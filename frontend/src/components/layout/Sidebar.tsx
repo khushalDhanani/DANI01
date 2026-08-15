@@ -81,9 +81,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             <Text className="text-xs font-black text-white tracking-tight">
               AIRIS <Text className="text-blue-400">INSIGHTS</Text>
             </Text>
-            <Text className="text-[8px] uppercase font-bold text-slate-500 tracking-wider">
-              DB Intelligence
-            </Text>
           </View>
         </View>
       </View>
@@ -110,11 +107,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 onPress={() => handleNav(item.href)}
                 accessibilityRole="button"
                 accessibilityLabel={`Navigate to ${item.label}`}
-                className={`flex-row items-center justify-between px-2.5 py-2 rounded-lg transition-all ${
-                  active
+                className={`flex-row items-center justify-between px-2.5 py-2 rounded-lg transition-all ${active
                     ? "bg-blue-600 shadow-sm"
                     : "hover:bg-slate-800/60 active:bg-slate-800"
-                }`}
+                  }`}
               >
                 <View className="flex-row items-center gap-2.5 flex-1">
                   <Icon
@@ -122,9 +118,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                     color={active ? THEME_COLORS.onPrimary : THEME_COLORS.textMuted}
                   />
                   <Text
-                    className={`text-xs font-semibold ${
-                      active ? "text-white" : "text-slate-300"
-                    }`}
+                    className={`text-xs font-semibold ${active ? "text-white" : "text-slate-300"
+                      }`}
                     numberOfLines={1}
                   >
                     {item.label}
@@ -146,11 +141,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             onPress={toggleDaylite}
             accessibilityRole="button"
             accessibilityLabel="Toggle Day Lite group"
-            className={`flex-row items-center justify-between px-2.5 py-2 rounded-lg transition-all ${
-              isDayliteActive && !dayliteExpanded
+            className={`flex-row items-center justify-between px-2.5 py-2 rounded-lg transition-all ${isDayliteActive && !dayliteExpanded
                 ? "bg-blue-600 shadow-sm"
                 : "hover:bg-slate-800/60 active:bg-slate-800"
-            }`}
+              }`}
           >
             <View className="flex-row items-center gap-2.5 flex-1">
               <Sparkles
@@ -162,11 +156,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 }
               />
               <Text
-                className={`text-xs font-bold ${
-                  isDayliteActive && !dayliteExpanded
+                className={`text-xs font-bold ${isDayliteActive && !dayliteExpanded
                     ? "text-white"
                     : "text-slate-100"
-                }`}
+                  }`}
               >
                 {DAYLITE_NAV_GROUP.label}
               </Text>
@@ -192,11 +185,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                     onPress={() => handleNav(subItem.href)}
                     accessibilityRole="button"
                     accessibilityLabel={`Navigate to ${subItem.label}`}
-                    className={`flex-row items-center justify-between px-2.5 py-1.5 rounded-lg transition-all ${
-                      active
+                    className={`flex-row items-center justify-between px-2.5 py-1.5 rounded-lg transition-all ${active
                         ? "bg-blue-600 shadow-sm"
                         : "hover:bg-slate-800/50 active:bg-slate-800"
-                    }`}
+                      }`}
                   >
                     <View className="flex-row items-center gap-2 flex-1">
                       <SubIcon
@@ -204,9 +196,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                         color={active ? THEME_COLORS.onPrimary : THEME_COLORS.textMuted}
                       />
                       <Text
-                        className={`text-xs font-medium ${
-                          active ? "text-white font-semibold" : "text-slate-300"
-                        }`}
+                        className={`text-xs font-medium ${active ? "text-white font-semibold" : "text-slate-300"
+                          }`}
                         numberOfLines={1}
                       >
                         {subItem.label}
@@ -215,16 +206,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
                     {subItem.badge && (
                       <View
-                        className={`px-1.5 py-0.2 rounded ${
-                          active
+                        className={`px-1.5 py-0.2 rounded ${active
                             ? "bg-white/20"
                             : "bg-emerald-950/80 border border-emerald-800/60"
-                        }`}
+                          }`}
                       >
                         <Text
-                          className={`text-[8px] font-mono font-black ${
-                            active ? "text-white" : "text-emerald-400"
-                          }`}
+                          className={`text-[8px] font-mono font-black ${active ? "text-white" : "text-emerald-400"
+                            }`}
                         >
                           {subItem.badge}
                         </Text>
@@ -249,16 +238,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               backgroundColor: apiChecking
                 ? THEME_COLORS.warning
                 : apiOnline
-                ? THEME_COLORS.success
-                : THEME_COLORS.danger,
+                  ? THEME_COLORS.success
+                  : THEME_COLORS.danger,
             }}
           />
           <Text className="text-[10px] text-slate-400 font-medium" numberOfLines={1}>
             {apiChecking
               ? "Connecting…"
               : apiOnline
-              ? "FastAPI Live"
-              : "API Offline"}
+                ? "FastAPI Live"
+                : "API Offline"}
           </Text>
         </View>
         <Text className="text-[8px] text-slate-600 mt-0.5">AIRIS_TEST (Read-only)</Text>
