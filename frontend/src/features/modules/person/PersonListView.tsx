@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -49,6 +49,7 @@ interface PersonListViewProps {
 
 export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }) => {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>("ALL");
   const [hasEmail, setHasEmail] = useState<boolean | undefined>(undefined);
   const [hasPhone, setHasPhone] = useState<boolean | undefined>(undefined);
@@ -61,8 +62,20 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
 
   const limit = 25;
 
+  // Debounce search by 350ms and enforce min 2 chars (or empty string to reset)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      const trimmed = search.trim();
+      if (trimmed.length === 0 || trimmed.length >= 2) {
+        setDebouncedSearch(trimmed);
+      }
+    }, 350);
+
+    return () => clearTimeout(handler);
+  }, [search]);
+
   const queryParams: PersonListParams = {
-    search: search.trim() || undefined,
+    search: debouncedSearch || undefined,
     status: statusFilter,
     has_email: hasEmail,
     has_phone: hasPhone,

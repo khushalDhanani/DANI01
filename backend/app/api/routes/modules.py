@@ -15,8 +15,10 @@ from app.modules.analyzer import ModuleAnalyzer
 from app.modules.models import ModuleDefinition, ModuleInfo, ModuleValidationResult
 from app.modules.person.analyzer import PersonModuleAnalyzer
 from app.modules.person.contact_quality_schemas import (
+    RULE_METADATA,
     ContactQualityIssuesResponse,
     ContactQualitySummaryResponse,
+    QualityRuleMeta,
 )
 from app.modules.person.contact_quality_service import ContactQualityService
 from app.modules.person.quality.engine import PersonQualityEngine
@@ -129,6 +131,16 @@ async def get_person_record(
 
 
 @router.get(
+    "/PERSON/contact-quality/rules",
+    response_model=list[QualityRuleMeta],
+    summary="Get all 37 declarative PERSON contact quality rules",
+    description="Returns the canonical declarative rule catalog with metadata, count units, severities, and descriptions.",
+)
+async def get_contact_quality_rules() -> list[QualityRuleMeta]:
+    return list(RULE_METADATA.values())
+
+
+@router.get(
     "/PERSON/contact-quality",
     response_model=ContactQualitySummaryResponse,
     summary="Get PERSON Contact Quality KPI summary",
@@ -150,9 +162,8 @@ async def get_contact_quality_issues(
     quality_service: Annotated[ContactQualityService, Depends(get_contact_quality_service)],
     issue: str = Query(default="INVALID_EMAIL", description="Issue code (e.g. INVALID_EMAIL, DUPLICATE_EMAIL_CROSS, MISSING_PHONE)"),
     search: str | None = Query(default=None, description="Filter issues by Person name, ID, or value"),
-    sort_by: str = Query(default="PersonID", description="Sort column (PersonID, PersonName, CurrentValue, Severity)"),
+    sort_by: str = Query(default="PersonID", description="Sort column (PersonID, PersonName, CurrentValue)"),
     sort_order: str = Query(default="desc", description="Sort direction (asc, desc)"),
-    severity: str | None = Query(default=None, description="Filter by severity level (CRITICAL, WARNING, INFO)"),
     limit: int = Query(default=25, ge=1, le=100, description="Page limit"),
     offset: int = Query(default=0, ge=0, description="Page offset"),
 ) -> ContactQualityIssuesResponse:
@@ -161,7 +172,6 @@ async def get_contact_quality_issues(
         search=search,
         sort_by=sort_by,
         sort_order=sort_order,
-        severity=severity,
         limit=limit,
         offset=offset,
     )
@@ -179,7 +189,6 @@ async def export_contact_quality_issues(
     search: str | None = Query(default=None, description="Search filter term"),
     sort_by: str = Query(default="PersonID", description="Sort column"),
     sort_order: str = Query(default="desc", description="Sort direction"),
-    severity: str | None = Query(default=None, description="Severity filter"),
 ) -> Response:
     content, media_type, filename = await quality_service.export_contact_quality_issues(
         issue=issue,
@@ -187,7 +196,6 @@ async def export_contact_quality_issues(
         search=search,
         sort_by=sort_by,
         sort_order=sort_order,
-        severity=severity,
     )
     return Response(
         content=content,

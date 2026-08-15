@@ -26,14 +26,12 @@ class PersonQualityRule(ABC):
         Checks if required tables and columns exist for this rule to execute.
         Returns (True, None) if applicable, or (False, "Reason for skip") if skipped.
         """
-        pass
 
     @abstractmethod
     def evaluate(self) -> QualityFinding:
         """
         Executes read-only aggregate SQL queries on MSSQL and returns a QualityFinding.
         """
-        pass
 
     def skipped_finding(self, reason: str) -> QualityFinding:
         """Helper to construct a skipped QualityFinding."""

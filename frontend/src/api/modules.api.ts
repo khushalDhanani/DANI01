@@ -10,7 +10,9 @@ import type {
   PersonListParams,
   PersonListResponse,
   PersonModuleMetricsResponse,
+  PersonQualityResponse,
   PersonRecordDetailResponse,
+  QualityRuleMeta,
 } from "@/types/modules.types";
 
 /**
@@ -174,4 +176,24 @@ export async function exportContactQualitySummary(
   const defaultFilename = `daylite_quality_summary_${dateStr}.${format}`;
 
   triggerBrowserDownload(response.data as Blob, defaultFilename, contentDisposition);
+}
+
+/**
+ * Fetches declarations for all 37 Daylite quality rules from backend SSoT registry.
+ */
+export async function getContactQualityRules(): Promise<QualityRuleMeta[]> {
+  const response = await apiClient.get<QualityRuleMeta[]>(
+    "/modules/PERSON/contact-quality/rules"
+  );
+  return response.data;
+}
+
+/**
+ * Runs PERSON data quality rule assessment and returns quality findings & scores.
+ */
+export async function getPersonQuality(): Promise<PersonQualityResponse> {
+  const response = await apiClient.get<PersonQualityResponse>(
+    "/modules/PERSON/quality"
+  );
+  return response.data;
 }

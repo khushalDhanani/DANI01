@@ -600,6 +600,18 @@ export interface ContactQualitySummary {
   audit_del_before_ent: number;
   sync_zimbra_missing_id: number;
 
+  // 8. Distinct Person Quality Telemetry (Entity-Level)
+  persons_with_critical_issues: number;
+  persons_with_warning_issues: number;
+  persons_with_any_issue: number;
+  total_clean_persons: number;
+  health_score_pct: number;
+
+  // 9. Standardized Aggregate Findings (Rule-Level)
+  total_critical_findings: number;
+  total_warning_findings: number;
+  total_info_findings: number;
+
   // Scope & Metadata (Root Entity: dbo.DLPersonMst)
   total_persons_evaluated: number;
   total_inactive_persons?: number;
@@ -607,6 +619,25 @@ export interface ContactQualitySummary {
   related_tables_checked: number;
   calculated_at: string;
   duration_ms: number;
+}
+
+export type IssueCountUnit =
+  | "PERSON"
+  | "CONTACT"
+  | "ADDRESS"
+  | "COMPANY_LINK"
+  | "EXTRA_FIELD"
+  | "DUPLICATE_GROUP";
+
+export interface QualityRuleMeta {
+  code: string;
+  title: string;
+  dimension: string;
+  severity: "CRITICAL" | "WARNING" | "INFO" | string;
+  count_unit: IssueCountUnit;
+  unit_label_singular: string;
+  unit_label_plural: string;
+  description: string;
 }
 
 export interface ContactQualityIssueItem {
@@ -625,20 +656,93 @@ export interface ContactQualityIssueItem {
   IsActive?: boolean | null;
 }
 
+export interface ContactQualityGroupMember {
+  PersonID: number;
+  PersonName: string;
+  ContactID?: number | null;
+  ContactType: string;
+  LabelName?: string | null;
+  CurrentValue?: string | null;
+  MaskedValue?: string | null;
+  IssueCode: string;
+  IssueDescription: string;
+  Severity: "CRITICAL" | "WARNING" | "INFO" | string;
+  IsVerified?: boolean | null;
+  IsPrimary?: boolean | null;
+  IsActive?: boolean | null;
+}
+
+export interface ContactQualityGroupItem {
+  GroupKey: string;
+  GroupLabel: string;
+  AffectedPersonsCount: number;
+  AffectedRecordsCount: number;
+  Members: ContactQualityGroupMember[];
+}
+
 export interface ContactQualityIssuesResponse {
   issue: string;
+  count_unit?: IssueCountUnit;
+  unit_label_singular?: string;
+  unit_label_plural?: string;
   total: number;
+  total_affected_persons?: number | null;
+  total_affected_records?: number | null;
   limit: number;
   offset: number;
   items: ContactQualityIssueItem[];
+  groups?: ContactQualityGroupItem[];
+  calculated_at?: string;
 }
 
 export interface ContactQualityIssueParams {
   issue?: string;
   search?: string;
-  sort_by?: "PersonID" | "PersonName" | "CurrentValue" | "Severity" | string;
+  sort_by?: "PersonID" | "PersonName" | "CurrentValue" | string;
   sort_order?: "asc" | "desc";
-  severity?: "CRITICAL" | "WARNING" | "INFO" | "ALL" | string;
   limit?: number;
   offset?: number;
 }
+
+export type QualityCategory = "COMPLETENESS" | "VALIDITY" | "INTEGRITY" | "CONSISTENCY";
+
+export type QualitySeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
+
+export type QualityFindingStatus = "PASSED" | "FAILED" | "WARNING" | "SKIPPED" | "ERROR" | "APPLIED";
+
+export interface QualityFinding {
+  rule_code: string;
+  category: QualityCategory;
+  severity: QualitySeverity;
+  title: string;
+  description: string;
+  affected_count: number;
+  total_evaluated: number;
+  affected_percent: number;
+  exact: boolean;
+  message: string;
+  status: QualityFindingStatus;
+  skip_reason?: string | null;
+  sample_records?: Record<string, unknown>[];
+}
+
+export interface QualitySeveritySummary {
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  info: number;
+}
+
+export interface PersonQualityResponse {
+  module: string;
+  status: string;
+  rules_evaluated: number;
+  rules_skipped: number;
+  findings_count: number;
+  severity_summary: QualitySeveritySummary;
+  findings: QualityFinding[];
+  duration_ms: number;
+  evaluated_at: string;
+}
+

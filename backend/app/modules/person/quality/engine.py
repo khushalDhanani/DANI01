@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Any
 
 from app.discovery.metadata import MetadataDiscovery
 from app.modules.definitions.person import PersonModuleDefinition

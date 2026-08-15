@@ -6,8 +6,8 @@ from app.modules.person.schemas import (
 )
 
 __all__ = [
-    "PersonModuleAnalyzer",
     "PersonMetricsService",
     "PersonMetricsSummary",
+    "PersonModuleAnalyzer",
     "PersonModuleMetricsResponse",
 ]

@@ -169,22 +169,8 @@ def test_safe_percent():
 def test_build_person_metrics_query_basic():
     query = build_person_metrics_query(
         root_table="dbo.DLPersonMst",
-        address_table="dbo.DLPersonAddressDet",
-        contact_table="dbo.DLPersonPhoneEmailURLDet",
-        company_link_table="dbo.DLPersonCompanyLinkDet",
-        relation_table="dbo.DLPersonRelationDet",
-        document_table="dbo.DLPersonDocumentDet",
-        extra_field_table="dbo.DLPersonExtraFieldValueDet",
-        im_table="dbo.DLPersonIMDet",
     )
     assert "COUNT_BIG(1) AS total_persons" in query
-    assert "DistinctAddresses AS" in query
-    assert "DistinctContacts AS" in query
-    assert "DistinctCompanyLinks AS" in query
-    assert "DistinctRelations AS" in query
-    assert "DistinctDocs AS" in query
-    assert "DistinctExtras AS" in query
-    assert "DistinctIMs AS" in query
     assert "FROM dbo.DLPersonMst p" in query
 
 
@@ -201,29 +187,7 @@ async def test_person_metrics_calculation_success(mock_person_discovery: MagicMo
         "inactive_persons": 50,
         "deleted_persons": 10,
         "temp_persons": 5,
-        "blacklist_persons": 1,
-        "persons_with_address": 750,
-        "total_addresses": 1200,
-        "active_addresses": 1100,
-        "geo_addresses": 100,
-        "formatted_addresses": 100,
-        "postal_addresses": 900,
-        "persons_with_contact": 990,
-        "total_contacts": 2500,
-        "active_contacts": 2000,
-        "verified_contacts": 500,
-        "primary_contacts": 800,
-        "persons_with_email": 900,
-        "persons_with_phone": 980,
-        "persons_with_company_link": 600,
-        "total_company_links": 650,
-        "persons_with_relationship": 10,
-        "persons_with_document": 0,
-        "total_documents": 0,
-        "persons_with_extra_field": 400,
-        "total_extra_fields": 450,
-        "persons_with_im": 5,
-        "total_ims": 5,
+        "active_contacts": 900,
     }
     mock_child_counts = {
         "total_relationships": 15,
@@ -241,15 +205,6 @@ async def test_person_metrics_calculation_success(mock_person_discovery: MagicMo
     assert res.metrics.active_percent == 95.0
     assert res.metrics.inactive_persons == 50
     assert res.metrics.inactive_percent == 5.0
-    assert res.metrics.address_coverage_percent == 75.0
-    assert res.metrics.total_addresses == 1200
-    assert res.metrics.contact_coverage_percent == 99.0
-    assert res.metrics.email_coverage_percent == 90.0
-    assert res.metrics.phone_coverage_percent == 98.0
-    assert res.metrics.company_link_coverage_percent == 60.0
-    assert res.metrics.relationship_coverage_percent == 1.0
-    assert res.metrics.total_relationships == 15
-    assert res.metrics.extra_field_coverage_percent == 40.0
 
 
 @pytest.mark.asyncio
@@ -260,12 +215,6 @@ async def test_person_metrics_zero_persons(mock_person_discovery: MagicMock):
         "total_persons": 0,
         "active_persons": 0,
         "inactive_persons": 0,
-        "persons_with_address": 0,
-        "persons_with_contact": 0,
-        "persons_with_email": 0,
-        "persons_with_phone": 0,
-        "persons_with_company_link": 0,
-        "persons_with_relationship": 0,
     }
 
     with patch("app.modules.person.metrics.execute_readonly_query") as mock_exec:
@@ -275,7 +224,6 @@ async def test_person_metrics_zero_persons(mock_person_discovery: MagicMock):
     assert res.status == "COMPLETED"
     assert res.metrics.total_persons == 0
     assert res.metrics.active_percent == 0.0
-    assert res.metrics.contact_coverage_percent == 0.0
 
 
 @pytest.mark.asyncio
@@ -300,16 +248,7 @@ async def test_person_analyzer_integration(mock_person_discovery: MagicMock):
     mock_db_row = {
         "total_persons": 500,
         "active_persons": 450,
-        "inactive_persons": 50,
-        "persons_with_address": 300,
-        "persons_with_contact": 480,
-        "persons_with_email": 450,
-        "persons_with_phone": 470,
-        "persons_with_company_link": 250,
-        "persons_with_relationship": 5,
-        "total_addresses": 350,
-        "total_contacts": 1000,
-        "total_company_links": 300,
+        "active_contacts": 0,
     }
     mock_child_counts = {
         "total_relationships": 5,
@@ -323,7 +262,6 @@ async def test_person_analyzer_integration(mock_person_discovery: MagicMock):
     assert res.status == "COMPLETED"
     assert res.metrics.total_persons == 500
     assert res.metrics.active_percent == 90.0
-    assert res.metrics.contact_coverage_percent == 96.0
 
 
 # ── 4. API Route Integration Tests ────────────────────────────────
@@ -338,16 +276,7 @@ async def test_person_metrics_api_endpoint(mock_person_discovery: MagicMock):
     mock_db_row = {
         "total_persons": 1000,
         "active_persons": 900,
-        "inactive_persons": 100,
-        "persons_with_address": 700,
-        "persons_with_contact": 950,
-        "persons_with_email": 850,
-        "persons_with_phone": 920,
-        "persons_with_company_link": 600,
-        "persons_with_relationship": 20,
-        "total_addresses": 800,
-        "total_contacts": 2000,
-        "total_company_links": 650,
+        "active_contacts": 900,
     }
     mock_child_counts = {
         "total_relationships": 20,

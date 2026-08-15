@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   getContactQualityIssues,
+  getContactQualityRules,
   getContactQualitySummary,
   getModule,
   getModules,
   getPersonDetail,
   getPersonList,
   getPersonMetrics,
+  getPersonQuality,
   validateModule,
 } from "@/api/modules.api";
 import type {
@@ -19,7 +21,9 @@ import type {
   PersonListParams,
   PersonListResponse,
   PersonModuleMetricsResponse,
+  PersonQualityResponse,
   PersonRecordDetailResponse,
+  QualityRuleMeta,
 } from "@/types/modules.types";
 
 /**
@@ -98,7 +102,7 @@ export function useContactQualitySummary() {
   return useQuery<ContactQualitySummary, Error>({
     queryKey: ["module", "PERSON", "contact-quality-summary"],
     queryFn: getContactQualitySummary,
-    staleTime: 1000 * 60 * 2,
+    staleTime: 1000 * 60,
   });
 }
 
@@ -109,6 +113,28 @@ export function useContactQualityIssues(params?: ContactQualityIssueParams) {
   return useQuery<ContactQualityIssuesResponse, Error>({
     queryKey: ["module", "PERSON", "contact-quality-issues", params],
     queryFn: () => getContactQualityIssues(params),
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60,
+  });
+}
+
+/**
+ * Hook to fetch declarations for all 37 Daylite quality rules from SSoT registry.
+ */
+export function useContactQualityRules() {
+  return useQuery<QualityRuleMeta[], Error>({
+    queryKey: ["module", "PERSON", "contact-quality-rules"],
+    queryFn: getContactQualityRules,
+    staleTime: 1000 * 60 * 60,
+  });
+}
+
+/**
+ * Hook to execute PERSON data quality engine rules and return rule evaluation scores.
+ */
+export function usePersonQuality() {
+  return useQuery<PersonQualityResponse, Error>({
+    queryKey: ["module", "PERSON", "quality"],
+    queryFn: getPersonQuality,
+    staleTime: 1000 * 60,
   });
 }

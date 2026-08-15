@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -6,11 +7,14 @@ from fastapi.responses import JSONResponse
 
 from app.api.routes import analysis, analysis_runs, database, health, modules
 from app.core.exceptions import (
+    DatabaseConnectionError,
     DiscoveryError,
     ReadOnlyViolationError,
     TableNotFoundError,
 )
 from app.db.postgres import init_db
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -43,6 +47,18 @@ async def readonly_violation_handler(request: Request, exc: ReadOnlyViolationErr
     )
 
 
+@app.exception_handler(DatabaseConnectionError)
+async def database_connection_handler(request: Request, exc: DatabaseConnectionError):
+    logger.warning("Database connection unavailable on %s: %s", request.url.path, exc)
+    return JSONResponse(
+        status_code=503,
+        content={
+            "error": "DatabaseConnectionError",
+            "detail": f"MSSQL database is unavailable or not initialized: {exc}",
+        },
+    )
+
+
 @app.exception_handler(DiscoveryError)
 async def discovery_error_handler(request: Request, exc: DiscoveryError):
     return JSONResponse(
@@ -50,10 +66,29 @@ async def discovery_error_handler(request: Request, exc: DiscoveryError):
     )
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled API exception on %s: %s", request.url.path, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"error": "InternalServerError", "detail": str(exc)},
+    )
+
+
 # CORS configuration for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, change to specific origins
+    allow_origins=[
+        "http://localhost:8081",
+        "http://localhost:8080",
+        "http://localhost:3000",
+        "http://localhost:19006",
+        "http://127.0.0.1:8081",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:19006",
+    ],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

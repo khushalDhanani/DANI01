@@ -90,7 +90,7 @@ export const ContactQualitySection: React.FC = () => {
     );
   }
 
-  const totalCritical =
+  const totalCriticalFindings = summary.total_critical_findings ?? (
     summary.invalid_emails +
     summary.invalid_phones +
     summary.persons_multiple_primary +
@@ -103,9 +103,10 @@ export const ContactQualitySection: React.FC = () => {
     summary.blacklist_missing_details +
     summary.company_orphan_links +
     summary.extra_field_orphan_id +
-    summary.audit_del_before_ent;
+    summary.audit_del_before_ent
+  );
 
-  const totalWarnings =
+  const totalWarningFindings = summary.total_warning_findings ?? (
     summary.persons_without_email +
     summary.persons_without_phone +
     summary.duplicate_email_cross_persons +
@@ -122,11 +123,71 @@ export const ContactQualitySection: React.FC = () => {
     summary.person_missing_lastname_only +
     summary.active_emp_missing_title +
     summary.stale_temp_persons +
+    summary.inactive_with_empid +
     summary.company_duplicate_links +
     summary.company_missing_role +
     summary.extra_field_duplicate_entries +
     summary.deleted_missing_del_date +
-    summary.sync_zimbra_missing_id;
+    summary.sync_zimbra_missing_id
+  );
+
+  const personsWithCritical = summary.persons_with_critical_issues ?? 0;
+  const personsWithWarnings = summary.persons_with_warning_issues ?? 0;
+  const totalCleanPersons = summary.total_clean_persons ?? Math.max(0, summary.total_persons_evaluated - (summary.persons_with_any_issue || 0));
+  const healthScore = summary.health_score_pct ?? 100.0;
+
+  const ALL_CARDS = [
+    // Contacts
+    { title: "Missing Email", count: summary.persons_without_email, issueCode: "MISSING_EMAIL", description: "Persons without any registered email", severity: "WARNING" as const, unitLabel: "Person", icon: <MailWarning size={13} color={THEME_COLORS.warningIcon} />, category: "CONTACTS" },
+    { title: "Missing Phone", count: summary.persons_without_phone, issueCode: "MISSING_PHONE", description: "Persons without any registered phone", severity: "WARNING" as const, unitLabel: "Person", icon: <PhoneOff size={13} color={THEME_COLORS.warningIcon} />, category: "CONTACTS" },
+    { title: "Invalid Email", count: summary.invalid_emails, issueCode: "INVALID_EMAIL", description: "Malformed format or invalid characters", severity: "CRITICAL" as const, unitLabel: "Contact", icon: <Mail size={13} color={THEME_COLORS.dangerIcon} />, category: "CONTACTS" },
+    { title: "Invalid Phone", count: summary.invalid_phones, issueCode: "INVALID_PHONE", description: "Invalid phone (7-15 digits) or extension (!= 4 digits)", severity: "CRITICAL" as const, unitLabel: "Contact", icon: <Phone size={13} color={THEME_COLORS.dangerIcon} />, category: "CONTACTS" },
+    { title: "Shared Email", count: summary.duplicate_email_cross_persons, issueCode: "DUPLICATE_EMAIL_CROSS", description: "Identical email linked to multiple Persons", severity: "WARNING" as const, unitLabel: "Group", icon: <Copy size={13} color={THEME_COLORS.companyIcon} />, category: "CONTACTS" },
+    { title: "Shared Phone", count: summary.duplicate_phone_cross_persons, issueCode: "DUPLICATE_PHONE_CROSS", description: "Identical phone linked to multiple Persons", severity: "WARNING" as const, unitLabel: "Group", icon: <Copy size={13} color={THEME_COLORS.companyIcon} />, category: "CONTACTS" },
+    { title: "Duplicate Email (Self)", count: summary.duplicate_email_same_person, issueCode: "DUPLICATE_EMAIL_SAME", description: "Same email added multiple times for 1 Person", severity: "WARNING" as const, unitLabel: "Group", icon: <UserCheck size={13} color={THEME_COLORS.primaryIcon} />, category: "CONTACTS" },
+    { title: "Duplicate Phone (Self)", count: summary.duplicate_phone_same_person, issueCode: "DUPLICATE_PHONE_SAME", description: "Same phone added multiple times for 1 Person", severity: "WARNING" as const, unitLabel: "Group", icon: <UserCheck size={13} color={THEME_COLORS.primaryIcon} />, category: "CONTACTS" },
+    { title: "Unverified Contacts", count: summary.unverified_contacts, issueCode: "UNVERIFIED_CONTACT", description: "Channels without verified flag status", severity: "INFO" as const, unitLabel: "Contact", icon: <ShieldAlert size={13} color={THEME_COLORS.imIcon} />, category: "CONTACTS" },
+    { title: "Invalid URLs", count: summary.invalid_urls, issueCode: "INVALID_URL", description: "URLs missing http/https/www scheme", severity: "WARNING" as const, unitLabel: "Contact", icon: <Globe size={13} color={THEME_COLORS.warningIcon} />, category: "CONTACTS" },
+    { title: "Multiple Primary", count: summary.persons_multiple_primary, issueCode: "MULTIPLE_PRIMARY", description: "Persons with conflicting primary contacts", severity: "CRITICAL" as const, unitLabel: "Person", icon: <Layers size={13} color={THEME_COLORS.dangerIcon} />, category: "CONTACTS" },
+    { title: "Primary Inactive", count: summary.primary_contact_inactive, issueCode: "PRIMARY_INACTIVE", description: "Primary contact flagged inactive", severity: "CRITICAL" as const, unitLabel: "Contact", icon: <ShieldX size={13} color={THEME_COLORS.dangerIcon} />, category: "CONTACTS" },
+    
+    // Addresses
+    { title: "Missing Postal Code", count: summary.addr_missing_postal_code, issueCode: "MISSING_POSTAL_CODE", description: "Address records without a postal / PIN code", severity: "WARNING" as const, unitLabel: "Address", icon: <MapPinOff size={13} color={THEME_COLORS.warningIcon} />, category: "ADDRESSES" },
+    { title: "Invalid PIN Format", count: summary.addr_invalid_pin_format, issueCode: "INVALID_PIN_CODE_FORMAT", description: "Postal code with non-numeric or bad length", severity: "CRITICAL" as const, unitLabel: "Address", icon: <MapPinOff size={13} color={THEME_COLORS.dangerIcon} />, category: "ADDRESSES" },
+    { title: "Street Without City", count: summary.addr_street_without_city, issueCode: "STREET_WITHOUT_CITY", description: "Street address present but city name is blank", severity: "WARNING" as const, unitLabel: "Address", icon: <Compass size={13} color={THEME_COLORS.warningIcon} />, category: "ADDRESSES" },
+    { title: "City Without State", count: summary.addr_city_without_state, issueCode: "CITY_WITHOUT_STATE", description: "City address without state region specified", severity: "WARNING" as const, unitLabel: "Address", icon: <Compass size={13} color={THEME_COLORS.warningIcon} />, category: "ADDRESSES" },
+    { title: "Missing Geocodes", count: summary.addr_missing_geocodes, issueCode: "MISSING_GEOCODES", description: "Addresses lacking Latitude/Longitude coordinates", severity: "INFO" as const, unitLabel: "Address", icon: <NavigationOff size={13} color={THEME_COLORS.imIcon} />, category: "ADDRESSES" },
+    { title: "Duplicate Address", count: summary.addr_duplicate_same_person, issueCode: "DUPLICATE_ADDRESSES_SAME_PERSON", description: "Identical address entered twice for 1 Person", severity: "WARNING" as const, unitLabel: "Group", icon: <Copy size={13} color={THEME_COLORS.warningIcon} />, category: "ADDRESSES" },
+    
+    // Integrity
+    { title: "Anniversary Before Birth", count: summary.person_anniversary_before_birth, issueCode: "ANNIVERSARY_BEFORE_BIRTH", description: "Anniversary date earlier than birth date", severity: "CRITICAL" as const, unitLabel: "Person", icon: <CalendarX size={13} color={THEME_COLORS.dangerIcon} />, category: "INTEGRITY" },
+    { title: "Invalid Birth Date", count: summary.person_invalid_birth_date, issueCode: "INVALID_BIRTH_DATE", description: "Birth date in the future or before 1900", severity: "CRITICAL" as const, unitLabel: "Person", icon: <CalendarOff size={13} color={THEME_COLORS.dangerIcon} />, category: "INTEGRITY" },
+    { title: "Dummy/Ancient DOB", count: summary.person_birth_date_ancient, issueCode: "BIRTH_DATE_DEFAULT_OR_ANCIENT", description: "Birth date is dummy 1900-01-01 or age > 100", severity: "WARNING" as const, unitLabel: "Person", icon: <CalendarOff size={13} color={THEME_COLORS.warningIcon} />, category: "INTEGRITY" },
+    { title: "Suspicious Test Names", count: summary.person_suspicious_dummy_names, issueCode: "SUSPICIOUS_DUMMY_NAMES", description: "Placeholder names (test, admin, dummy, etc.)", severity: "WARNING" as const, unitLabel: "Person", icon: <UserX size={13} color={THEME_COLORS.warningIcon} />, category: "INTEGRITY" },
+    { title: "Missing Last Name", count: summary.person_missing_lastname_only, issueCode: "MISSING_LAST_NAME", description: "Person has first name but missing surname", severity: "WARNING" as const, unitLabel: "Person", icon: <FileWarning size={13} color={THEME_COLORS.warningIcon} />, category: "INTEGRITY" },
+    
+    // Governance
+    { title: "Active & Deleted Conflict", count: summary.status_active_and_deleted, issueCode: "STATUS_ACTIVE_AND_DELETED", description: "Record marked both Active and Deleted", severity: "CRITICAL" as const, unitLabel: "Person", icon: <ShieldAlert size={13} color={THEME_COLORS.dangerIcon} />, category: "GOVERNANCE" },
+    { title: "Employee Missing Title", count: summary.active_emp_missing_title, issueCode: "ACTIVE_EMP_MISSING_TITLE", description: "Active employee has no job title designation", severity: "WARNING" as const, unitLabel: "Person", icon: <FileWarning size={13} color={THEME_COLORS.warningIcon} />, category: "GOVERNANCE" },
+    { title: "Inactive with EmpID (Info)", count: summary.inactive_with_empid, issueCode: "INACTIVE_WITH_ACTIVE_EMPID", description: "Informational: Inactive records retaining employee ID (excluded from active score)", severity: "INFO" as const, unitLabel: "Person", icon: <AlertCircle size={13} color={THEME_COLORS.textMuted} />, category: "GOVERNANCE" },
+    { title: "Stale Temp Persons", count: summary.stale_temp_persons, issueCode: "STALE_TEMP_PERSONS", description: "Temporary person record older than 90 days", severity: "WARNING" as const, unitLabel: "Person", icon: <Clock size={13} color={THEME_COLORS.warningIcon} />, category: "GOVERNANCE" },
+    { title: "Unapproved Blacklist", count: summary.blacklist_unapproved, issueCode: "BLACKLIST_UNAPPROVED", description: "Blacklist flag active without HOD approval", severity: "CRITICAL" as const, unitLabel: "Person", icon: <ShieldAlert size={13} color={THEME_COLORS.dangerIcon} />, category: "GOVERNANCE" },
+    { title: "Missing Blacklist Details", count: summary.blacklist_missing_details, issueCode: "BLACKLIST_MISSING_DETAILS", description: "Blacklist record missing date or type", severity: "CRITICAL" as const, unitLabel: "Person", icon: <FileWarning size={13} color={THEME_COLORS.dangerIcon} />, category: "GOVERNANCE" },
+    { title: "Orphan Company Link", count: summary.company_orphan_links, issueCode: "ORPHAN_COMPANY_LINK", description: "Link references non-existent company ID", severity: "CRITICAL" as const, unitLabel: "Link", icon: <Building2 size={13} color={THEME_COLORS.dangerIcon} />, category: "GOVERNANCE" },
+    { title: "Duplicate Company Link", count: summary.company_duplicate_links, issueCode: "DUPLICATE_COMPANY_LINKS", description: "Same company linked >1 times to Person", severity: "WARNING" as const, unitLabel: "Group", icon: <Copy size={13} color={THEME_COLORS.warningIcon} />, category: "GOVERNANCE" },
+    { title: "Company Missing Role", count: summary.company_missing_role, issueCode: "COMPANY_MISSING_ROLE", description: "Company affiliation without role definition", severity: "WARNING" as const, unitLabel: "Link", icon: <Building2 size={13} color={THEME_COLORS.warningIcon} />, category: "GOVERNANCE" },
+    { title: "Orphan Extra Field", count: summary.extra_field_orphan_id, issueCode: "EXTRA_FIELD_ORPHAN_ID", description: "Custom field with invalid schema definition", severity: "CRITICAL" as const, unitLabel: "Field", icon: <Sliders size={13} color={THEME_COLORS.dangerIcon} />, category: "GOVERNANCE" },
+    { title: "Duplicate Extra Fields", count: summary.extra_field_duplicate_entries, issueCode: "DUPLICATE_EXTRA_FIELDS", description: "Duplicate custom field entries for 1 Person", severity: "WARNING" as const, unitLabel: "Group", icon: <Sliders size={13} color={THEME_COLORS.warningIcon} />, category: "GOVERNANCE" },
+    { title: "Missing Deletion Date", count: summary.deleted_missing_del_date, issueCode: "DELETED_MISSING_TIMESTAMP", description: "Deleted person missing deletion timestamp", severity: "WARNING" as const, unitLabel: "Person", icon: <Clock size={13} color={THEME_COLORS.warningIcon} />, category: "GOVERNANCE" },
+    { title: "Deletion Before Creation", count: summary.audit_del_before_ent, issueCode: "AUDIT_DEL_BEFORE_ENT", description: "Deletion date is earlier than creation date", severity: "CRITICAL" as const, unitLabel: "Person", icon: <Clock size={13} color={THEME_COLORS.dangerIcon} />, category: "GOVERNANCE" },
+    { title: "Broken Zimbra Sync", count: summary.sync_zimbra_missing_id, issueCode: "SYNC_ZIMBRA_MISSING_ID", description: "Sync enabled but missing Zimbra ID", severity: "WARNING" as const, unitLabel: "Person", icon: <RefreshCw size={13} color={THEME_COLORS.warningIcon} />, category: "GOVERNANCE" }
+  ];
+
+  const filteredCards = ALL_CARDS.filter(card => activeCategory === "ALL" || card.category === activeCategory);
+  
+  const criticalCards = filteredCards.filter(c => c.severity === "CRITICAL");
+  const warningCards = filteredCards.filter(c => c.severity === "WARNING");
+  const infoCards = filteredCards.filter(c => c.severity === "INFO");
 
   return (
     <View className="bg-dark-card border border-dark-border rounded-xl p-4 gap-3.5 shadow-sm">
@@ -143,14 +204,36 @@ export const ContactQualitySection: React.FC = () => {
               </Text>
             </View>
             <View className="flex-row items-center gap-1.5 flex-wrap mt-1">
-              <View className="bg-blue-950/80 border border-blue-800/80 px-2 py-0.5 rounded">
-                <Text className="text-[10px] font-mono font-bold text-blue-300">
-                  {(summary.total_persons_evaluated || 28493).toLocaleString()} Valid Active Evaluated
+              <View className="bg-emerald-950/80 border border-emerald-700/80 px-2 py-0.5 rounded flex-row items-center gap-1">
+                <CheckCircle2 size={10} color={THEME_COLORS.successIcon} />
+                <Text className="text-[10px] font-mono font-bold text-emerald-300">
+                  {healthScore.toFixed(1)}% Clean ({totalCleanPersons.toLocaleString()})
                 </Text>
               </View>
+              <View className="bg-blue-950/80 border border-blue-800/80 px-2 py-0.5 rounded">
+                <Text className="text-[10px] font-mono font-bold text-blue-300">
+                  {(summary.total_persons_evaluated ?? 0).toLocaleString()} Active Evaluated
+                </Text>
+              </View>
+              {personsWithCritical > 0 ? (
+                <View className="bg-rose-950/70 border border-rose-800/70 px-2 py-0.5 rounded flex-row items-center gap-1">
+                  <AlertCircle size={10} color={THEME_COLORS.dangerIcon} />
+                  <Text className="text-[10px] font-mono font-bold text-rose-300">
+                    {personsWithCritical.toLocaleString()} Critical Persons
+                  </Text>
+                </View>
+              ) : null}
+              {personsWithWarnings > 0 ? (
+                <View className="bg-amber-950/70 border border-amber-800/70 px-2 py-0.5 rounded flex-row items-center gap-1">
+                  <AlertTriangle size={10} color={THEME_COLORS.warningIcon} />
+                  <Text className="text-[10px] font-mono font-bold text-amber-300">
+                    {personsWithWarnings.toLocaleString()} Warning Persons
+                  </Text>
+                </View>
+              ) : null}
               <View className="bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">
                 <Text className="text-[10px] font-mono font-bold text-slate-300">
-                  {summary.related_tables_checked || 8} Related Tables Checked
+                  {summary.related_tables_checked ?? 0} Tables Checked
                 </Text>
               </View>
               {summary.total_inactive_persons ? (
@@ -173,24 +256,24 @@ export const ContactQualitySection: React.FC = () => {
 
         {/* Severity Summary Pills & All Issues Action */}
         <View className="flex-row items-center gap-2 flex-wrap">
-          {totalCritical > 0 ? (
+          {totalCriticalFindings > 0 ? (
             <View className="flex-row items-center gap-1 bg-rose-950/60 border border-rose-800/60 px-2 py-0.5 rounded-full">
               <AlertCircle size={11} color={THEME_COLORS.dangerIcon} />
               <Text className="text-[10px] font-bold text-rose-300">
-                {totalCritical.toLocaleString()} Critical
+                {totalCriticalFindings.toLocaleString()} Critical Findings
               </Text>
             </View>
           ) : (
             <View className="flex-row items-center gap-1 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full">
               <CheckCircle2 size={11} color={THEME_COLORS.successIcon} />
-              <Text className="text-[10px] font-bold text-emerald-300">0 Critical</Text>
+              <Text className="text-[10px] font-bold text-emerald-300">0 Critical Findings</Text>
             </View>
           )}
 
           <View className="flex-row items-center gap-1 bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded-full">
             <AlertTriangle size={11} color={THEME_COLORS.warningIcon} />
             <Text className="text-[10px] font-bold text-amber-300">
-              {totalWarnings.toLocaleString()} Warnings
+              {totalWarningFindings.toLocaleString()} Warning Findings
             </Text>
           </View>
 
@@ -326,360 +409,102 @@ export const ContactQualitySection: React.FC = () => {
         </Pressable>
       </View>
 
-      {/* ── KPI Grid ─────────────────────────────────────────── */}
-      <View className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
-        {/* === SECTION 1: Contacts & Duplicates === */}
-        {(activeCategory === "ALL" || activeCategory === "CONTACTS") && (
-          <>
-            <ContactQualityCard
-              title="Missing Email"
-              count={summary.persons_without_email}
-              issueCode="MISSING_EMAIL"
-              description="Persons without any registered email"
-              severity="WARNING"
-              icon={<MailWarning size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Missing Phone"
-              count={summary.persons_without_phone}
-              issueCode="MISSING_PHONE"
-              description="Persons without any registered phone"
-              severity="WARNING"
-              icon={<PhoneOff size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Invalid Email"
-              count={summary.invalid_emails}
-              issueCode="INVALID_EMAIL"
-              description="Malformed format or invalid characters"
-              severity="CRITICAL"
-              icon={<Mail size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Invalid Phone"
-              count={summary.invalid_phones}
-              issueCode="INVALID_PHONE"
-              description="Invalid phone (7-15 digits) or extension (!= 4 digits)"
-              severity="CRITICAL"
-              icon={<Phone size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Shared Email"
-              count={summary.duplicate_email_cross_persons}
-              issueCode="DUPLICATE_EMAIL_CROSS"
-              description="Identical email linked to multiple Persons"
-              severity="WARNING"
-              icon={<Copy size={13} color={THEME_COLORS.companyIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Shared Phone"
-              count={summary.duplicate_phone_cross_persons}
-              issueCode="DUPLICATE_PHONE_CROSS"
-              description="Identical phone linked to multiple Persons"
-              severity="WARNING"
-              icon={<Copy size={13} color={THEME_COLORS.companyIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Duplicate Email (Self)"
-              count={summary.duplicate_email_same_person}
-              issueCode="DUPLICATE_EMAIL_SAME"
-              description="Same email added multiple times for 1 Person"
-              severity="WARNING"
-              icon={<UserCheck size={13} color={THEME_COLORS.primaryIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Duplicate Phone (Self)"
-              count={summary.duplicate_phone_same_person}
-              issueCode="DUPLICATE_PHONE_SAME"
-              description="Same phone added multiple times for 1 Person"
-              severity="WARNING"
-              icon={<UserCheck size={13} color={THEME_COLORS.primaryIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Unverified Contacts"
-              count={summary.unverified_contacts}
-              issueCode="UNVERIFIED_CONTACT"
-              description="Channels without verified flag status"
-              severity="INFO"
-              icon={<ShieldAlert size={13} color={THEME_COLORS.imIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Invalid URLs"
-              count={summary.invalid_urls}
-              issueCode="INVALID_URL"
-              description="URLs missing http/https/www scheme"
-              severity="WARNING"
-              icon={<Globe size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Multiple Primary"
-              count={summary.persons_multiple_primary}
-              issueCode="MULTIPLE_PRIMARY"
-              description="Persons with conflicting primary contacts"
-              severity="CRITICAL"
-              icon={<Layers size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Primary Inactive"
-              count={summary.primary_contact_inactive}
-              issueCode="PRIMARY_INACTIVE"
-              description="Primary contact flagged inactive"
-              severity="CRITICAL"
-              icon={<ShieldX size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-          </>
+      {/* ── KPI Grid (Grouped by Severity) ───────────────────── */}
+      <View className="flex-col gap-6 mt-2">
+        
+        {/* CRITICAL SECTION */}
+        {criticalCards.length > 0 && (
+          <View className="flex-col gap-3">
+            <View className="flex-row items-center justify-between border-b border-rose-900/50 pb-2">
+              <View className="flex-row items-center gap-2">
+                <View className="w-6 h-6 rounded-md bg-rose-600/20 border border-rose-500/30 items-center justify-center">
+                  <ShieldX size={14} color={THEME_COLORS.dangerIcon} />
+                </View>
+                <Text className="text-sm font-black text-rose-400 tracking-widest uppercase">Critical</Text>
+              </View>
+              <Text className="text-xs font-bold text-rose-500 bg-rose-950/40 px-2 py-0.5 rounded-full">
+                {totalCriticalFindings.toLocaleString()} Findings
+              </Text>
+            </View>
+            <View className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {criticalCards.map(c => (
+                <ContactQualityCard
+                  key={c.issueCode}
+                  title={c.title}
+                  count={c.count}
+                  issueCode={c.issueCode}
+                  description={c.description}
+                  severity={c.severity}
+                  unitLabel={c.unitLabel}
+                  icon={c.icon}
+                />
+              ))}
+            </View>
+          </View>
         )}
 
-        {/* === SECTION 2: Address & Location Quality === */}
-        {(activeCategory === "ALL" || activeCategory === "ADDRESSES") && (
-          <>
-            <ContactQualityCard
-              title="Missing Postal Code"
-              count={summary.addr_missing_postal_code}
-              issueCode="MISSING_POSTAL_CODE"
-              description="Addresses with street/city but no PIN code"
-              severity="WARNING"
-              icon={<MapPinOff size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Invalid PIN Format"
-              count={summary.addr_invalid_pin_format}
-              issueCode="INVALID_PIN_CODE_FORMAT"
-              description="Postal code with non-numeric or bad length"
-              severity="CRITICAL"
-              icon={<MapPinOff size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Street Without City"
-              count={summary.addr_street_without_city}
-              issueCode="STREET_WITHOUT_CITY"
-              description="Street address present but city name is blank"
-              severity="WARNING"
-              icon={<Compass size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="City Without State"
-              count={summary.addr_city_without_state}
-              issueCode="CITY_WITHOUT_STATE"
-              description="City address without state region specified"
-              severity="WARNING"
-              icon={<Compass size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Missing Geocodes"
-              count={summary.addr_missing_geocodes}
-              issueCode="MISSING_GEOCODES"
-              description="Addresses lacking Latitude/Longitude coordinates"
-              severity="INFO"
-              icon={<NavigationOff size={13} color={THEME_COLORS.imIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Duplicate Address"
-              count={summary.addr_duplicate_same_person}
-              issueCode="DUPLICATE_ADDRESSES_SAME_PERSON"
-              description="Identical address entered twice for 1 Person"
-              severity="WARNING"
-              icon={<Copy size={13} color={THEME_COLORS.warningIcon} />}
-            />
-          </>
+        {/* WARNING SECTION */}
+        {warningCards.length > 0 && (
+          <View className="flex-col gap-3">
+            <View className="flex-row items-center justify-between border-b border-amber-900/50 pb-2">
+              <View className="flex-row items-center gap-2">
+                <View className="w-6 h-6 rounded-md bg-amber-600/20 border border-amber-500/30 items-center justify-center">
+                  <AlertTriangle size={14} color={THEME_COLORS.warningIcon} />
+                </View>
+                <Text className="text-sm font-black text-amber-400 tracking-widest uppercase">Warning</Text>
+              </View>
+              <Text className="text-xs font-bold text-amber-500 bg-amber-950/40 px-2 py-0.5 rounded-full">
+                {totalWarningFindings.toLocaleString()} Findings
+              </Text>
+            </View>
+            <View className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {warningCards.map(c => (
+                <ContactQualityCard
+                  key={c.issueCode}
+                  title={c.title}
+                  count={c.count}
+                  issueCode={c.issueCode}
+                  description={c.description}
+                  severity={c.severity}
+                  unitLabel={c.unitLabel}
+                  icon={c.icon}
+                />
+              ))}
+            </View>
+          </View>
         )}
 
-        {/* === SECTION 3: Profile & Chronological Integrity === */}
-        {(activeCategory === "ALL" || activeCategory === "INTEGRITY") && (
-          <>
-            <ContactQualityCard
-              title="Anniversary Before Birth"
-              count={summary.person_anniversary_before_birth}
-              issueCode="ANNIVERSARY_BEFORE_BIRTH"
-              description="Anniversary date earlier than birth date"
-              severity="CRITICAL"
-              icon={<CalendarX size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Invalid Birth Date"
-              count={summary.person_invalid_birth_date}
-              issueCode="INVALID_BIRTH_DATE"
-              description="Birth date in the future or before 1900"
-              severity="CRITICAL"
-              icon={<CalendarOff size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Dummy/Ancient DOB"
-              count={summary.person_birth_date_ancient}
-              issueCode="BIRTH_DATE_DEFAULT_OR_ANCIENT"
-              description="Birth date is dummy 1900-01-01 or age > 100"
-              severity="WARNING"
-              icon={<CalendarOff size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Suspicious Test Names"
-              count={summary.person_suspicious_dummy_names}
-              issueCode="SUSPICIOUS_DUMMY_NAMES"
-              description="Placeholder names (test, admin, dummy, etc.)"
-              severity="WARNING"
-              icon={<UserX size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Missing Last Name"
-              count={summary.person_missing_lastname_only}
-              issueCode="MISSING_LAST_NAME"
-              description="Person has first name but missing surname"
-              severity="WARNING"
-              icon={<FileWarning size={13} color={THEME_COLORS.warningIcon} />}
-            />
-          </>
+        {/* INFO SECTION */}
+        {infoCards.length > 0 && (
+          <View className="flex-col gap-3">
+            <View className="flex-row items-center justify-between border-b border-blue-900/50 pb-2">
+              <View className="flex-row items-center gap-2">
+                <View className="w-6 h-6 rounded-md bg-blue-600/20 border border-blue-500/30 items-center justify-center">
+                  <AlertCircle size={14} color={THEME_COLORS.primaryIcon} />
+                </View>
+                <Text className="text-sm font-black text-blue-400 tracking-widest uppercase">Info</Text>
+              </View>
+              <Text className="text-xs font-bold text-blue-500 bg-blue-950/40 px-2 py-0.5 rounded-full">
+                {summary.total_info_findings?.toLocaleString() || infoCards.reduce((acc, c) => acc + c.count, 0).toLocaleString()} Findings
+              </Text>
+            </View>
+            <View className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {infoCards.map(c => (
+                <ContactQualityCard
+                  key={c.issueCode}
+                  title={c.title}
+                  count={c.count}
+                  issueCode={c.issueCode}
+                  description={c.description}
+                  severity={c.severity}
+                  unitLabel={c.unitLabel}
+                  icon={c.icon}
+                />
+              ))}
+            </View>
+          </View>
         )}
 
-        {/* === SECTION 4: Governance, Employment & Links === */}
-        {(activeCategory === "ALL" || activeCategory === "GOVERNANCE") && (
-          <>
-            <ContactQualityCard
-              title="Active & Deleted Conflict"
-              count={summary.status_active_and_deleted}
-              issueCode="STATUS_ACTIVE_AND_DELETED"
-              description="Record marked both Active and Deleted"
-              severity="CRITICAL"
-              icon={<ShieldAlert size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Employee Missing Title"
-              count={summary.active_emp_missing_title}
-              issueCode="ACTIVE_EMP_MISSING_TITLE"
-              description="Active employee has no job title designation"
-              severity="WARNING"
-              icon={<FileWarning size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Inactive with EmpID (Info)"
-              count={summary.inactive_with_empid}
-              issueCode="INACTIVE_WITH_ACTIVE_EMPID"
-              description="Informational: Inactive records retaining employee ID (excluded from active score)"
-              severity="INFO"
-              icon={<AlertCircle size={13} color={THEME_COLORS.textMuted} />}
-            />
-
-            <ContactQualityCard
-              title="Stale Temp Persons"
-              count={summary.stale_temp_persons}
-              issueCode="STALE_TEMP_PERSONS"
-              description="Temporary person record older than 90 days"
-              severity="WARNING"
-              icon={<Clock size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Unapproved Blacklist"
-              count={summary.blacklist_unapproved}
-              issueCode="BLACKLIST_UNAPPROVED"
-              description="Blacklist flag active without HOD approval"
-              severity="CRITICAL"
-              icon={<ShieldAlert size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Missing Blacklist Details"
-              count={summary.blacklist_missing_details}
-              issueCode="BLACKLIST_MISSING_DETAILS"
-              description="Blacklist record missing date or type"
-              severity="CRITICAL"
-              icon={<FileWarning size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Orphan Company Link"
-              count={summary.company_orphan_links}
-              issueCode="ORPHAN_COMPANY_LINK"
-              description="Link references non-existent company ID"
-              severity="CRITICAL"
-              icon={<Building2 size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Duplicate Company Link"
-              count={summary.company_duplicate_links}
-              issueCode="DUPLICATE_COMPANY_LINKS"
-              description="Same company linked $>1$ times to Person"
-              severity="WARNING"
-              icon={<Copy size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Company Missing Role"
-              count={summary.company_missing_role}
-              issueCode="COMPANY_MISSING_ROLE"
-              description="Company affiliation without role definition"
-              severity="WARNING"
-              icon={<Building2 size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Orphan Extra Field"
-              count={summary.extra_field_orphan_id}
-              issueCode="EXTRA_FIELD_ORPHAN_ID"
-              description="Custom field with invalid schema definition"
-              severity="CRITICAL"
-              icon={<Sliders size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Duplicate Extra Fields"
-              count={summary.extra_field_duplicate_entries}
-              issueCode="DUPLICATE_EXTRA_FIELDS"
-              description="Duplicate custom field entries for 1 Person"
-              severity="WARNING"
-              icon={<Sliders size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Missing Deletion Date"
-              count={summary.deleted_missing_del_date}
-              issueCode="DELETED_MISSING_TIMESTAMP"
-              description="Deleted person missing deletion timestamp"
-              severity="WARNING"
-              icon={<Clock size={13} color={THEME_COLORS.warningIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Deletion Before Creation"
-              count={summary.audit_del_before_ent}
-              issueCode="AUDIT_DEL_BEFORE_ENT"
-              description="Deletion date is earlier than creation date"
-              severity="CRITICAL"
-              icon={<Clock size={13} color={THEME_COLORS.dangerIcon} />}
-            />
-
-            <ContactQualityCard
-              title="Broken Zimbra Sync"
-              count={summary.sync_zimbra_missing_id}
-              issueCode="SYNC_ZIMBRA_MISSING_ID"
-              description="Sync enabled but missing Zimbra ID"
-              severity="WARNING"
-              icon={<RefreshCw size={13} color={THEME_COLORS.warningIcon} />}
-            />
-          </>
-        )}
       </View>
     </View>
   );
