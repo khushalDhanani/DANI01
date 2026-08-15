@@ -1,77 +1,145 @@
-# AIRIS Insights — Backend Agent Instructions
+# AIRIS Insights — Repository Agent Instructions
 
-These rules apply to `backend/`.
+This is the shared instruction entry point for the AIRIS Insights monorepo.
 
-Read the repository root [`AGENTS.md`](../AGENTS.md) first. This file contains
-backend-specific requirements.
+These rules apply everywhere. Before modifying code inside `backend/` or
+`frontend/`, also read that folder's `AGENTS.md`.
 
-## Backend Scope
+## Project Overview
 
-The backend is a Python 3.12+ FastAPI application that safely analyzes an
-existing production Microsoft SQL Server database.
+AIRIS Insights is a database intelligence and data-quality platform for safely
+discovering, profiling, classifying, and analyzing an existing Microsoft SQL
+Server database.
 
-The backend also owns AIRIS's internal persistence, analysis orchestration,
-exports, and Celery background work.
+The repository contains:
 
-## Source of Truth
+- `backend/` — Python/FastAPI analysis API, MSSQL discovery/profiling,
+  data-quality logic, persistence, exports, and background jobs.
+- `frontend/` — Expo/React Native/TypeScript application for web and native
+  interfaces over the backend APIs.
 
-Before editing:
+The source MSSQL database is production data and is always **READ ONLY**.
 
-- inspect the filesystem and existing implementation;
-- treat `pyproject.toml` / `uv.lock` as dependency sources of truth;
-- treat `app/core/config.py` as the source of truth for runtime defaults;
-- treat FastAPI/Pydantic models and actual routes as the API contract;
-- do not preserve stale documentation assumptions over working code.
-
-The application entry point is `app.main:app`.
-
-Do not add production application behavior to the legacy root `main.py` unless
-the project intentionally changes its entry-point strategy.
-
-## Current Backend Structure
+## Repository Structure
 
 ```text
-backend/
-├── app/
-│   ├── analysis/
-│   ├── api/
-│   │   └── routes/
-│   ├── classification/
-│   ├── core/
-│   ├── db/
-│   ├── discovery/
-│   ├── models/
-│   ├── modules/
-│   │   ├── definitions/
-│   │   └── person/
-│   ├── persistence/
-│   ├── profiling/
-│   ├── repositories/
-│   ├── sampling/
-│   ├── schemas/
-│   ├── workers/
-│   └── main.py
-├── migrations/
-├── tests/
-├── .env.example
-├── alembic.ini
-├── docker-compose.yml
-├── Dockerfile
-├── pyproject.toml
-└── uv.lock
+/
+├── AGENTS.md
+├── README.md
+├── backend/
+│   ├── AGENTS.md
+│   ├── README.md
+│   ├── app/
+│   │   ├── analysis/
+│   │   ├── api/
+│   │   ├── classification/
+│   │   ├── core/
+│   │   ├── db/
+│   │   ├── discovery/
+│   │   ├── models/
+│   │   ├── modules/
+│   │   ├── persistence/
+│   │   ├── profiling/
+│   │   ├── repositories/
+│   │   ├── sampling/
+│   │   ├── schemas/
+│   │   └── workers/
+│   ├── migrations/
+│   └── tests/
+└── frontend/
+    ├── AGENTS.md
+    ├── CLAUDE.md
+    ├── README.md
+    ├── app/
+    └── src/
 ```
 
-This is descriptive, not permission to invent missing modules. Verify the
-filesystem before creating or referencing anything.
+This tree is a guide, not a substitute for inspecting the filesystem. Never
+invent a file, route, export, schema, table, field, or component because a
+document implies it exists.
 
-# 1. Non-Negotiable MSSQL Read-Only Rule
+## Instruction Precedence
 
-The source Microsoft SQL Server database is production data.
+1. This root `AGENTS.md` applies repository-wide.
+2. `backend/AGENTS.md` applies to backend work.
+3. `frontend/AGENTS.md` applies to frontend work.
+4. A more specific nested instruction may refine a general rule.
+5. If documentation and code disagree about current structure or versions,
+   inspect the code/configuration and treat executable configuration as the
+   source of truth.
 
-**Never modify it.**
+## Shared Engineering Rules
 
-Do not execute source MSSQL statements containing mutation/DDL operations such
-as:
+### 1. Inspect Before Editing
+
+Before changing code:
+
+- read the existing implementation;
+- locate all consumers of the behavior being changed;
+- verify current types, schemas, routes, hooks, services, and exports;
+- search for an existing abstraction before creating another one;
+- inspect nearby tests;
+- inspect configuration rather than duplicating constants.
+
+Do not implement from assumptions.
+
+### 2. Keep Changes Focused
+
+Prefer the smallest reliable change that fits the existing architecture.
+
+Do not:
+
+- refactor unrelated working code;
+- rename unrelated files;
+- reorganize directories without a concrete need;
+- introduce speculative abstractions;
+- add infrastructure because it may be useful later.
+
+### 3. Preserve Layer Boundaries
+
+Keep responsibilities separated.
+
+Typical flow:
+
+```text
+Frontend route/view
+    ↓
+Frontend query hook
+    ↓
+Frontend API module
+    ↓
+FastAPI route
+    ↓
+Service / analysis / domain logic
+    ↓
+Repository / discovery / DB layer
+```
+
+Route and entry-point files should remain thin. Business logic belongs in the
+appropriate service/domain/feature layer.
+
+### 4. Backend and Frontend Contracts Must Stay Synchronized
+
+An API contract change is a cross-layer change.
+
+When request/response behavior changes, inspect and update as required:
+
+- backend Pydantic schemas;
+- backend routes/services;
+- frontend TypeScript request/response types;
+- frontend API modules;
+- TanStack Query hooks;
+- consuming screens/components;
+- tests and exports.
+
+Do not make one side silently compensate for a broken or outdated contract on
+the other side. Fix the contract at its source.
+
+### 5. Source MSSQL Is Read Only
+
+Never introduce a source-database mutation path.
+
+Forbidden against the source MSSQL database include:
 
 - `INSERT`
 - `UPDATE`
@@ -82,475 +150,141 @@ as:
 - `DROP`
 - `CREATE`
 
-Do not create temporary/business tables in the source database.
+Do not add frontend actions, API endpoints, scripts, migrations, jobs, or tests
+that mutate source MSSQL.
 
-Do not execute stored procedures unless they have been explicitly verified to
-be read-only.
+AIRIS internal persistence is separate and may be writable.
 
-All source MSSQL access must go through the project's read-only execution path
-and safety guard.
+### 6. Treat Source Data as Sensitive
 
-Use least-privilege/read-only MSSQL credentials whenever possible. Application
-guards are a second safety layer, not a replacement for database permissions.
+Assume source rows can contain PII or other sensitive information.
 
-## Values Must Be Parameterized
+Do not:
 
-Never interpolate user/data values directly into SQL strings.
+- commit secrets or populated `.env` files;
+- log passwords or credentials;
+- log connection strings containing passwords;
+- dump large source records to logs;
+- expose raw PII when a summary/masked value is sufficient;
+- add debugging output containing sensitive production values.
 
-Use SQLAlchemy/text parameters for values.
+### 7. Design for Large Data
 
-## Identifiers Require Separate Validation
+Never assume the database, table, API result, or UI list is small.
 
-SQL identifiers such as schema, table, and column names cannot be treated like
-normal bind values.
+Prefer:
 
-When dynamic identifiers are necessary:
+- metadata queries;
+- bounded queries;
+- configurable sampling;
+- pagination;
+- server-side aggregation;
+- limited concurrency;
+- virtualization for large UI lists;
+- transferring only the data required for the operation.
 
-- obtain them from trusted discovery metadata or a validated allowlist;
-- validate them before interpolation;
-- schema-qualify objects where appropriate;
-- quote identifiers safely for SQL Server;
-- never insert arbitrary client-provided identifier text directly into SQL.
+Never compute authoritative totals from a partial page.
 
-# 2. Source MSSQL vs AIRIS Internal Persistence
+### 8. Keep Business Definitions Centralized
 
-These are separate systems.
+Data-quality and integrity rules are domain contracts.
 
-### Source MSSQL
+For each business rule or issue type—such as qualifying email, missing phone,
+duplicate identity, active/deleted status, invalid contact, or severity—there
+must be one canonical backend definition.
 
-- production data;
-- read-only;
-- discovery/profiling/analysis source.
+The following must not independently reimplement the same rule:
 
-### AIRIS Persistence
+- dashboard KPIs;
+- summary counts;
+- drill-down totals;
+- drill-down item queries;
+- CSV/Excel exports;
+- background analysis;
+- frontend displays.
 
-- SQLite by default for local development;
-- PostgreSQL in Docker/production-style setups;
-- stores AIRIS-owned state/results.
+If multiple surfaces answer the same business question, they must reuse the same
+predicate/service/domain definition.
 
-Alembic migrations may modify **only AIRIS internal persistence**.
+### 9. Count, List, Summary, and Export Must Agree
 
-Never point Alembic migrations, schema creation, or destructive migration
-operations at the production source MSSQL database.
+For a paginated issue or quality endpoint:
 
-# 3. Backend Architecture
+- the `total` query and item query must use the same qualification logic;
+- joins and active/deleted filters must remain consistent;
+- exports must reuse the same business predicate as the API/UI;
+- a frontend must not derive the total from the current page;
+- issue codes and severity semantics must not be reinterpreted independently by
+  different screens.
 
-## `api/`
+A mismatch between KPI, drill-down, and export is a correctness bug.
 
-FastAPI transport layer only.
+### 10. Keep Types and Contracts Explicit
 
-Responsible for:
+Use typed, explicit models whenever the structure is known.
 
-- request parsing;
-- validation;
-- dependency resolution;
-- calling application/domain services;
-- mapping expected exceptions;
-- returning typed responses.
+Do not weaken type/lint rules or return arbitrary untyped structures merely to
+make code pass.
 
-Do not place SQL or substantial business analysis logic in route functions.
+### 11. Dependencies Require Justification
 
-## `core/`
+Before adding a dependency:
 
-Application-wide infrastructure:
+1. Check whether the existing stack already solves the problem.
+2. Confirm compatibility with the affected runtime.
+3. Prefer existing project patterns when reasonable.
+4. Add new infrastructure/frameworks only for a concrete requirement.
 
-- settings;
-- logging;
-- exceptions;
-- constants/lifecycle.
-
-Use `pydantic-settings` for environment-backed configuration.
-
-## `db/`
-
-Database connectivity and low-level execution.
-
-`db/mssql.py` owns MSSQL connectivity/read-only execution concerns.
-
-Do not place domain-quality rules in DB connection modules.
-
-Internal persistence connection/session management belongs in the internal DB
-layer.
-
-## `discovery/`
-
-Database structure discovery:
-
-- schemas;
-- tables;
-- columns;
-- primary/foreign keys;
-- indexes;
-- estimated counts;
-- relationships.
-
-Prefer SQL Server catalog/system metadata over expensive data scans.
-
-## `sampling/`
-
-Bounded sampling strategies.
-
-Sampling sizes and thresholds must come from configuration, not duplicated
-magic numbers.
-
-## `profiling/`
-
-Column/table profiling and statistics.
-
-Use SQL Server for efficient simple aggregates where appropriate and Polars for
-bounded Python-side profiling.
-
-Never automatically load an entire large table into Python.
-
-## `classification/`
-
-Semantic/data classification logic.
-
-Keep classification rules deterministic and testable. Do not mix them into API
-routes or UI-oriented formatting.
-
-## `analysis/`
-
-Coordinates analysis workflows.
-
-Analysis/domain code must not depend on FastAPI transport details.
-
-Keep background execution adapters separate from core analysis behavior so the
-same logic can be invoked and tested without Celery.
-
-## `repositories/`
-
-Data-access boundary for reusable source/internal DB queries where appropriate.
-
-Do not duplicate the same domain query across unrelated services.
-
-## `modules/`
-
-Domain-specific analysis modules.
-
-A module should own its domain rules and expose reusable services/predicates
-rather than duplicating SQL in routes, summaries, and exports.
-
-## `persistence/` / `models/`
-
-AIRIS-owned persistence and data models.
-
-Keep source MSSQL models/concepts separate from AIRIS internal result storage.
-
-## `workers/`
-
-Celery/background execution adapters.
-
-Workers should call reusable analysis/services; they should not become a second
-copy of business logic.
-
-# 4. Canonical Data-Quality Rules
-
-This is a critical project invariant.
-
-Each data-quality/business definition must have **one canonical backend
-implementation**.
-
-Examples:
-
-- qualifying email;
-- missing email;
-- qualifying phone;
-- invalid contact;
-- duplicate identity/contact;
-- active/deleted person;
-- issue severity;
-- issue code/meaning.
-
-Do not independently rewrite a qualifying predicate for:
-
-- dashboard summary KPIs;
-- issue count endpoints;
-- issue drill-down item queries;
-- analysis results;
-- CSV export;
-- Excel export;
-- summary export;
-- worker tasks.
-
-Prefer a shared service, reusable SQL fragment/builder, domain predicate, or
-repository method appropriate to the architecture.
-
-A change to the definition must update one source of truth and all consumers
-must inherit the new behavior.
-
-# 5. Count / List / Export Consistency
-
-For every paginated issue endpoint:
-
-- `total` and `items` must use the same qualification predicate;
-- all required joins must be equivalent;
-- active/deleted filters must be equivalent;
-- null/empty normalization must be equivalent;
-- export rows must use the same qualification definition;
-- summary KPIs must represent the same business meaning.
-
-Never:
-
-- derive total from `len(current_page)`;
-- use a looser predicate for export;
-- use a stricter predicate for the dashboard;
-- copy/paste similar SQL and assume it will remain synchronized.
-
-Add regression tests whenever a bug is caused by count/list/export divergence.
-
-# 6. Data Scale & MSSQL Performance
-
-The production database is large. Never assume a table is small.
-
-Before expensive work, prefer to know:
-
-- estimated row count;
-- column count;
-- indexes/primary key;
-- table size when practical.
-
-Do not run unrestricted:
-
-```sql
-SELECT *
-FROM SomeLargeTable;
-```
-
-Use a controlled bound or configured sampling strategy.
-
-## Runtime Limits
-
-`app/core/config.py` is the source of truth for:
-
-- MSSQL pool size;
-- MSSQL max overflow;
-- query timeout;
-- profile sample limits;
-- analysis sample sizes;
-- table-size thresholds;
-- maximum concurrent table analysis;
-- Celery timeout/concurrency.
-
-Do not duplicate these values as hard-coded constants in services or docs.
-
-Minimize data transferred from MSSQL into Python.
-
-# 7. Celery / Background Jobs
-
-Celery and Redis are active backend infrastructure.
-
-Background tasks must:
-
-- call reusable application/domain logic;
-- honor configured task time limits;
-- honor configured worker/concurrency limits;
-- avoid unbounded MSSQL fan-out;
-- be retry/idempotency-aware where retries are possible;
-- not leave AIRIS internal analysis state inconsistent after failure;
-- never weaken source MSSQL read-only protections.
-
-Do not increase worker concurrency merely to make analysis appear faster without
-considering source DB load.
-
-# 8. Configuration
-
-Configuration belongs in environment variables and Pydantic Settings.
-
-Never hard-code secrets.
-
-When adding or renaming an environment-backed setting:
-
-1. update `app/core/config.py`;
-2. update `backend/.env.example`;
-3. update Docker/Compose environment wiring if applicable;
-4. update documentation if developers must configure it;
-5. update tests for meaningful behavior.
-
-Do not commit populated `.env` files.
-
-# 9. API Conventions
-
-Use versioned routes under:
-
-```text
-/api/v1/...
-```
-
-Current top-level areas are registered for:
-
-- health;
-- database;
-- analysis;
-- analysis runs;
-- domain modules.
-
-Use Pydantic models for stable request/response contracts.
-
-Routes call services/domain code; they do not perform analysis directly.
-
-When changing a response shape, remember the root cross-layer rule: inspect and
-update frontend types and consumers in the same change when necessary.
-
-# 10. Errors
+### 12. Errors Must Be Visible
 
 Do not silently swallow failures.
 
-Avoid:
+Handle errors at the correct layer and surface useful structured error states.
+Avoid broad `except Exception: pass` behavior and equivalent frontend failure
+suppression.
 
-```python
-try:
-    ...
-except Exception:
-    pass
-```
+### 13. Configuration Is a Source of Truth
 
-Use project exceptions where appropriate and preserve actionable context.
+Do not copy tunable runtime values into business logic or documentation when
+they already exist in configuration.
 
-One table failing during a multi-table analysis should be isolated when the
-workflow can safely continue, but the failure must still be visible in status,
-logs, or result metadata.
+When a new environment-backed setting is added, update the relevant
+`.env.example` in the same change unless there is a documented reason not to.
 
-Do not expose secrets or raw sensitive database values in client-facing error
-messages.
+### 14. Validate the Whole Change
 
-# 11. Logging
+A change is not complete because one edited file looks correct.
 
-Use structured/useful logging context where applicable, such as:
+Run the relevant backend/frontend validation from the nested `AGENTS.md` files.
+For cross-layer changes, validate both sides.
 
-- request ID;
-- analysis run ID;
-- database/schema/table;
-- operation;
-- duration;
-- row/sample count.
+## Repository-Wide Do / Don't
 
-Never log:
+### Do
 
-- passwords;
-- secrets;
-- credential-bearing connection strings;
-- large source payloads;
-- unnecessary PII.
+- inspect first;
+- reuse existing architecture;
+- keep changes narrow;
+- centralize business rules;
+- synchronize API contracts;
+- design for large datasets;
+- protect source MSSQL;
+- protect sensitive data;
+- run relevant validation.
 
-Do not log full destructive-query text if doing so could leak sensitive values;
-log enough context to diagnose the blocked operation safely.
+### Don't
 
-# 12. Python Standards
+- invent project structure or data;
+- duplicate data-quality predicates;
+- mutate source MSSQL;
+- compute totals from partial pages;
+- hard-code secrets or backend URLs;
+- add unexplained dependencies;
+- bypass type/lint/safety rules;
+- hide errors;
+- refactor unrelated code.
 
-Use:
+## Folder-Specific Instructions
 
-- type hints;
-- small focused functions/classes;
-- descriptive names;
-- Pydantic models for API contracts;
-- dependency injection where it improves testability;
-- parameterized SQL;
-- async only where it provides real value.
-
-Avoid:
-
-- giant service classes;
-- global mutable state;
-- generic dumping-ground `utils.py`;
-- duplicated SQL;
-- hidden side effects;
-- business logic in routes;
-- arbitrary dicts when a known typed structure is appropriate.
-
-# 13. Exports
-
-CSV/Excel exports are another representation of domain results, not a separate
-business-rule implementation.
-
-Exports must:
-
-- reuse the same qualification logic as API/UI results;
-- respect sensitive-data requirements;
-- use bounded/streaming/chunked strategies when result size is large;
-- avoid loading unnecessarily large result sets into memory;
-- preserve stable column meanings.
-
-# 14. Testing
-
-Use `pytest`.
-
-All test/experimental test files belong under `backend/tests/`. Do not create
-one-off `test_*.py` files at backend root.
-
-Tests should cover affected behavior, especially:
-
-- configuration;
-- read-only SQL protection;
-- MSSQL connection/error handling;
-- discovery;
-- sampling;
-- profiling/classification;
-- API contracts;
-- analysis orchestration;
-- data-quality predicates;
-- KPI/count/list/export consistency;
-- background-job behavior where relevant.
-
-Critical safety tests must prove mutation SQL is rejected.
-
-Never run destructive tests against production MSSQL.
-
-Use mocks/fixtures or an explicitly safe test database for tests that require DB
-behavior.
-
-# 15. Development Commands
-
-Install:
-
-```bash
-uv sync
-```
-
-Run API:
-
-```bash
-uv run uvicorn app.main:app --reload
-```
-
-Tests:
-
-```bash
-uv run pytest
-```
-
-Lint:
-
-```bash
-uv run ruff check .
-```
-
-Formatting check:
-
-```bash
-uv run ruff format --check .
-```
-
-Format:
-
-```bash
-uv run ruff format .
-```
-
-# 16. Backend Definition of Done
-
-A backend change is complete only when relevant items below are satisfied:
-
-- [ ] source MSSQL read-only guarantees are preserved;
-- [ ] no unbounded query/table scan was introduced;
-- [ ] runtime limits come from configuration where applicable;
-- [ ] data-quality rules have one canonical implementation;
-- [ ] KPI/count/list/export paths remain consistent;
-- [ ] request/response contracts are typed;
-- [ ] `.env.example` is synchronized for new settings;
-- [ ] migrations target only AIRIS internal persistence;
-- [ ] affected tests pass;
-- [ ] `uv run ruff check .` passes;
-- [ ] formatting is valid;
-- [ ] frontend consumers were updated if the API contract changed;
-- [ ] no secrets or unnecessary PII are logged/exposed.
+- [Backend instructions](backend/AGENTS.md)
+- [Frontend instructions](frontend/AGENTS.md)
