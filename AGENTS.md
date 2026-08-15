@@ -1,41 +1,42 @@
 # AIRIS Insights — Repository Agent Instructions
 
-This is the shared instruction file for the AIRIS Insights monorepo.
+This is the shared instruction entry point for the AIRIS Insights monorepo.
 
-These rules apply to all work in this repository. Before modifying code inside
-`backend/` or `frontend/`, also read that folder's `AGENTS.md` because it contains
-implementation-specific rules for that part of the system.
+These rules apply everywhere. Before modifying code inside `backend/` or
+`frontend/`, also read that folder's `AGENTS.md`.
 
 ## Project Overview
 
-AIRIS Insights is a database intelligence and data-quality platform built around
-an existing Microsoft SQL Server database.
+AIRIS Insights is a database intelligence and data-quality platform for safely
+discovering, profiling, classifying, and analyzing an existing Microsoft SQL
+Server database.
 
-The application has two main parts:
+The repository contains:
 
-- `backend/` — Python/FastAPI services for database discovery, profiling,
-  analysis, data-quality evaluation, persistence, exports, and background work.
-- `frontend/` — Expo / React Native / TypeScript application for web and native
+- `backend/` — Python/FastAPI analysis API, MSSQL discovery/profiling,
+  data-quality logic, persistence, exports, and background jobs.
+- `frontend/` — Expo/React Native/TypeScript application for web and native
   interfaces over the backend APIs.
 
-The source MSSQL database contains a large production dataset and must be treated
-as **read only**.
+The source MSSQL database is production data and is always **READ ONLY**.
 
 ## Repository Structure
 
 ```text
 /
-├── AGENTS.md                  # Shared repository-wide rules
-│
+├── AGENTS.md
+├── README.md
 ├── backend/
-│   ├── AGENTS.md              # Backend-specific rules
+│   ├── AGENTS.md
+│   ├── README.md
 │   ├── app/
-│   │   ├── api/
 │   │   ├── analysis/
+│   │   ├── api/
 │   │   ├── classification/
 │   │   ├── core/
 │   │   ├── db/
 │   │   ├── discovery/
+│   │   ├── models/
 │   │   ├── modules/
 │   │   ├── persistence/
 │   │   ├── profiling/
@@ -45,271 +46,245 @@ as **read only**.
 │   │   └── workers/
 │   ├── migrations/
 │   └── tests/
-│
 └── frontend/
-    ├── AGENTS.md              # Frontend-specific rules
-    ├── app/                   # Expo Router route entry points
-    ├── src/
-    │   ├── api/
-    │   ├── components/
-    │   ├── constants/
-    │   ├── features/
-    │   ├── hooks/
-    │   ├── lib/
-    │   ├── providers/
-    │   ├── schemas/
-    │   ├── store/
-    │   ├── types/
-    │   └── utils/
-    └── assets/
+    ├── AGENTS.md
+    ├── CLAUDE.md
+    ├── README.md
+    ├── app/
+    └── src/
 ```
 
-## Technology Overview
-
-### Backend
-
-- Python 3.12+
-- FastAPI
-- Pydantic
-- SQLAlchemy / pyodbc
-- Microsoft SQL Server
-- Polars / NumPy
-- PostgreSQL for AIRIS Insights internal persistence
-- Alembic
-- Celery / Redis where background processing is required
-- pytest
-- Ruff
-- `uv` for Python dependency management
-
-See [`backend/AGENTS.md`](backend/AGENTS.md) for backend architecture,
-database-safety, testing, and SQL rules.
-
-### Frontend
-
-- Expo / React Native
-- Expo Router
-- TypeScript
-- NativeWind / Tailwind
-- TanStack Query
-- Axios
-- Zustand
-- Zod
-
-See [`frontend/AGENTS.md`](frontend/AGENTS.md) for frontend data-flow,
-state-management, styling, responsiveness, typing, and Expo rules.
+This tree is a guide, not a substitute for inspecting the filesystem. Never
+invent a file, route, export, schema, table, field, or component because a
+document implies it exists.
 
 ## Instruction Precedence
 
-1. This root `AGENTS.md` applies everywhere.
-2. When working in `backend/`, also follow `backend/AGENTS.md`.
-3. When working in `frontend/`, also follow `frontend/AGENTS.md`.
-4. More specific folder instructions override general guidance if there is a
-   genuine conflict.
-
-Never work from the root instructions alone when modifying backend or frontend
-implementation details.
+1. This root `AGENTS.md` applies repository-wide.
+2. `backend/AGENTS.md` applies to backend work.
+3. `frontend/AGENTS.md` applies to frontend work.
+4. A more specific nested instruction may refine a general rule.
+5. If documentation and code disagree about current structure or versions,
+   inspect the code/configuration and treat executable configuration as the
+   source of truth.
 
 ## Shared Engineering Rules
 
 ### 1. Inspect Before Editing
 
-Read the existing implementation before changing it.
+Before changing code:
 
-Verify:
+- read the existing implementation;
+- locate all consumers of the behavior being changed;
+- verify current types, schemas, routes, hooks, services, and exports;
+- search for an existing abstraction before creating another one;
+- inspect nearby tests;
+- inspect configuration rather than duplicating constants.
 
-- files and directories actually exist;
-- existing exports, interfaces, functions, hooks, services, and components;
-- current API contracts;
-- nearby conventions and patterns;
-- whether an existing module already solves the problem.
+Do not implement from assumptions.
 
-Do not invent files, APIs, database fields, exports, data, or architecture based
-on assumptions.
-
-### 2. Make Focused Changes
-
-Keep changes limited to the requested problem.
-
-Do not:
-
-- reorganize unrelated working code;
-- perform opportunistic refactors;
-- rename unrelated files;
-- rewrite working modules merely because another design is possible;
-- introduce architectural changes without a concrete requirement.
+### 2. Keep Changes Focused
 
 Prefer the smallest reliable change that fits the existing architecture.
 
-### 3. Reuse Existing Architecture
+Do not:
 
-Extend existing modules and established patterns before creating parallel
-abstractions.
+- refactor unrelated working code;
+- rename unrelated files;
+- reorganize directories without a concrete need;
+- introduce speculative abstractions;
+- add infrastructure because it may be useful later.
 
-Maintain separation of responsibilities between:
+### 3. Preserve Layer Boundaries
 
-- route / transport layers;
-- application and domain logic;
-- data-access layers;
-- API clients;
-- state-management layers;
-- presentation components.
+Keep responsibilities separated.
 
-Entry-point and route files should stay thin. Business logic belongs in the
-appropriate domain/service/feature layer.
+Typical flow:
 
-Refer to the nested `AGENTS.md` for the exact backend and frontend dependency
-flow.
+```text
+Frontend route/view
+    ↓
+Frontend query hook
+    ↓
+Frontend API module
+    ↓
+FastAPI route
+    ↓
+Service / analysis / domain logic
+    ↓
+Repository / discovery / DB layer
+```
 
-### 4. Preserve Backend/Frontend Contracts
+Route and entry-point files should remain thin. Business logic belongs in the
+appropriate service/domain/feature layer.
 
-The frontend and backend are one system.
+### 4. Backend and Frontend Contracts Must Stay Synchronized
 
-When changing an API contract:
+An API contract change is a cross-layer change.
 
-- update the backend request/response model;
-- update the corresponding frontend TypeScript type;
-- update the API module and consuming hooks/components where required;
-- update affected tests;
-- verify all consumers before considering the change complete.
+When request/response behavior changes, inspect and update as required:
 
-Do not silently make the frontend compensate for an incorrect backend contract,
-or the backend compensate for an incorrect frontend assumption.
+- backend Pydantic schemas;
+- backend routes/services;
+- frontend TypeScript request/response types;
+- frontend API modules;
+- TanStack Query hooks;
+- consuming screens/components;
+- tests and exports.
 
-Prefer fixing the contract at its source.
+Do not make one side silently compensate for a broken or outdated contract on
+the other side. Fix the contract at its source.
 
 ### 5. Source MSSQL Is Read Only
 
-The existing source Microsoft SQL Server database is production data.
+Never introduce a source-database mutation path.
 
-No feature on either side of the application may introduce source-database
-mutation.
+Forbidden against the source MSSQL database include:
 
-Do not design frontend actions, backend endpoints, scripts, migrations, tests,
-or utilities that modify the source MSSQL database unless an explicit project
-requirement changes this invariant.
+- `INSERT`
+- `UPDATE`
+- `DELETE`
+- `MERGE`
+- `TRUNCATE`
+- `ALTER`
+- `DROP`
+- `CREATE`
 
-Backend-specific SQL enforcement rules are defined in `backend/AGENTS.md`.
+Do not add frontend actions, API endpoints, scripts, migrations, jobs, or tests
+that mutate source MSSQL.
+
+AIRIS internal persistence is separate and may be writable.
 
 ### 6. Treat Source Data as Sensitive
 
-Assume database records may contain PII or other sensitive information.
+Assume source rows can contain PII or other sensitive information.
 
 Do not:
 
-- expose raw sensitive values unnecessarily;
-- log passwords, credentials, connection strings, or secrets;
-- log large source-data payloads;
-- add debugging output containing sensitive records;
-- commit real credentials or `.env` files containing secrets.
+- commit secrets or populated `.env` files;
+- log passwords or credentials;
+- log connection strings containing passwords;
+- dump large source records to logs;
+- expose raw PII when a summary/masked value is sufficient;
+- add debugging output containing sensitive production values.
 
-Use environment configuration and the project's existing masking/privacy
-utilities where appropriate.
+### 7. Design for Large Data
 
-### 7. Respect Data Scale
-
-This system analyzes hundreds of database tables and potentially very large
-datasets.
-
-Never assume data is small.
+Never assume the database, table, API result, or UI list is small.
 
 Prefer:
 
-- pagination;
-- sampling;
+- metadata queries;
 - bounded queries;
-- server-side counts/aggregations;
-- virtualization where appropriate;
-- explicit limits.
+- configurable sampling;
+- pagination;
+- server-side aggregation;
+- limited concurrency;
+- virtualization for large UI lists;
+- transferring only the data required for the operation.
 
-Avoid loading, transferring, or rendering entire large datasets when a bounded
-operation can solve the problem.
+Never compute authoritative totals from a partial page.
 
-Backend query rules and frontend rendering rules are defined in their respective
-`AGENTS.md` files.
+### 8. Keep Business Definitions Centralized
 
-### 8. Keep Contracts and Types Explicit
+Data-quality and integrity rules are domain contracts.
 
-Use explicit, typed data contracts.
+For each business rule or issue type—such as qualifying email, missing phone,
+duplicate identity, active/deleted status, invalid contact, or severity—there
+must be one canonical backend definition.
 
-Avoid loosely structured data when the shape is known.
+The following must not independently reimplement the same rule:
 
-Backend API models and frontend TypeScript interfaces must remain aligned.
+- dashboard KPIs;
+- summary counts;
+- drill-down totals;
+- drill-down item queries;
+- CSV/Excel exports;
+- background analysis;
+- frontend displays.
 
-Do not bypass the project's type-safety mechanisms to make an error disappear.
-Fix the underlying contract or implementation instead.
+If multiple surfaces answer the same business question, they must reuse the same
+predicate/service/domain definition.
 
-### 9. Avoid Catch-All Code
+### 9. Count, List, Summary, and Export Must Agree
 
-Prefer small, focused modules with clear responsibilities.
+For a paginated issue or quality endpoint:
 
-Do not create generic dumping grounds such as oversized `utils` modules,
-god-services, mega-components, or unrelated helper collections.
+- the `total` query and item query must use the same qualification logic;
+- joins and active/deleted filters must remain consistent;
+- exports must reuse the same business predicate as the API/UI;
+- a frontend must not derive the total from the current page;
+- issue codes and severity semantics must not be reinterpreted independently by
+  different screens.
 
-Place logic in the narrowest appropriate domain/module.
+A mismatch between KPI, drill-down, and export is a correctness bug.
 
-### 10. Dependencies Require Justification
+### 10. Keep Types and Contracts Explicit
+
+Use typed, explicit models whenever the structure is known.
+
+Do not weaken type/lint rules or return arbitrary untyped structures merely to
+make code pass.
+
+### 11. Dependencies Require Justification
 
 Before adding a dependency:
 
-1. Check whether the existing stack already provides the capability.
-2. Confirm that the dependency is compatible with the affected runtime.
-3. Prefer a small implementation with existing dependencies when reasonable.
-4. Add a new framework, service, or infrastructure component only when there is
-   a concrete requirement.
+1. Check whether the existing stack already solves the problem.
+2. Confirm compatibility with the affected runtime.
+3. Prefer existing project patterns when reasonable.
+4. Add new infrastructure/frameworks only for a concrete requirement.
 
-Do not introduce technology solely because it may be useful later.
+### 12. Errors Must Be Visible
 
-### 11. Handle Errors Explicitly
+Do not silently swallow failures.
 
-Do not silently hide operational failures.
+Handle errors at the correct layer and surface useful structured error states.
+Avoid broad `except Exception: pass` behavior and equivalent frontend failure
+suppression.
 
-Errors should be handled at the correct layer and surfaced in a useful,
-structured way.
+### 13. Configuration Is a Source of Truth
 
-Frontend data views must represent failure states appropriately.
+Do not copy tunable runtime values into business logic or documentation when
+they already exist in configuration.
 
-Backend failures must be logged and handled according to the backend-specific
-rules.
+When a new environment-backed setting is added, update the relevant
+`.env.example` in the same change unless there is a documented reason not to.
 
-### 12. Tests and Validation Are Part of the Change
+### 14. Validate the Whole Change
 
-Changes are not complete merely because the edited code looks correct.
+A change is not complete because one edited file looks correct.
 
-Run the checks appropriate to the modified side of the repository.
+Run the relevant backend/frontend validation from the nested `AGENTS.md` files.
+For cross-layer changes, validate both sides.
 
-For backend commands and required tests, see `backend/AGENTS.md`.
-
-For frontend type-checking, linting, Expo validation, and UI requirements, see
-`frontend/AGENTS.md`.
-
-Add or update tests for meaningful behavior changes and avoid regressions in
-unrelated functionality.
-
-## Repository-Wide Do / Don't Summary
+## Repository-Wide Do / Don't
 
 ### Do
 
-- Inspect existing code before editing.
-- Reuse existing modules and conventions.
-- Keep changes narrow and task-focused.
-- Respect frontend/backend boundaries.
-- Keep API contracts synchronized.
-- Preserve source-MSSQL read-only guarantees.
-- Treat production data as sensitive.
-- Design for large datasets.
-- Keep types/contracts explicit.
-- Run relevant validation before completion.
-- Prefer simple, maintainable solutions.
+- inspect first;
+- reuse existing architecture;
+- keep changes narrow;
+- centralize business rules;
+- synchronize API contracts;
+- design for large datasets;
+- protect source MSSQL;
+- protect sensitive data;
+- run relevant validation.
 
 ### Don't
 
-- Invent project structure or backend data.
-- Refactor unrelated working code.
-- Bypass established architectural layers.
-- Mutate the source MSSQL database.
-- Hard-code credentials, secrets, or environment-specific URLs.
-- Log sensitive source records.
-- Load or render unbounded datasets.
-- Create catch-all utility modules or oversized components/services.
-- Add dependencies or infrastructure without a clear requirement.
-- Disable type, lint, safety, or validation rules merely to make code pass.
+- invent project structure or data;
+- duplicate data-quality predicates;
+- mutate source MSSQL;
+- compute totals from partial pages;
+- hard-code secrets or backend URLs;
+- add unexplained dependencies;
+- bypass type/lint/safety rules;
+- hide errors;
+- refactor unrelated code.
+
+## Folder-Specific Instructions
+
+- [Backend instructions](backend/AGENTS.md)
+- [Frontend instructions](frontend/AGENTS.md)

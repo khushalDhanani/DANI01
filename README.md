@@ -1,157 +1,120 @@
 # AIRIS Insights
 
-**AIRIS Insights** is a read-only database intelligence and data-quality platform for exploring, profiling, classifying, and analyzing large Microsoft SQL Server databases.
+AIRIS Insights is a read-only database intelligence and data-quality platform
+for exploring, profiling, classifying, and analyzing an existing Microsoft SQL
+Server database.
 
-It combines a **FastAPI backend** with an **Expo / React Native frontend** and is designed to analyze production MSSQL data safely without modifying the source database.
+It combines a **FastAPI/Python backend** with an **Expo/React Native/TypeScript
+frontend** and keeps AIRIS's own persistence separate from the production MSSQL
+source.
 
-> [!IMPORTANT]
-> The source Microsoft SQL Server database is **READ ONLY**. Source-data mutation (`INSERT`, `UPDATE`, `DELETE`, `MERGE`, `TRUNCATE`, `ALTER`, `DROP`, `CREATE`, etc.) is not allowed.
+> **Source MSSQL is READ ONLY.** AIRIS must never mutate the production source
+> database.
 
 ## Core Capabilities
 
-* MSSQL connection and health checks
-* Schema, table, column, key, index, and relationship discovery
-* Safe, bounded sampling for large tables
-* Table and column profiling
-* Null, empty, distinct, range, length, and common-value analysis
-* Semantic/data classification
-* Analysis orchestration and run persistence
-* Domain-specific analysis modules
-* Data-quality dashboards and issue views
-* Database/table explorer
-* Responsive web, iOS, and Android frontend
+- MSSQL connectivity and health checks
+- schema/table/column/key/index discovery
+- safe table sampling
+- table and column profiling
+- semantic classification
+- analysis orchestration and persisted analysis runs
+- domain/data-quality modules
+- issue summaries, drill-downs, and exports
+- responsive web/native dashboards and database explorer
+- Celery/Redis background processing
 
 ## Architecture
 
 ```text
-┌───────────────────────────────────────────────────────────┐
-│                 Expo / React Native                       │
-│ Routes → Feature Views → Query Hooks → API Modules        │
-└───────────────────────────┬───────────────────────────────┘
-                            │ HTTP / JSON
-                            ▼
-┌───────────────────────────────────────────────────────────┐
-│                       FastAPI                             │
-│ API Routes → Analysis / Services → Repositories           │
-└───────────────────┬───────────────────────┬───────────────┘
-                    │                       │
-                    ▼                       ▼
-        Microsoft SQL Server       SQLite / PostgreSQL
-        Production Source          AIRIS Internal Data
-             READ ONLY
-                                            │
-                                            ▼
-                                      Redis / Celery
-                                      Background Jobs
+Expo / React Native
+Routes → Feature Views → Query Hooks → API Modules
+                         │
+                         ▼
+                    FastAPI /api/v1
+Routes → Services / Analysis / Domain Logic → Repositories
+                         │
+            ┌────────────┴────────────┐
+            ▼                         ▼
+      MSSQL Source             AIRIS Persistence
+       READ ONLY              SQLite / PostgreSQL
+                                      │
+                                      ▼
+                                 Redis / Celery
 ```
-
-AIRIS separates the production source database from its own internal persistence:
-
-| Database             | Purpose                                 | Write Access       |
-| -------------------- | --------------------------------------- | ------------------ |
-| Microsoft SQL Server | Existing production data being analyzed | **No — read only** |
-| SQLite / PostgreSQL  | AIRIS analysis state/results            | Yes                |
-
-Local backend development defaults to SQLite for AIRIS internal persistence. Docker-based development uses PostgreSQL.
 
 ## Repository Structure
 
 ```text
 DANI01/
-├── AGENTS.md                  # Shared engineering/agent rules
+├── AGENTS.md
 ├── README.md
-│
 ├── backend/
-│   ├── AGENTS.md              # Backend-specific rules
+│   ├── AGENTS.md
+│   ├── README.md
 │   ├── app/
-│   │   ├── analysis/
-│   │   ├── api/
-│   │   ├── classification/
-│   │   ├── core/
-│   │   ├── db/
-│   │   ├── discovery/
-│   │   ├── models/
-│   │   ├── modules/
-│   │   ├── persistence/
-│   │   ├── profiling/
-│   │   ├── repositories/
-│   │   ├── sampling/
-│   │   ├── schemas/
-│   │   └── workers/
 │   ├── migrations/
 │   ├── tests/
 │   ├── docker-compose.yml
 │   ├── Dockerfile
 │   ├── pyproject.toml
 │   └── uv.lock
-│
 └── frontend/
-    ├── AGENTS.md              # Frontend-specific rules
-    ├── app/                   # Expo Router entries
+    ├── AGENTS.md
+    ├── CLAUDE.md
+    ├── README.md
+    ├── app/
     ├── src/
-    │   ├── api/
-    │   ├── components/
-    │   ├── constants/
-    │   ├── features/
-    │   ├── hooks/
-    │   ├── lib/
-    │   ├── providers/
-    │   ├── schemas/
-    │   ├── store/
-    │   ├── types/
-    │   └── utils/
-    ├── app.json
     ├── package.json
-    └── tsconfig.json
+    └── package-lock.json
 ```
 
 ## Tech Stack
 
 ### Backend
 
-* Python 3.12+
-* FastAPI
-* Pydantic v2 / pydantic-settings
-* SQLAlchemy 2.x
-* pyodbc + Microsoft ODBC Driver 18
-* Polars / NumPy
-* SQLite (default local internal persistence)
-* PostgreSQL
-* Alembic
-* Celery / Redis
-* pytest / Ruff
-* `uv`
-* Docker / Docker Compose
+- Python 3.12+
+- FastAPI
+- Pydantic / pydantic-settings
+- SQLAlchemy
+- pyodbc + Microsoft ODBC Driver 18
+- Polars / NumPy
+- SQLite for default local AIRIS persistence
+- PostgreSQL for Docker/production-style AIRIS persistence
+- Alembic
+- Celery / Redis
+- openpyxl
+- pytest / Ruff
+- `uv`
 
 ### Frontend
 
-* Expo 57
-* React 19 / React Native
-* Expo Router
-* TypeScript
-* NativeWind / Tailwind CSS
-* TanStack Query
-* Axios
-* Zustand
-* Zod
-* React Hook Form
-* Lucide React Native
+- Expo 57
+- React 19 / React Native
+- Expo Router
+- TypeScript
+- NativeWind / Tailwind CSS
+- TanStack Query
+- Axios
+- Zustand
+- Zod
+- React Hook Form
+- Lucide React Native
 
-# Getting Started
+Exact dependency versions are defined by `backend/pyproject.toml`,
+`backend/uv.lock`, `frontend/package.json`, and `frontend/package-lock.json`.
+
+# Quick Start
 
 ## Prerequisites
 
-Install:
-
-* Git
-* Python 3.12+
-* [`uv`](https://docs.astral.sh/uv/)
-* Node.js + npm
-* Microsoft ODBC Driver 18 for SQL Server
-* Access to the target SQL Server
-* Docker, if using the full backend stack
-
-Redis is also required when running Celery/background jobs outside Docker.
+- Git
+- Python 3.12+
+- `uv`
+- Node.js + npm
+- Microsoft ODBC Driver 18 for SQL Server
+- network access and read-only credentials for the target MSSQL database
+- Docker if using the full backend stack
 
 ## 1. Clone
 
@@ -160,113 +123,77 @@ git clone https://github.com/khushalDhanani/DANI01.git
 cd DANI01
 ```
 
-# Backend
-
-## 2. Configure
+## 2. Backend
 
 ```bash
 cd backend
 cp .env.example .env
-```
-
-Set the MSSQL connection:
-
-```env
-APP_NAME="AIRIS Insights"
-APP_ENV=development
-APP_DEBUG=true
-
-MSSQL_HOST=your-sql-server-host
-MSSQL_PORT=1433
-MSSQL_DATABASE=your-database
-MSSQL_USERNAME=your-username
-MSSQL_PASSWORD=your-password
-MSSQL_DRIVER="ODBC Driver 18 for SQL Server"
-
-MSSQL_POOL_SIZE=5
-MSSQL_MAX_OVERFLOW=2
-MSSQL_QUERY_TIMEOUT=30
-```
-
-Never commit real credentials or the populated `.env`.
-
-The backend defaults to these internal services for local development:
-
-```env
-POSTGRES_URL=sqlite:///./dbinsights.db
-REDIS_URL=redis://localhost:6379/0
-```
-
-Despite the variable name `POSTGRES_URL`, the local default is SQLite.
-
-## 3. Install
-
-```bash
 uv sync
-```
-
-## 4. Run
-
-```bash
 uv run uvicorn app.main:app --reload
 ```
 
-Backend:
+Configure MSSQL values in `backend/.env`:
+
+```env
+MSSQL_HOST=
+MSSQL_PORT=1433
+MSSQL_DATABASE=
+MSSQL_USERNAME=
+MSSQL_PASSWORD=
+MSSQL_DRIVER="ODBC Driver 18 for SQL Server"
+```
+
+The backend defaults to SQLite for AIRIS's local internal persistence:
+
+```text
+sqlite:///./dbinsights.db
+```
+
+The API runs at:
 
 ```text
 http://localhost:8000
 ```
 
-Swagger/OpenAPI UI:
+Swagger UI:
 
 ```text
 http://localhost:8000/docs
 ```
 
-OpenAPI schema:
+### Docker backend stack
 
-```text
-http://localhost:8000/openapi.json
-```
-
-## Docker Backend
-
-The included Compose stack runs:
-
-* PostgreSQL
-* Redis
-* FastAPI
-* Celery worker
-
-Configure `backend/.env`, then:
+From `backend/`:
 
 ```bash
 docker compose up --build
 ```
 
-Stop:
+The compose stack includes:
+
+- PostgreSQL
+- Redis
+- FastAPI
+- Celery worker
+
+Stop it with:
 
 ```bash
 docker compose down
 ```
 
-Remove local Docker persistence as well:
+Use `docker compose down -v` only when you intentionally want to remove the
+local AIRIS PostgreSQL development volume.
 
-```bash
-docker compose down -v
-```
-
-> `docker compose down -v` removes AIRIS's local PostgreSQL development volume. It does not modify the source MSSQL database.
-
-# Frontend
-
-## 5. Configure
+## 3. Frontend
 
 In another terminal:
 
 ```bash
 cd frontend
 cp .env.example .env
+npm install
+npm run start
 ```
 
 Web / iOS simulator:
@@ -287,20 +214,6 @@ Physical device on the same LAN:
 EXPO_PUBLIC_API_URL=http://<YOUR_LAN_IP>:8000/api/v1
 ```
 
-Do not hard-code backend URLs in screens or components.
-
-## 6. Install
-
-```bash
-npm install
-```
-
-## 7. Run
-
-```bash
-npm run start
-```
-
 Specific targets:
 
 ```bash
@@ -309,81 +222,52 @@ npm run android
 npm run ios
 ```
 
-# API Overview
+# API
 
-The API is versioned under:
+The application API is versioned under:
 
 ```text
 /api/v1
 ```
 
-Current top-level route areas include:
+Top-level route areas currently include:
 
-| Area          | Prefix                  | Purpose                          |
-| ------------- | ----------------------- | -------------------------------- |
-| Health        | `/api/v1/health`        | Application/database health      |
-| Database      | `/api/v1/database`      | Database discovery and metadata  |
-| Analysis      | `/api/v1/analysis`      | Analysis operations              |
-| Analysis Runs | `/api/v1/analysis-runs` | Analysis workflow/run state      |
-| Modules       | `/api/v1/...`           | Domain-specific analysis modules |
+- `/api/v1/health`
+- `/api/v1/database`
+- `/api/v1/analysis`
+- `/api/v1/analysis-runs`
+- domain/module routes under `/api/v1/...`
 
-Use `/docs` as the source of truth for exact endpoints and request/response schemas.
+Use `/docs` as the source of truth for the exact current endpoint contracts.
 
-# Frontend Data Flow
+# Development Validation
 
-Server data follows this path:
+## Backend
 
-```text
-Expo Route / Screen
-        ↓
-TanStack Query Hook
-        ↓
-API Domain Module
-        ↓
-Shared Axios Client
-        ↓
-FastAPI /api/v1/...
+```bash
+cd backend
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
 ```
 
-Frontend conventions:
+## Frontend
 
-* Screens do not call Axios directly.
-* API URLs are centralized.
-* TanStack Query owns server state.
-* Zustand is used for client/UI state only.
-* Loading, error, empty, and success states are handled.
-* API contracts are typed in `src/types/`.
-* Route files remain thin.
-* Large datasets are paginated or virtualized.
-
-# Large-Database Safety
-
-AIRIS is built for a production database containing hundreds of tables. Never assume a table is small.
-
-Prefer:
-
-* metadata/catalog queries
-* estimated counts where appropriate
-* bounded queries
-* configurable sampling
-* server-side aggregates
-* pagination
-* conservative connection pools
-* limited concurrency
-* transferring only required data to Python
-
-Avoid unrestricted queries such as:
-
-```sql
-SELECT *
-FROM HugeTable;
+```bash
+cd frontend
+npm run typecheck
+npm run lint
+npm run build:web
 ```
 
-Use an explicit bound or sampling strategy.
+`npm run build:web` is especially important when a change affects routing,
+bundling, shared configuration, or web rendering.
 
-## MSSQL Read-Only Rule
+# Data Safety
 
-The source MSSQL connection must never execute mutation operations such as:
+## Source MSSQL
+
+Forbidden against source MSSQL:
 
 ```text
 INSERT
@@ -396,130 +280,39 @@ DROP
 CREATE
 ```
 
-Stored procedures must not be executed unless they are explicitly verified as read-only.
+Use read-only database credentials whenever possible in addition to application
+guards.
 
-Use parameterized queries whenever values are involved.
+For large datasets:
 
-# Development Commands
+- prefer catalog/metadata queries;
+- use bounded queries and configured sampling;
+- paginate list endpoints;
+- limit MSSQL concurrency;
+- avoid unrestricted full-table reads;
+- transfer only necessary data into Python.
 
-## Backend
+## Data-Quality Consistency
 
-```bash
-cd backend
+A business/data-quality definition must have one canonical backend
+implementation.
 
-uv run pytest
-uv run ruff check .
-uv run ruff format .
-uv run uvicorn app.main:app --reload
-```
+Dashboard KPI, total count, paginated drill-down, CSV export, Excel export, and
+other summaries must not implement slightly different versions of the same
+predicate.
 
-## Frontend
+If those surfaces disagree, treat it as a correctness defect.
 
-```bash
-cd frontend
+# Engineering Instructions
 
-npm run typecheck
-npm run lint
-npm run start
-npm run build:web
-```
+Read [AGENTS.md](AGENTS.md) before modifying the repository.
 
-# Environment Variables
+Then read the relevant nested file:
 
-## Backend
+- [backend/AGENTS.md](backend/AGENTS.md)
+- [frontend/AGENTS.md](frontend/AGENTS.md)
 
-| Variable              | Default                         | Purpose                       |
-| --------------------- | ------------------------------- | ----------------------------- |
-| `APP_NAME`            | `AIRIS Insights`                | Application name              |
-| `APP_ENV`             | `development`                   | Runtime environment           |
-| `APP_DEBUG`           | `true`                          | Debug mode                    |
-| `MSSQL_HOST`          | empty                           | SQL Server host               |
-| `MSSQL_PORT`          | `1433`                          | SQL Server port               |
-| `MSSQL_DATABASE`      | empty                           | Source database               |
-| `MSSQL_USERNAME`      | empty                           | Source DB user                |
-| `MSSQL_PASSWORD`      | empty                           | Source DB password            |
-| `MSSQL_DRIVER`        | `ODBC Driver 18 for SQL Server` | ODBC driver                   |
-| `MSSQL_POOL_SIZE`     | `5`                             | MSSQL pool size               |
-| `MSSQL_MAX_OVERFLOW`  | `2`                             | Additional pooled connections |
-| `MSSQL_QUERY_TIMEOUT` | `30`                            | Query timeout                 |
-| `POSTGRES_URL`        | `sqlite:///./dbinsights.db`     | AIRIS internal persistence    |
-| `REDIS_URL`           | `redis://localhost:6379/0`      | Redis/Celery connection       |
+# Subproject Documentation
 
-Additional sampling and analysis settings live in `backend/app/core/config.py`.
-
-## Frontend
-
-| Variable              | Purpose                    |
-| --------------------- | -------------------------- |
-| `EXPO_PUBLIC_API_URL` | FastAPI `/api/v1` base URL |
-
-`EXPO_PUBLIC_*` variables are bundled into the frontend. Never place secrets in them.
-
-# Security
-
-The source database may contain PII or other sensitive data.
-
-Do not:
-
-* commit credentials or populated `.env` files;
-* log passwords or connection strings;
-* log large source-data payloads;
-* expose raw PII without a deliberate requirement;
-* add source-database mutation paths;
-* perform unrestricted production table scans.
-
-Use least-privilege/read-only MSSQL credentials whenever possible.
-
-# Engineering Rules
-
-Repository-wide instructions:
-
-```text
-AGENTS.md
-```
-
-Implementation-specific instructions:
-
-```text
-backend/AGENTS.md
-frontend/AGENTS.md
-```
-
-Core principles:
-
-1. Inspect existing code before editing.
-2. Keep changes focused.
-3. Reuse existing architecture.
-4. Keep backend/frontend contracts synchronized.
-5. Never mutate source MSSQL.
-6. Treat source data as sensitive.
-7. Design every data operation for scale.
-8. Keep types/contracts explicit.
-9. Avoid unnecessary dependencies.
-10. Run relevant tests, linting, and type checks.
-
-# Development Status
-
-AIRIS Insights is under active development around this core pipeline:
-
-```text
-Connect safely
-      ↓
-Discover database structure
-      ↓
-Inspect metadata
-      ↓
-Sample safely
-      ↓
-Profile and classify
-      ↓
-Run data-quality/domain analysis
-      ↓
-Persist structured results
-      ↓
-Present findings in the frontend
-```
-
-New functionality should extend this pipeline without bypassing its safety, data-volume, or architecture boundaries.
-
-## Repository
+- [Backend README](backend/README.md)
+- [Frontend README](frontend/README.md)

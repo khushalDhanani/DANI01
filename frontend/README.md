@@ -1,56 +1,182 @@
-# Welcome to your Expo app 👋
+# AIRIS Insights Frontend
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo/React Native frontend for AIRIS Insights.
 
-## Get started
+The application provides responsive web/native interfaces for database
+discovery, profiling, analysis, data-quality modules, and persisted analysis
+runs exposed by the FastAPI backend.
 
-1. Install dependencies
+## Stack
 
-   ```bash
-   npm install
-   ```
+- Expo 57
+- Expo Router
+- React 19 / React Native
+- TypeScript
+- NativeWind / Tailwind CSS
+- TanStack Query
+- Axios
+- Zustand
+- Zod
+- React Hook Form
+- Lucide React Native
 
-2. Start the app
+Exact versions are defined by `package.json` and `package-lock.json`.
 
-   ```bash
-   npx expo start
-   ```
+## Structure
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+frontend/
+├── app/
+│   ├── _layout.tsx
+│   └── (shell)/
+│       ├── _layout.tsx
+│       ├── index.tsx
+│       ├── analysis/
+│       ├── database/
+│       ├── daylite/
+│       └── modules/
+├── src/
+│   ├── api/
+│   ├── components/
+│   ├── constants/
+│   ├── features/
+│   ├── hooks/
+│   ├── lib/
+│   ├── providers/
+│   ├── schemas/
+│   ├── store/
+│   ├── types/
+│   └── utils/
+├── .env.example
+├── package.json
+└── tsconfig.json
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Always inspect the current filesystem before relying on this summary.
 
-### Other setup steps
+## Setup
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+cp .env.example .env
+npm install
+```
 
-## Learn more
+Configure the backend API URL.
 
-To learn more about developing your project with Expo, look at the following resources:
+### Web / iOS Simulator
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```env
+EXPO_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
 
-## Join the community
+### Android Emulator
 
-Join our community of developers creating universal apps.
+```env
+EXPO_PUBLIC_API_URL=http://10.0.2.2:8000/api/v1
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Physical Device
+
+```env
+EXPO_PUBLIC_API_URL=http://<YOUR_LAN_IP>:8000/api/v1
+```
+
+`EXPO_PUBLIC_*` values are bundled into the client. Never store secrets in
+frontend environment variables.
+
+## Run
+
+```bash
+npm run start
+```
+
+Targets:
+
+```bash
+npm run web
+npm run android
+npm run ios
+```
+
+## Data Flow
+
+Server state follows:
+
+```text
+Route / Feature View
+        ↓
+TanStack Query Hook
+        ↓
+API Module
+        ↓
+Shared Axios Client
+        ↓
+FastAPI /api/v1
+```
+
+Important conventions:
+
+- routes/screens do not call Axios directly;
+- TanStack Query owns server state;
+- Zustand owns UI/client state only;
+- API contracts are typed;
+- query keys are centralized;
+- backend URLs are centralized;
+- loading/error/empty/success states are handled;
+- large lists are paginated or virtualized.
+
+## Data-Quality Semantics
+
+The frontend must display the backend's canonical business definitions.
+
+Do not independently recalculate data-quality qualification rules, authoritative
+totals, or issue severity.
+
+For example, if a backend issue is `critical`, `warning`, or `info`, the
+frontend should consistently map that semantic value to the design system
+instead of deriving severity differently on each screen.
+
+## Validation
+
+```bash
+npm run typecheck
+npm run lint
+```
+
+For web-impacting changes:
+
+```bash
+npm run build:web
+```
+
+To verify runtime startup:
+
+```bash
+npm run start
+```
+
+There is currently no dedicated frontend unit-test script in `package.json`.
+Do not assume a test framework exists.
+
+## Responsive / Accessibility Expectations
+
+The app targets mobile, tablet, and web.
+
+- use established breakpoint/layout utilities;
+- avoid fixed mobile-only dimensions;
+- virtualize large lists;
+- add labels/roles to icon-only interactive controls where needed;
+- do not rely on color alone for status/severity;
+- preserve keyboard usability on web.
+
+## Agent Instructions
+
+Read:
+
+1. [`../AGENTS.md`](../AGENTS.md)
+2. [`AGENTS.md`](AGENTS.md)
+
+before modifying frontend code.
+
+`CLAUDE.md` intentionally redirects to `AGENTS.md` so instructions remain
+single-source.

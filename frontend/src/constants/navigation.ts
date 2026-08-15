@@ -20,11 +20,19 @@ export interface NavItem {
 }
 
 export interface NavGroup {
+  id: string;
   label: string;
   icon: LucideIcon;
   href?: string;
   defaultExpanded?: boolean;
   children: NavItem[];
+}
+
+export interface NavSection {
+  id: string;
+  title: string;
+  items?: NavItem[];
+  groups?: NavGroup[];
 }
 
 export const PLATFORM_NAV_ITEMS: NavItem[] = [
@@ -49,6 +57,7 @@ export const PLATFORM_NAV_ITEMS: NavItem[] = [
 ];
 
 export const DAYLITE_NAV_GROUP: NavGroup = {
+  id: "daylite",
   label: "Day Lite",
   icon: Sparkles,
   href: "/daylite",
@@ -67,8 +76,27 @@ export const DAYLITE_NAV_GROUP: NavGroup = {
       description: "Person Directory & Profiles",
       badge: "LIVE",
     },
+    {
+      label: "PR Campaign",
+      href: "/daylite/campaign",
+      icon: Users,
+      description: "PR Campaign",
+    },
   ],
 };
+
+export const NAV_SECTIONS: NavSection[] = [
+  {
+    id: "platform",
+    title: "Database Platform",
+    items: PLATFORM_NAV_ITEMS,
+  },
+  {
+    id: "analytics",
+    title: "Data Analytics",
+    groups: [DAYLITE_NAV_GROUP],
+  },
+];
 
 /** Flat array for backward compatibility */
 export const NAV_ITEMS: NavItem[] = [
