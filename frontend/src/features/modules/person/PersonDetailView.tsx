@@ -7,18 +7,28 @@ import {
   AlertTriangle,
   ArrowLeft,
   Building2,
+  Calendar,
   CheckCircle2,
+  ChevronLeft,
   Clock,
+  Edit2,
   FileText,
   HeartHandshake,
+  Link as LinkIcon,
   Mail,
   MapPin,
   MessageSquare,
+  MoreVertical,
   Phone,
+  Settings,
+  Share2,
   Shield,
   Sliders,
+  Sparkles,
   User,
   UserCheck,
+  UserPlus,
+  Users,
 } from "lucide-react-native";
 import { usePersonDetail } from "@/hooks/useModules";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -54,22 +64,22 @@ export const PersonDetailView: React.FC<PersonDetailViewProps> = ({ personId }) 
   const person = detail?.person;
   const fullName = person
     ? [
-        person.PersonPrefix,
-        person.PersonFirstName,
-        person.PersonMiddleName,
-        person.PersonLastName,
-        person.PersonSuffix,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim() || `Person #${person.PersonID}`
+      person.PersonPrefix,
+      person.PersonFirstName,
+      person.PersonMiddleName,
+      person.PersonLastName,
+      person.PersonSuffix,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || `Person #${person.PersonID}`
     : `Person #${personId}`;
 
   const initials = person
     ? [person.PersonFirstName?.[0], person.PersonLastName?.[0]]
-        .filter(Boolean)
-        .join("")
-        .toUpperCase() || "P"
+      .filter(Boolean)
+      .join("")
+      .toUpperCase() || "P"
     : "P";
 
   const subtitle = person
@@ -225,6 +235,45 @@ export const PersonDetailView: React.FC<PersonDetailViewProps> = ({ personId }) 
                   {subtitle}
                 </Text>
               ) : null}
+
+              <View className="flex-row items-center gap-2 mt-2 flex-wrap">
+                {/* Contact Owner */}
+                {person.PersonEntUser && (
+                  <View className="flex-row items-center gap-1.5 bg-emerald-950/50 border border-emerald-800 px-3 py-1 rounded-full shadow-sm">
+                    <UserCheck size={12} color={THEME_COLORS.successIcon || "#10b981"} />
+                    <Text className="text-[11px] font-bold text-emerald-300 tracking-wide uppercase">
+                      Contact Owner: {person.PersonEntUser}
+                    </Text>
+                  </View>
+                )}
+
+                {/* PR Grade */}
+                {person.PRClassName && (
+                  <View className="flex-row items-center gap-1.5 bg-pink-950/50 border border-pink-800 px-3 py-1 rounded-full shadow-sm">
+                    <Sparkles size={12} color="#f472b6" />
+                    <Text className="text-[11px] font-bold text-pink-300 tracking-wide uppercase">
+                      PR Grade: {person.PRClassName}
+                    </Text>
+                  </View>
+                )}
+
+                {/* PR Owner */}
+                {person.OwnerName ? (
+                  <View className="flex-row items-center gap-1.5 bg-indigo-950/50 border border-indigo-800 px-3 py-1 rounded-full shadow-sm">
+                    <UserCheck size={12} color={THEME_COLORS.ownerIcon} />
+                    <Text className="text-[11px] font-bold text-indigo-300 tracking-wide uppercase">
+                      PR Owner: {person.OwnerName}
+                    </Text>
+                  </View>
+                ) : (
+                  <View className="flex-row items-center gap-1.5 bg-slate-800/80 border border-slate-700 px-3 py-1 rounded-full shadow-sm">
+                    <UserCheck size={12} color={THEME_COLORS.textMuted} />
+                    <Text className="text-[11px] font-bold text-slate-400 tracking-wide uppercase">
+                      Unassigned PR Owner
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
 
@@ -250,16 +299,14 @@ export const PersonDetailView: React.FC<PersonDetailViewProps> = ({ personId }) 
               onPress={() => setActiveTab(t.id)}
               accessibilityRole="tab"
               accessibilityState={{ selected: active }}
-              className={`flex-row items-center gap-1.5 px-3.5 py-2.5 border-b-2 transition-all ${
-                active
+              className={`flex-row items-center gap-1.5 px-3.5 py-2.5 border-b-2 transition-all ${active
                   ? "border-blue-500 bg-blue-500/10"
                   : "border-transparent hover:bg-slate-800/40"
-              }`}
+                }`}
             >
               <Text
-                className={`text-xs font-semibold ${
-                  active ? "text-white font-bold" : "text-slate-400"
-                }`}
+                className={`text-xs font-semibold ${active ? "text-white font-bold" : "text-slate-400"
+                  }`}
               >
                 {t.label}
               </Text>
@@ -692,8 +739,8 @@ export const PersonDetailView: React.FC<PersonDetailViewProps> = ({ personId }) 
                     person.PersonIsVisitor_Contact === 1
                       ? "Visitor (1)"
                       : person.PersonIsVisitor_Contact === 2
-                      ? "Contact (2)"
-                      : null
+                        ? "Contact (2)"
+                        : null
                   }
                   type="badge"
                   badgeColor={person.PersonIsVisitor_Contact === 1 ? "indigo" : "blue"}

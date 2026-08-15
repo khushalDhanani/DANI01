@@ -50,6 +50,8 @@ class PersonRecordsService:
             params["search_pattern"] = f"%{clean_search}%"
             where_clauses.append(
                 "("
+                "CAST(p.PersonID AS varchar) LIKE :search_pattern OR "
+                "ISNULL(p.PersonFirstName, '') + ' ' + ISNULL(p.PersonLastName, '') LIKE :search_pattern OR "
                 "p.PersonFirstName LIKE :search_pattern OR "
                 "p.PersonLastName LIKE :search_pattern OR "
                 "p.PersonNickName LIKE :search_pattern OR "
@@ -58,7 +60,8 @@ class PersonRecordsService:
                 "EXISTS (SELECT 1 FROM dbo.DLPersonPhoneEmailURLDet c WHERE c.PersionID = p.PersonID AND c.TypeValue LIKE :search_pattern) OR "
                 "EXISTS (SELECT 1 FROM dbo.DLPersonAddressDet a WHERE a.PersonID = p.PersonID AND (a.CityName LIKE :search_pattern OR a.Street LIKE :search_pattern)) OR "
                 "EXISTS (SELECT 1 FROM dbo.DLPersonCompanyLinkDet l JOIN dbo.DLCompanyMst cmp ON l.DLCompID = cmp.DLCompID WHERE l.PersonID = p.PersonID AND cmp.DLCompName LIKE :search_pattern) OR "
-                "EXISTS (SELECT 1 FROM dbo.DLPersonMst o WHERE o.EmpID = p.PROwnerEmpID AND (o.PersonFirstName LIKE :search_pattern OR o.PersonLastName LIKE :search_pattern))"
+                "EXISTS (SELECT 1 FROM dbo.DLPersonMst o WHERE o.EmpID = p.PROwnerEmpID AND (ISNULL(o.PersonFirstName, '') + ' ' + ISNULL(o.PersonLastName, '') LIKE :search_pattern)) OR "
+                "EXISTS (SELECT TOP 1 1 FROM dbo.ChangeContactOwnershipTransaction t JOIN dbo.DLPersonMst o ON o.PersonID = t.NewPersonID WHERE t.PersonID = p.PersonID AND (ISNULL(o.PersonFirstName, '') + ' ' + ISNULL(o.PersonLastName, '') LIKE :search_pattern) ORDER BY t.EntDt DESC)"
                 ")"
             )
 
@@ -185,13 +188,31 @@ class PersonRecordsService:
             p.PersonIsVisitor_Contact,
             p.PersonIsShareContact,
             p.PersonEntDt,
+            p.PersonEntUser,
             p.PROwnerEmpID,
-            ISNULL(owner_p.PersonFirstName + ' ' + owner_p.PersonLastName, NULL) AS OwnerName,
+            COALESCE(
+                NULLIF(LTRIM(RTRIM(ISNULL(owner_p.PersonFirstName, '') + ' ' + ISNULL(owner_p.PersonLastName, ''))), ''),
+                (
+                    SELECT TOP 1 ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(new_p.PersonFirstName, '') + ' ' + ISNULL(new_p.PersonLastName, ''))), ''), 'Person #' + CAST(t.NewPersonID AS varchar))
+                    FROM dbo.ChangeContactOwnershipTransaction t
+                    LEFT JOIN dbo.DLPersonMst new_p ON new_p.PersonID = t.NewPersonID
+                    WHERE t.PersonID = p.PersonID
+                    ORDER BY t.EntDt DESC, t.ChangeOwnershipID DESC
+                )
+            ) AS OwnerName,
+            (
+                SELECT TOP 1 ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(new_p.PersonFirstName, '') + ' ' + ISNULL(new_p.PersonLastName, ''))), ''), 'Person #' + CAST(t.NewPersonID AS varchar))
+                FROM dbo.ChangeContactOwnershipTransaction t
+                LEFT JOIN dbo.DLPersonMst new_p ON new_p.PersonID = t.NewPersonID
+                WHERE t.PersonID = p.PersonID
+                ORDER BY t.EntDt DESC, t.ChangeOwnershipID DESC
+            ) AS FallbackOwnerName,
             (SELECT TOP 1 TypeValue FROM dbo.DLPersonPhoneEmailURLDet WHERE PersionID = p.PersonID AND TypeValue LIKE '%@%') AS PrimaryEmail,
             (SELECT TOP 1 TypeValue FROM dbo.DLPersonPhoneEmailURLDet WHERE PersionID = p.PersonID AND TypeValue NOT LIKE '%@%' AND TypeValue NOT LIKE 'http%' AND TypeValue NOT LIKE 'www%') AS PrimaryPhone,
             (SELECT TOP 1 CityName FROM dbo.DLPersonAddressDet WHERE PersonID = p.PersonID) AS CityName,
             (SELECT TOP 1 StateName FROM dbo.DLPersonAddressDet WHERE PersonID = p.PersonID) AS StateName,
             (SELECT TOP 1 c.DLCompName FROM dbo.DLPersonCompanyLinkDet l JOIN dbo.DLCompanyMst c ON l.DLCompID = c.DLCompID WHERE l.PersonID = p.PersonID) AS CompanyName,
+            (SELECT TOP 1 pr.PRClassName FROM dbo.PRClassMst pr WHERE pr.PRClassID = p.PRClassID) AS PRClassName,
             (SELECT COUNT_BIG(1) FROM dbo.DLPersonPhoneEmailURLDet WHERE PersionID = p.PersonID) AS ContactCount,
             (SELECT COUNT_BIG(1) FROM dbo.DLPersonAddressDet WHERE PersonID = p.PersonID) AS AddressCount,
             (SELECT COUNT_BIG(1) FROM dbo.DLPersonCompanyLinkDet WHERE PersonID = p.PersonID) AS CompanyCount,
@@ -204,6 +225,13 @@ class PersonRecordsService:
         """
 
         rows = execute_readonly_query(items_sql, params)
+        for r in rows:
+            if r.get("PROwnerEmpID") is None and r.get("FallbackOwnerName") is not None:
+                logger.warning(
+                    f"Data Integrity Issue: PersonID {r.get('PersonID')} has no PROwnerEmpID on master record, "
+                    f"but has ownership history. Fallback Owner '{r.get('FallbackOwnerName')}' used."
+                )
+
         items = [PersonListItem.model_validate(r) for r in rows]
 
         return PersonListResponse(
@@ -289,11 +317,28 @@ class PersonRecordsService:
             p.Flag,
             p.IsPRContacts,
             p.PRClassID,
+            (SELECT TOP 1 pr.PRClassName FROM dbo.PRClassMst pr WHERE pr.PRClassID = p.PRClassID) AS PRClassName,
             p.DeviceTerm,
             p.DeviceModel,
             p.PROwnerEmpID,
             p.PROwnerApprovalStatusID,
-            ISNULL(owner_p.PersonFirstName + ' ' + owner_p.PersonLastName, NULL) AS OwnerName,
+            COALESCE(
+                NULLIF(LTRIM(RTRIM(ISNULL(owner_p.PersonFirstName, '') + ' ' + ISNULL(owner_p.PersonLastName, ''))), ''),
+                (
+                    SELECT TOP 1 ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(new_p.PersonFirstName, '') + ' ' + ISNULL(new_p.PersonLastName, ''))), ''), 'Person #' + CAST(t.NewPersonID AS varchar))
+                    FROM dbo.ChangeContactOwnershipTransaction t
+                    LEFT JOIN dbo.DLPersonMst new_p ON new_p.PersonID = t.NewPersonID
+                    WHERE t.PersonID = p.PersonID
+                    ORDER BY t.EntDt DESC, t.ChangeOwnershipID DESC
+                )
+            ) AS OwnerName,
+            (
+                SELECT TOP 1 ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(new_p.PersonFirstName, '') + ' ' + ISNULL(new_p.PersonLastName, ''))), ''), 'Person #' + CAST(t.NewPersonID AS varchar))
+                FROM dbo.ChangeContactOwnershipTransaction t
+                LEFT JOIN dbo.DLPersonMst new_p ON new_p.PersonID = t.NewPersonID
+                WHERE t.PersonID = p.PersonID
+                ORDER BY t.EntDt DESC, t.ChangeOwnershipID DESC
+            ) AS FallbackOwnerName,
             owner_p.PersonDepartment AS OwnerDepartment,
             owner_p.PersonID AS OwnerPersonID,
             p.PRDeliveryStatusID,
@@ -307,7 +352,14 @@ class PersonRecordsService:
         if not p_res:
             return None
 
-        person_item = PersonFullRootDetail.model_validate(p_res[0])
+        row = p_res[0]
+        if row.get("PROwnerEmpID") is None and row.get("FallbackOwnerName") is not None:
+            logger.warning(
+                f"Data Integrity Issue: PersonID {row.get('PersonID')} has no PROwnerEmpID on master record, "
+                f"but has ownership history. Fallback Owner '{row.get('FallbackOwnerName')}' used."
+            )
+
+        person_item = PersonFullRootDetail.model_validate(row)
 
         # 2. Addresses (all 24 columns from dbo.DLPersonAddressDet)
         addr_sql = """
@@ -352,7 +404,7 @@ class PersonRecordsService:
         rel_sql = """
         SELECT 
             r.PersonRelationID, r.PersonID, r.RelatedPersonID,
-            ISNULL(p2.PersonFirstName + ' ' + p2.PersonLastName, 'Person #' + CAST(r.RelatedPersonID AS varchar)) AS RelatedPersonName,
+            ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(p2.PersonFirstName, '') + ' ' + ISNULL(p2.PersonLastName, ''))), ''), 'Person #' + CAST(r.RelatedPersonID AS varchar)) AS RelatedPersonName,
             r.RelationShipTypeID, r.RelationDetail, r.PersonRelationIsDeleted,
             r.PersonRelationEntDt, r.PersonRelationEntUser, r.PresonRelationEntTerm,
             r.PersonRelationUpdDt, r.PersonRelationUpdUser, r.PersonRelationUpdTerm,
@@ -405,11 +457,11 @@ class PersonRecordsService:
             t.ChangeOwnershipID,
             t.PersonID,
             t.LastPersonID,
-            ISNULL(last_p.PersonFirstName + ' ' + last_p.PersonLastName, 'Person #' + CAST(t.LastPersonID AS varchar)) AS LastOwnerName,
+            ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(last_p.PersonFirstName, '') + ' ' + ISNULL(last_p.PersonLastName, ''))), ''), 'Person #' + CAST(t.LastPersonID AS varchar)) AS LastOwnerName,
             t.NewPersonID,
-            ISNULL(new_p.PersonFirstName + ' ' + new_p.PersonLastName, 'Person #' + CAST(t.NewPersonID AS varchar)) AS NewOwnerName,
+            ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(new_p.PersonFirstName, '') + ' ' + ISNULL(new_p.PersonLastName, ''))), ''), 'Person #' + CAST(t.NewPersonID AS varchar)) AS NewOwnerName,
             t.RequestedByPersonID,
-            ISNULL(req_p.PersonFirstName + ' ' + req_p.PersonLastName, 'Person #' + CAST(t.RequestedByPersonID AS varchar)) AS RequestedByName,
+            ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(req_p.PersonFirstName, '') + ' ' + ISNULL(req_p.PersonLastName, ''))), ''), 'Person #' + CAST(t.RequestedByPersonID AS varchar)) AS RequestedByName,
             t.EntDt,
             t.EntUser,
             t.EntTerm

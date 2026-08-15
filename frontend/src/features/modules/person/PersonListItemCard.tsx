@@ -11,6 +11,7 @@ import {
   Phone,
   User,
   UserCheck,
+  Sparkles,
 } from "lucide-react-native";
 import { THEME_COLORS } from "@/constants/theme";
 import type { PersonListItem } from "@/types/modules.types";
@@ -202,14 +203,39 @@ export const PersonListItemCard: React.FC<PersonListItemCardProps> = ({
         ) : null}
 
         {/* Contact Owner */}
+        {person.PersonEntUser ? (
+          <View className="flex-row items-center gap-1 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded-md">
+            <UserCheck size={11} color={THEME_COLORS.successIcon || "#10b981"} />
+            <Text className="text-[10px] text-emerald-300 font-medium" numberOfLines={1}>
+              Contact Owner: {person.PersonEntUser}
+            </Text>
+          </View>
+        ) : null}
+
+        {/* PR Grade */}
+        {person.PRClassName ? (
+          <View className="flex-row items-center gap-1 bg-pink-950/40 border border-pink-800/40 px-2 py-0.5 rounded-md">
+            <Sparkles size={11} color="#f472b6" />
+            <Text className="text-[10px] text-pink-300 font-medium" numberOfLines={1}>
+              PR Grade: {person.PRClassName}
+            </Text>
+          </View>
+        ) : null}
+
+        {/* PR Owner */}
         {person.OwnerName ? (
           <View className="flex-row items-center gap-1 bg-indigo-950/40 border border-indigo-800/40 px-2 py-0.5 rounded-md">
             <UserCheck size={11} color={THEME_COLORS.ownerIcon} />
             <Text className="text-[10px] text-indigo-300 font-medium" numberOfLines={1}>
-              Owner: {person.OwnerName}
+              PR Owner: {person.OwnerName}
             </Text>
           </View>
-        ) : null}
+        ) : (
+          <View className="flex-row items-center gap-1 bg-slate-900/60 px-2 py-0.5 rounded-md">
+            <UserCheck size={11} color={THEME_COLORS.textDisabled} />
+            <Text className="text-[10px] text-slate-500 italic">No PR owner</Text>
+          </View>
+        )}
 
         {/* Location (City / State) */}
         {location ? (

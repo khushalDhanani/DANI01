@@ -229,7 +229,9 @@ export interface PersonListItem {
 
   // Contact Owner
   PROwnerEmpID?: number | null;
+  PRClassName?: string | null;
   OwnerName?: string | null;
+  PersonEntUser?: string | null;
 }
 
 export interface PersonListResponse {
@@ -319,6 +321,7 @@ export interface PersonFullRootDetail {
   DeviceTerm?: string | null;
   DeviceModel?: string | null;
   PROwnerEmpID?: number | null;
+  PRClassName?: string | null;
   PROwnerApprovalStatusID?: number | null;
   OwnerName?: string | null;
   OwnerDepartment?: string | null;
@@ -745,4 +748,3 @@ export interface PersonQualityResponse {
   duration_ms: number;
   evaluated_at: string;
 }
-

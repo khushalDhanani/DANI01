@@ -133,12 +133,12 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
 
   const hasActiveFilters = Boolean(
     search ||
-      statusFilter !== "ALL" ||
-      hasEmail !== undefined ||
-      hasPhone !== undefined ||
-      hasAddress !== undefined ||
-      hasCompany !== undefined ||
-      hasOwner !== undefined
+    statusFilter !== "ALL" ||
+    hasEmail !== undefined ||
+    hasPhone !== undefined ||
+    hasAddress !== undefined ||
+    hasCompany !== undefined ||
+    hasOwner !== undefined
   );
 
   // Derive segment-specific title
@@ -172,15 +172,13 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
           {/* Newest ID Sort */}
           <Pressable
             onPress={() => handleToggleSort("PersonID")}
-            className={`px-2 py-1 rounded flex-row items-center gap-1 ${
-              sortBy === "PersonID" ? "bg-blue-600" : "bg-slate-900 active:bg-slate-800"
-            }`}
+            className={`px-2 py-1 rounded flex-row items-center gap-1 ${sortBy === "PersonID" ? "bg-blue-600" : "bg-slate-900 active:bg-slate-800"
+              }`}
           >
             <Hash size={11} color={sortBy === "PersonID" ? THEME_COLORS.onPrimary : THEME_COLORS.textMuted} />
             <Text
-              className={`text-[11px] font-semibold ${
-                sortBy === "PersonID" ? "text-white" : "text-slate-300"
-              }`}
+              className={`text-[11px] font-semibold ${sortBy === "PersonID" ? "text-white" : "text-slate-300"
+                }`}
             >
               ID {sortBy === "PersonID" ? (sortOrder === "desc" ? "↓" : "↑") : ""}
             </Text>
@@ -189,9 +187,8 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
           {/* Name A-Z Sort */}
           <Pressable
             onPress={() => handleToggleSort("PersonFirstName")}
-            className={`px-2 py-1 rounded flex-row items-center gap-1 ${
-              sortBy === "PersonFirstName" ? "bg-blue-600" : "bg-slate-900 active:bg-slate-800"
-            }`}
+            className={`px-2 py-1 rounded flex-row items-center gap-1 ${sortBy === "PersonFirstName" ? "bg-blue-600" : "bg-slate-900 active:bg-slate-800"
+              }`}
           >
             {sortOrder === "asc" && sortBy === "PersonFirstName" ? (
               <ArrowDownAZ size={11} color={sortBy === "PersonFirstName" ? THEME_COLORS.onPrimary : THEME_COLORS.textMuted} />
@@ -199,9 +196,8 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
               <ArrowUpAZ size={11} color={sortBy === "PersonFirstName" ? THEME_COLORS.onPrimary : THEME_COLORS.textMuted} />
             )}
             <Text
-              className={`text-[11px] font-semibold ${
-                sortBy === "PersonFirstName" ? "text-white" : "text-slate-300"
-              }`}
+              className={`text-[11px] font-semibold ${sortBy === "PersonFirstName" ? "text-white" : "text-slate-300"
+                }`}
             >
               Name
             </Text>
@@ -210,15 +206,13 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
           {/* Date Created Sort */}
           <Pressable
             onPress={() => handleToggleSort("PersonEntDt")}
-            className={`px-2 py-1 rounded flex-row items-center gap-1 ${
-              sortBy === "PersonEntDt" ? "bg-blue-600" : "bg-slate-900 active:bg-slate-800"
-            }`}
+            className={`px-2 py-1 rounded flex-row items-center gap-1 ${sortBy === "PersonEntDt" ? "bg-blue-600" : "bg-slate-900 active:bg-slate-800"
+              }`}
           >
             <Calendar size={11} color={sortBy === "PersonEntDt" ? THEME_COLORS.onPrimary : THEME_COLORS.textMuted} />
             <Text
-              className={`text-[11px] font-semibold ${
-                sortBy === "PersonEntDt" ? "text-white" : "text-slate-300"
-              }`}
+              className={`text-[11px] font-semibold ${sortBy === "PersonEntDt" ? "text-white" : "text-slate-300"
+                }`}
             >
               Date
             </Text>
@@ -269,16 +263,14 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
                 <Pressable
                   key={st}
                   onPress={() => handleStatusChange(st)}
-                  className={`px-2 py-1 rounded-md text-xs font-semibold transition-all ${
-                    active
-                      ? "bg-blue-600 shadow-sm"
-                      : "bg-slate-900/80 hover:bg-slate-800 border border-slate-800"
-                  }`}
+                  className={`px-2 py-1 rounded-md text-xs font-semibold transition-all ${active
+                    ? "bg-blue-600 shadow-sm"
+                    : "bg-slate-900/80 hover:bg-slate-800 border border-slate-800"
+                    }`}
                 >
                   <Text
-                    className={`text-[10px] font-bold uppercase tracking-wider ${
-                      active ? "text-white" : "text-slate-400"
-                    }`}
+                    className={`text-[10px] font-bold uppercase tracking-wider ${active ? "text-white" : "text-slate-400"
+                      }`}
                   >
                     {st === "ALL" ? "All" : st.charAt(0) + st.slice(1).toLowerCase()}
                   </Text>
@@ -295,17 +287,15 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
                 setHasEmail((prev) => (prev === true ? undefined : true));
                 setPage(0);
               }}
-              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${
-                hasEmail === true
-                  ? "bg-blue-950 border-blue-600"
-                  : "bg-slate-900 border-slate-800"
-              }`}
+              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${hasEmail === true
+                ? "bg-blue-950 border-blue-600"
+                : "bg-slate-900 border-slate-800"
+                }`}
             >
               <Mail size={10} color={hasEmail === true ? THEME_COLORS.primaryIcon : THEME_COLORS.textMuted} />
               <Text
-                className={`text-[10px] font-medium ${
-                  hasEmail === true ? "text-blue-300 font-bold" : "text-slate-400"
-                }`}
+                className={`text-[10px] font-medium ${hasEmail === true ? "text-blue-300 font-bold" : "text-slate-400"
+                  }`}
               >
                 Email
               </Text>
@@ -317,17 +307,15 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
                 setHasPhone((prev) => (prev === true ? undefined : true));
                 setPage(0);
               }}
-              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${
-                hasPhone === true
-                  ? "bg-emerald-950 border-emerald-600"
-                  : "bg-slate-900 border-slate-800"
-              }`}
+              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${hasPhone === true
+                ? "bg-emerald-950 border-emerald-600"
+                : "bg-slate-900 border-slate-800"
+                }`}
             >
               <Phone size={10} color={hasPhone === true ? THEME_COLORS.successIcon : THEME_COLORS.textMuted} />
               <Text
-                className={`text-[10px] font-medium ${
-                  hasPhone === true ? "text-emerald-300 font-bold" : "text-slate-400"
-                }`}
+                className={`text-[10px] font-medium ${hasPhone === true ? "text-emerald-300 font-bold" : "text-slate-400"
+                  }`}
               >
                 Phone
               </Text>
@@ -339,17 +327,15 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
                 setHasAddress((prev) => (prev === true ? undefined : true));
                 setPage(0);
               }}
-              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${
-                hasAddress === true
-                  ? "bg-amber-950 border-amber-600"
-                  : "bg-slate-900 border-slate-800"
-              }`}
+              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${hasAddress === true
+                ? "bg-amber-950 border-amber-600"
+                : "bg-slate-900 border-slate-800"
+                }`}
             >
               <MapPin size={10} color={hasAddress === true ? THEME_COLORS.warningIcon : THEME_COLORS.textMuted} />
               <Text
-                className={`text-[10px] font-medium ${
-                  hasAddress === true ? "text-amber-300 font-bold" : "text-slate-400"
-                }`}
+                className={`text-[10px] font-medium ${hasAddress === true ? "text-amber-300 font-bold" : "text-slate-400"
+                  }`}
               >
                 Address
               </Text>
@@ -361,17 +347,15 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
                 setHasCompany((prev) => (prev === true ? undefined : true));
                 setPage(0);
               }}
-              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${
-                hasCompany === true
-                  ? "bg-purple-950 border-purple-600"
-                  : "bg-slate-900 border-slate-800"
-              }`}
+              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${hasCompany === true
+                ? "bg-purple-950 border-purple-600"
+                : "bg-slate-900 border-slate-800"
+                }`}
             >
               <Building2 size={10} color={hasCompany === true ? THEME_COLORS.companyIcon : THEME_COLORS.textMuted} />
               <Text
-                className={`text-[10px] font-medium ${
-                  hasCompany === true ? "text-purple-300 font-bold" : "text-slate-400"
-                }`}
+                className={`text-[10px] font-medium ${hasCompany === true ? "text-purple-300 font-bold" : "text-slate-400"
+                  }`}
               >
                 Company
               </Text>
@@ -383,17 +367,15 @@ export const PersonListView: React.FC<PersonListViewProps> = ({ visitorContact }
                 setHasOwner((prev) => (prev === true ? undefined : true));
                 setPage(0);
               }}
-              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${
-                hasOwner === true
-                  ? "bg-indigo-950 border-indigo-600"
-                  : "bg-slate-900 border-slate-800"
-              }`}
+              className={`flex-row items-center gap-1 px-2 py-0.5 rounded border transition-all ${hasOwner === true
+                ? "bg-indigo-950 border-indigo-600"
+                : "bg-slate-900 border-slate-800"
+                }`}
             >
               <UserCheck size={10} color={hasOwner === true ? THEME_COLORS.ownerIcon : THEME_COLORS.textMuted} />
               <Text
-                className={`text-[10px] font-medium ${
-                  hasOwner === true ? "text-indigo-300 font-bold" : "text-slate-400"
-                }`}
+                className={`text-[10px] font-medium ${hasOwner === true ? "text-indigo-300 font-bold" : "text-slate-400"
+                  }`}
               >
                 Owner
               </Text>

@@ -40,6 +40,8 @@ class PersonListItem(BaseModel):
     # Contact Owner
     owner_name: str | None = Field(default=None, alias="OwnerName")
     owner_empid: int | None = Field(default=None, alias="PROwnerEmpID")
+    pr_class: str | None = Field(default=None, alias="PRClassName")
+    person_ent_user: str | None = Field(default=None, alias="PersonEntUser")
 
 
 class PersonListResponse(BaseModel):
