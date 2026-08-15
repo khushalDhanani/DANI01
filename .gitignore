@@ -1,0 +1,56 @@
+# ── Operating System & IDE ──────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# ── Environment & Secrets ───────────────────────────────────
+.env
+.env*.local
+*.pem
+*.key
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# ── Frontend (Expo / React Native / Node) ───────────────────
+node_modules/
+frontend/node_modules/
+.expo/
+frontend/.expo/
+dist/
+frontend/dist/
+web-build/
+frontend/web-build/
+expo-env.d.ts
+frontend/expo-env.d.ts
+*.tsbuildinfo
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+frontend/.metro-health-check*
+frontend/ios/
+frontend/android/
+frontend/.kotlin/
+
+# ── Backend (Python / FastAPI / UV / SQLAlchemy) ───────────
+__pycache__/
+*.py[oc]
+*.pyo
+.venv/
+backend/.venv/
+build/
+backend/build/
+backend/dist/
+wheels/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.sqlite
+*.sqlite3
+backend/dbinsights.db
+backend/dbinsights.db*

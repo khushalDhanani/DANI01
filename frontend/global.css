@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── AIRIS Design Token CSS Variables ──────────────────────────── */
+:root {
+  /* Surface */
+  --color-bg:           #0B0F17;
+  --color-card:         #131B2A;
+  --color-card-hover:   #182338;
+  --color-border:       #1F2E47;
+  --color-border-light: #2E4366;
+
+  /* Text */
+  --color-text-primary:  #FFFFFF;
+  --color-text-muted:    #94A3B8;
+  --color-text-dark:     #64748B;
+  --color-text-disabled: #475569;
+
+  /* Semantic fills */
+  --color-primary:      #3B82F6;
+  --color-primary-hover:#2563EB;
+  --color-accent:       #8B5CF6;
+  --color-success:      #10B981;
+  --color-warning:      #F59E0B;
+  --color-danger:       #EF4444;
+
+  /* Semantic icons */
+  --color-primary-icon: #60A5FA;
+  --color-success-icon: #34D399;
+  --color-warning-icon: #FBBF24;
+  --color-danger-icon:  #F87171;
+  --color-accent-icon:  #A78BFA;
+  --color-on-primary:   #FFFFFF;
+
+  /* Domain icons */
+  --color-company:  #C084FC;
+  --color-owner:    #818CF8;
+  --color-im:       #38BDF8;
+  --color-relation: #F472B6;
+  --color-public:   #2DD4BF;
+}
+
+/* Cross-Platform Root Scrolling & Layout Resets */
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+

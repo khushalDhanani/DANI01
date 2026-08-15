@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "AIRIS Insights",
+    "slug": "airis-insights",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/images/icon.png",
+    "scheme": "airisinsights",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#020617",
+    "ios": {
+      "bundleIdentifier": "com.aetherind.airisinsights",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.aetherind.airisinsights",
+      "adaptiveIcon": {
+        "backgroundColor": "#020617",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png",
+      "name": "AIRIS Insights",
+      "shortName": "AIRIS",
+      "themeColor": "#020617",
+      "backgroundColor": "#020617",
+      "description": "Database Metadata, Polars Profiling, and Semantic Classification Intelligence Platform"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "root": "./app"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#020617",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 120
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

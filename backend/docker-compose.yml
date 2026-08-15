@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dbinsights
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d dbinsights"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_URL=postgresql+psycopg://user:password@db:5432/dbinsights
+      - REDIS_URL=redis://redis:6379/0
+      - MSSQL_HOST=${MSSQL_HOST:-}
+      - MSSQL_PORT=${MSSQL_PORT:-1433}
+      - MSSQL_DATABASE=${MSSQL_DATABASE:-AIRIS_TEST}
+      - MSSQL_USERNAME=${MSSQL_USERNAME:-}
+      - MSSQL_PASSWORD=${MSSQL_PASSWORD:-}
+      - MSSQL_DRIVER=${MSSQL_DRIVER:-ODBC Driver 18 for SQL Server}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+
+  worker:
+    build: .
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=1
+    environment:
+      - POSTGRES_URL=postgresql+psycopg://user:password@db:5432/dbinsights
+      - REDIS_URL=redis://redis:6379/0
+      - MSSQL_HOST=${MSSQL_HOST:-}
+      - MSSQL_PORT=${MSSQL_PORT:-1433}
+      - MSSQL_DATABASE=${MSSQL_DATABASE:-AIRIS_TEST}
+      - MSSQL_USERNAME=${MSSQL_USERNAME:-}
+      - MSSQL_PASSWORD=${MSSQL_PASSWORD:-}
+      - MSSQL_DRIVER=${MSSQL_DRIVER:-ODBC Driver 18 for SQL Server}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:
