@@ -3,3 +3,5 @@ export * from "./useTable";
 export * from "./useAnalysis";
 export * from "./useUIStore";
 export * from "./useModules";
+export * from "./useCampaigns";
+

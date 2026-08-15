@@ -122,12 +122,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   }`}
                 >
                   <View className="flex-row items-center gap-2.5 flex-1">
-                    <Icon
-                      size={15}
-                      color={
-                        active ? THEME_COLORS.onPrimary : THEME_COLORS.textMuted
-                      }
-                    />
+                    {Icon && (
+                      <Icon
+                        size={15}
+                        color={
+                          active ? THEME_COLORS.onPrimary : THEME_COLORS.textMuted
+                        }
+                      />
+                    )}
                     <Text
                       className={`text-xs font-semibold ${
                         active ? "text-white" : "text-slate-300"
@@ -235,14 +237,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                             }`}
                           >
                             <View className="flex-row items-center gap-2 flex-1">
-                              <SubIcon
-                                size={13}
-                                color={
-                                  active
-                                    ? THEME_COLORS.onPrimary
-                                    : THEME_COLORS.textMuted
-                                }
-                              />
+                              {SubIcon && (
+                                <SubIcon
+                                  size={13}
+                                  color={
+                                    active
+                                      ? THEME_COLORS.onPrimary
+                                      : THEME_COLORS.textMuted
+                                  }
+                                />
+                              )}
                               <Text
                                 className={`text-xs font-medium ${
                                   active

@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routes import analysis, analysis_runs, database, health, modules
+from app.api.routes import analysis, analysis_runs, campaign, database, health, modules
 from app.core.exceptions import (
     DatabaseConnectionError,
     DiscoveryError,
@@ -99,6 +99,7 @@ app.include_router(health.router, prefix="/api/v1/health", tags=["Health"])
 app.include_router(database.router, prefix="/api/v1/database", tags=["Database"])
 app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Analysis"])
 app.include_router(analysis_runs.router, prefix="/api/v1/analysis-runs", tags=["Analysis Runs"])
+app.include_router(campaign.router, prefix="/api/v1/campaigns", tags=["Campaigns"])
 app.include_router(modules.router, prefix="/api/v1", tags=["Modules"])
 
 
