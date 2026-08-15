@@ -257,9 +257,9 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
 
           {campaign.Items && campaign.Items.length > 0 ? (
             <View className="gap-2">
-              {campaign.Items.map((item) => (
+              {campaign.Items.map((item, idx) => (
                 <View
-                  key={item.CampDetID}
+                  key={`${item.CampDetID}-${item.PRClassID}-${idx}`}
                   className="flex-row items-center justify-between p-3 rounded-lg bg-dark-bg/60 border border-dark-border/80"
                 >
                   <View className="flex-row items-center gap-2.5">

@@ -96,7 +96,12 @@ class CampaignService:
             d.AdHocLimit
         FROM dbo.PRCampaignDet d
         LEFT JOIN dbo.PRClassMst cls ON d.PRClassID = cls.PRClassID
-        LEFT JOIN dbo.CntRowMaterialMst m ON (d.ItemRefID = m.ItemRefID OR d.ItemRefID = m.CntRowMaterialId)
+        OUTER APPLY (
+            SELECT TOP 1 RowMaterialName 
+            FROM dbo.CntRowMaterialMst 
+            WHERE ItemRefID = d.ItemRefID OR CntRowMaterialId = d.ItemRefID
+            ORDER BY CntRowMaterialId
+        ) m
         WHERE d.CampID = :camp_id
         ORDER BY cls.PRClassID;
         """
