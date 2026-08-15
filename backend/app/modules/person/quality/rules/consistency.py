@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.db.mssql import execute_readonly_query
+from app.db import mssql
 from app.modules.person.quality.models import (
     QualityCategory,
     QualityFinding,
@@ -34,7 +34,7 @@ class PersonSelfRelationshipRule(PersonQualityRule):
         JOIN dbo.DLPersonMst p ON r.PersonID = p.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0 AND r.PersonID IS NOT NULL AND r.RelatedPersonID IS NOT NULL;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_relationships") or 0)
         self_rel = int(rows[0].get("self_relationships") or 0)
         pct = round((self_rel / total) * 100, 2) if total > 0 else 0.0
@@ -81,7 +81,7 @@ class PersonCreatedAfterUpdatedRule(PersonQualityRule):
         FROM dbo.DLPersonMst
         WHERE PersonIsActive = 1 AND ISNULL(PersonIsDeleted, 0) = 0 AND PersonEntDt IS NOT NULL AND PersonUpdDt IS NOT NULL;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_timestamped") or 0)
         invalid = int(rows[0].get("invalid_timestamps") or 0)
         pct = round((invalid / total) * 100, 2) if total > 0 else 0.0

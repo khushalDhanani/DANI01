@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.db.mssql import execute_readonly_query
+from app.db import mssql
 from app.modules.person.quality.models import (
     QualityCategory,
     QualityFinding,
@@ -36,7 +36,7 @@ class PersonMissingAddressRule(PersonQualityRule):
         LEFT JOIN DistinctAddresses a ON p.PersonID = a.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_active") or 0)
         missing = int(rows[0].get("missing_addr") or 0)
         pct = round((missing / total) * 100, 2) if total > 0 else 0.0
@@ -82,7 +82,7 @@ class PersonMissingContactRule(PersonQualityRule):
         LEFT JOIN DistinctContacts c ON p.PersonID = c.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_active") or 0)
         missing = int(rows[0].get("missing_contact") or 0)
         pct = round((missing / total) * 100, 2) if total > 0 else 0.0
@@ -129,7 +129,7 @@ class PersonMissingEmailRule(PersonQualityRule):
         LEFT JOIN DistinctEmails e ON p.PersonID = e.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_active") or 0)
         missing = int(rows[0].get("missing_email") or 0)
         pct = round((missing / total) * 100, 2) if total > 0 else 0.0
@@ -179,7 +179,7 @@ class PersonMissingPhoneRule(PersonQualityRule):
         LEFT JOIN DistinctPhones ph ON p.PersonID = ph.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_active") or 0)
         missing = int(rows[0].get("missing_phone") or 0)
         pct = round((missing / total) * 100, 2) if total > 0 else 0.0
@@ -227,7 +227,7 @@ class PersonMissingCompanyLinkRule(PersonQualityRule):
         LEFT JOIN DistinctCompanyLinks cl ON p.PersonID = cl.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_active") or 0)
         missing = int(rows[0].get("missing_company") or 0)
         pct = round((missing / total) * 100, 2) if total > 0 else 0.0

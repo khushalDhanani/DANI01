@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.db.mssql import execute_readonly_query
+from app.db import mssql
 from app.modules.person.quality.models import (
     QualityCategory,
     QualityFinding,
@@ -33,7 +33,7 @@ class PersonOrphanAddressRule(PersonQualityRule):
         LEFT JOIN dbo.DLPersonMst p ON a.PersonID = p.PersonID
         WHERE a.PersonID IS NOT NULL;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_addresses") or 0)
         orphans = int(rows[0].get("orphan_addresses") or 0)
         pct = round((orphans / total) * 100, 2) if total > 0 else 0.0
@@ -76,7 +76,7 @@ class PersonOrphanContactRule(PersonQualityRule):
         LEFT JOIN dbo.DLPersonMst p ON c.PersionID = p.PersonID
         WHERE c.PersionID IS NOT NULL;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_contacts") or 0)
         orphans = int(rows[0].get("orphan_contacts") or 0)
         pct = round((orphans / total) * 100, 2) if total > 0 else 0.0
@@ -119,7 +119,7 @@ class PersonOrphanCompanyLinkRule(PersonQualityRule):
         LEFT JOIN dbo.DLPersonMst p ON cl.PersonID = p.PersonID
         WHERE cl.PersonID IS NOT NULL;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_company_links") or 0)
         orphans = int(rows[0].get("orphan_company_links") or 0)
         pct = round((orphans / total) * 100, 2) if total > 0 else 0.0
@@ -163,7 +163,7 @@ class PersonOrphanRelationshipRule(PersonQualityRule):
         LEFT JOIN dbo.DLPersonMst p2 ON r.RelatedPersonID = p2.PersonID
         WHERE r.PersonID IS NOT NULL;
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_relationships") or 0)
         orphans = int(rows[0].get("orphan_relationships") or 0)
         pct = round((orphans / total) * 100, 2) if total > 0 else 0.0

@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.db.mssql import execute_readonly_query
+from app.db import mssql
 from app.modules.person.quality.models import (
     QualityCategory,
     QualityFinding,
@@ -31,7 +31,7 @@ class PersonInvalidEmailRule(PersonQualityRule):
         JOIN dbo.DLPersonMst p ON c.PersionID = p.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0 AND c.TypeValue LIKE '%@%';
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_emails") or 0)
         invalid = int(rows[0].get("invalid_emails") or 0)
         pct = round((invalid / total) * 100, 2) if total > 0 else 0.0
@@ -75,7 +75,7 @@ class PersonInvalidPhoneRule(PersonQualityRule):
           AND c.TypeValue NOT LIKE 'http%'
           AND c.TypeValue NOT LIKE 'www%';
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_phones") or 0)
         invalid = int(rows[0].get("invalid_phones") or 0)
         pct = round((invalid / total) * 100, 2) if total > 0 else 0.0
@@ -116,7 +116,7 @@ class PersonInvalidUrlRule(PersonQualityRule):
         JOIN dbo.DLPersonMst p ON c.PersionID = p.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0 AND (c.TypeValue LIKE 'http%' OR c.TypeValue LIKE 'www%');
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_urls") or 0)
         invalid = int(rows[0].get("invalid_urls") or 0)
         pct = round((invalid / total) * 100, 2) if total > 0 else 0.0
@@ -160,7 +160,7 @@ class PersonInvalidLatitudeRule(PersonQualityRule):
         JOIN dbo.DLPersonMst p ON a.PersonID = p.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0 AND a.Latitude IS NOT NULL AND LTRIM(RTRIM(CAST(a.Latitude AS varchar(100)))) <> '';
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_lats") or 0)
         invalid = int(rows[0].get("invalid_lats") or 0)
         pct = round((invalid / total) * 100, 2) if total > 0 else 0.0
@@ -204,7 +204,7 @@ class PersonInvalidLongitudeRule(PersonQualityRule):
         JOIN dbo.DLPersonMst p ON a.PersonID = p.PersonID
         WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0 AND a.Longitude IS NOT NULL AND LTRIM(RTRIM(CAST(a.Longitude AS varchar(100)))) <> '';
         """
-        rows = execute_readonly_query(query)
+        rows = mssql.execute_readonly_query(query)
         total = int(rows[0].get("total_longs") or 0)
         invalid = int(rows[0].get("invalid_longs") or 0)
         pct = round((invalid / total) * 100, 2) if total > 0 else 0.0

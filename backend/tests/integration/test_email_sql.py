@@ -1,4 +1,7 @@
+import pytest
+
 from app.db.mssql import execute_readonly_query
+from app.db.mssql import test_connection as mssql_test_connection
 from app.modules.person.quality.rules.contacts import INVALID_EMAIL_WHERE_SQL
 
 VALID_EMAILS = [
@@ -42,7 +45,11 @@ INVALID_EMAILS = [
 ]
 
 
+@pytest.mark.integration
 def test_email_sql_validation_valid_cases():
+    if not mssql_test_connection():
+        pytest.skip("Live MSSQL instance is not reachable in this environment.")
+
     valid_exact_254 = "a" * 64 + "@" + "b" * 63 + "." + "c" * 63 + "." + "d" * 59
     cases = VALID_EMAILS.copy()
     cases.append(valid_exact_254)
@@ -62,7 +69,11 @@ def test_email_sql_validation_valid_cases():
         )
 
 
+@pytest.mark.integration
 def test_email_sql_validation_invalid_cases():
+    if not mssql_test_connection():
+        pytest.skip("Live MSSQL instance is not reachable in this environment.")
+
     sql_logic = INVALID_EMAIL_WHERE_SQL.split("AND (")[1].rsplit(")", 1)[0].strip()
     if sql_logic.endswith("= 1"):
         sql_logic = sql_logic[:-3].strip()

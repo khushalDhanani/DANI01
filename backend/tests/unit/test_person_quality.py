@@ -158,7 +158,7 @@ def test_missing_address_rule():
     assert rule.category == QualityCategory.COMPLETENESS
     assert rule.severity == QualitySeverity.HIGH
 
-    with patch("app.modules.person.quality.rules.completeness.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_active": 1000, "missing_addr": 250}]
         finding = rule.evaluate()
 
@@ -170,7 +170,7 @@ def test_missing_address_rule():
 
 def test_missing_contact_rule():
     rule = PersonMissingContactRule()
-    with patch("app.modules.person.quality.rules.completeness.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_active": 1000, "missing_contact": 10}]
         finding = rule.evaluate()
 
@@ -180,7 +180,7 @@ def test_missing_contact_rule():
 
 def test_missing_email_rule():
     rule = PersonMissingEmailRule()
-    with patch("app.modules.person.quality.rules.completeness.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_active": 500, "missing_email": 50}]
         finding = rule.evaluate()
 
@@ -190,7 +190,7 @@ def test_missing_email_rule():
 
 def test_missing_phone_rule():
     rule = PersonMissingPhoneRule()
-    with patch("app.modules.person.quality.rules.completeness.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_active": 500, "missing_phone": 5}]
         finding = rule.evaluate()
 
@@ -200,7 +200,7 @@ def test_missing_phone_rule():
 
 def test_missing_company_link_rule():
     rule = PersonMissingCompanyLinkRule()
-    with patch("app.modules.person.quality.rules.completeness.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_active": 1000, "missing_company": 300}]
         finding = rule.evaluate()
 
@@ -213,7 +213,7 @@ def test_missing_company_link_rule():
 
 def test_invalid_email_rule():
     rule = PersonInvalidEmailRule()
-    with patch("app.modules.person.quality.rules.validity.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_emails": 1000, "invalid_emails": 20}]
         finding = rule.evaluate()
 
@@ -224,7 +224,7 @@ def test_invalid_email_rule():
 
 def test_invalid_phone_rule():
     rule = PersonInvalidPhoneRule()
-    with patch("app.modules.person.quality.rules.validity.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_phones": 2000, "invalid_phones": 40}]
         finding = rule.evaluate()
 
@@ -234,7 +234,7 @@ def test_invalid_phone_rule():
 
 def test_invalid_url_rule():
     rule = PersonInvalidUrlRule()
-    with patch("app.modules.person.quality.rules.validity.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_urls": 100, "invalid_urls": 0}]
         finding = rule.evaluate()
 
@@ -246,14 +246,14 @@ def test_invalid_lat_long_rules():
     lat_rule = PersonInvalidLatitudeRule()
     long_rule = PersonInvalidLongitudeRule()
 
-    with patch("app.modules.person.quality.rules.validity.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_lats": 50, "invalid_lats": 2}]
         finding_lat = lat_rule.evaluate()
 
     assert finding_lat.affected_count == 2
     assert finding_lat.affected_percent == 4.0
 
-    with patch("app.modules.person.quality.rules.validity.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_longs": 50, "invalid_longs": 1}]
         finding_long = long_rule.evaluate()
 
@@ -270,23 +270,23 @@ def test_orphan_rules():
     comp_rule = PersonOrphanCompanyLinkRule()
     rel_rule = PersonOrphanRelationshipRule()
 
-    with patch("app.modules.person.quality.rules.integrity.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_addresses": 500, "orphan_addresses": 0}]
         finding = addr_rule.evaluate()
         assert finding.affected_count == 0
         assert finding.severity == QualitySeverity.CRITICAL
 
-    with patch("app.modules.person.quality.rules.integrity.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_contacts": 800, "orphan_contacts": 5}]
         finding = contact_rule.evaluate()
         assert finding.affected_count == 5
 
-    with patch("app.modules.person.quality.rules.integrity.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_company_links": 300, "orphan_company_links": 0}]
         finding = comp_rule.evaluate()
         assert finding.affected_count == 0
 
-    with patch("app.modules.person.quality.rules.integrity.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_relationships": 50, "orphan_relationships": 0}]
         finding = rel_rule.evaluate()
         assert finding.affected_count == 0
@@ -296,13 +296,13 @@ def test_consistency_rules():
     self_rel_rule = PersonSelfRelationshipRule()
     ts_rule = PersonCreatedAfterUpdatedRule()
 
-    with patch("app.modules.person.quality.rules.consistency.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_relationships": 50, "self_relationships": 1}]
         finding = self_rel_rule.evaluate()
         assert finding.affected_count == 1
         assert finding.severity == QualitySeverity.HIGH
 
-    with patch("app.modules.person.quality.rules.consistency.execute_readonly_query") as mock_exec:
+    with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         mock_exec.return_value = [{"total_timestamped": 1000, "invalid_timestamps": 0}]
         finding = ts_rule.evaluate()
         assert finding.affected_count == 0
