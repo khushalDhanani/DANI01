@@ -44,16 +44,12 @@ def classify_column_signals(
         return SemanticType.EMAIL, 0.98, signals
 
     # 3. Phone
-    if any(
-        p in name_clean for p in ("phone", "mobile", "cellphone", "telephone", "fax")
-    ):
+    if any(p in name_clean for p in ("phone", "mobile", "cellphone", "telephone", "fax")):
         signals.append("column_name_phone_match")
         return SemanticType.PHONE, 0.95, signals
 
     # 4. URL
-    if any(
-        u in name_clean for u in ("url", "website", "link", "webpage", "locationmapurl")
-    ):
+    if any(u in name_clean for u in ("url", "website", "link", "webpage", "locationmapurl")):
         signals.append("column_name_url_match")
         return SemanticType.URL, 0.98, signals
 
@@ -69,10 +65,7 @@ def classify_column_signals(
         return SemanticType.LONGITUDE, 0.99, signals
 
     # 6. Postal Code
-    if any(
-        pc in name_clean
-        for pc in ("postalcode", "zipcode", "zip", "pincode", "postcode")
-    ):
+    if any(pc in name_clean for pc in ("postalcode", "zipcode", "zip", "pincode", "postcode")):
         signals.append("column_name_postalcode_match")
         return SemanticType.POSTAL_CODE, 0.98, signals
 
@@ -118,8 +111,7 @@ def classify_column_signals(
         return SemanticType.MIDDLE_NAME, 0.98, signals
 
     if any(
-        n in name_clean
-        for n in ("fullname", "personname", "username", "customername", "empname")
+        n in name_clean for n in ("fullname", "personname", "username", "customername", "empname")
     ):
         signals.append("column_name_name_match")
         return SemanticType.NAME, 0.95, signals
@@ -182,9 +174,7 @@ def classify_column_signals(
         signals.append("column_name_status_flag_match")
         return SemanticType.STATUS_FLAG, 0.95, signals
 
-    if name_clean in {"status", "state", "stage", "phase"} or name_clean.endswith(
-        "status"
-    ):
+    if name_clean in {"status", "state", "stage", "phase"} or name_clean.endswith("status"):
         signals.append("column_name_status_match")
         return SemanticType.STATUS, 0.90, signals
 

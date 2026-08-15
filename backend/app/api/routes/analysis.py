@@ -29,6 +29,4 @@ async def run_quick_analysis(
     except DiscoveryError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Database analysis failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Database analysis failed: {e!s}")

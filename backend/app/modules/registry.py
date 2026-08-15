@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from app.modules.models import ModuleDefinition, ModuleInfo
 
@@ -9,8 +8,6 @@ logger = logging.getLogger(__name__)
 class DuplicateModuleError(ValueError):
     """Raised when registering a module with an existing code."""
 
-    pass
-
 
 class ModuleRegistry:
     """
@@ -19,7 +16,7 @@ class ModuleRegistry:
     """
 
     def __init__(self) -> None:
-        self._modules: Dict[str, ModuleDefinition] = {}
+        self._modules: dict[str, ModuleDefinition] = {}
 
     def register(self, definition: ModuleDefinition) -> None:
         """

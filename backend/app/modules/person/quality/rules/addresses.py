@@ -16,7 +16,7 @@ ADDR_MISSING_POSTAL_CODE_WHERE_SQL = """
 """.strip()
 
 ADDR_INVALID_PIN_FORMAT_WHERE_SQL = """
-a.PostalCode IS NOT NULL 
+a.PostalCode IS NOT NULL
 AND LTRIM(RTRIM(a.PostalCode)) <> ''
 AND (
     LEN(LTRIM(RTRIM(a.PostalCode))) NOT IN (5, 6)
@@ -25,13 +25,13 @@ AND (
 """.strip()
 
 ADDR_STREET_WITHOUT_CITY_WHERE_SQL = """
-a.Street IS NOT NULL 
+a.Street IS NOT NULL
 AND LTRIM(RTRIM(a.Street)) <> ''
 AND (a.CityName IS NULL OR LTRIM(RTRIM(a.CityName)) = '')
 """.strip()
 
 ADDR_CITY_WITHOUT_STATE_WHERE_SQL = """
-a.CityName IS NOT NULL 
+a.CityName IS NOT NULL
 AND LTRIM(RTRIM(a.CityName)) <> ''
 AND (a.StateName IS NULL OR LTRIM(RTRIM(a.StateName)) = '')
 """.strip()
@@ -42,7 +42,7 @@ ADDR_MISSING_GEOCODES_WHERE_SQL = """
 
 ADDR_DUPLICATE_SAME_PERSON_WHERE_SQL = """
 EXISTS (
-    SELECT 1 
+    SELECT 1
     FROM dbo.DLPersonAddressDet a2
     WHERE a2.PersonID = a.PersonID
       AND a2.PersonAddID <> a.PersonAddID

@@ -44,31 +44,15 @@ def profile_numeric_column(
         )
 
     # Calculate numeric stats
-    min_val = (
-        round(float(non_null_floats.min()), 4)
-        if non_null_floats.min() is not None
-        else None
-    )
-    max_val = (
-        round(float(non_null_floats.max()), 4)
-        if non_null_floats.max() is not None
-        else None
-    )
+    min_val = round(float(non_null_floats.min()), 4) if non_null_floats.min() is not None else None
+    max_val = round(float(non_null_floats.max()), 4) if non_null_floats.max() is not None else None
     mean_val = (
-        round(float(non_null_floats.mean()), 4)
-        if non_null_floats.mean() is not None
-        else None
+        round(float(non_null_floats.mean()), 4) if non_null_floats.mean() is not None else None
     )
     median_val = (
-        round(float(non_null_floats.median()), 4)
-        if non_null_floats.median() is not None
-        else None
+        round(float(non_null_floats.median()), 4) if non_null_floats.median() is not None else None
     )
-    std_val = (
-        round(float(non_null_floats.std()), 4)
-        if non_null_floats.std() is not None
-        else None
-    )
+    std_val = round(float(non_null_floats.std()), 4) if non_null_floats.std() is not None else None
 
     zero_mask = non_null_floats == 0
     zero_count = int(zero_mask.sum())

@@ -12,7 +12,7 @@ from app.modules.person.quality.models import (
 
 # Canonical Predicates
 ACTIVE_EMP_MISSING_TITLE_WHERE_SQL = """
-p.EmpID IS NOT NULL 
+p.EmpID IS NOT NULL
 AND LTRIM(RTRIM(p.EmpID)) <> ''
 AND (p.PersonTitle IS NULL OR LTRIM(RTRIM(p.PersonTitle)) = '')
 """.strip()
@@ -20,17 +20,17 @@ AND (p.PersonTitle IS NULL OR LTRIM(RTRIM(p.PersonTitle)) = '')
 INACTIVE_WITH_EMPID_WHERE_SQL = """
 p.PersonIsActive = 0
 AND (p.PersonIsDeleted = 0 OR p.PersonIsDeleted IS NULL)
-AND p.EmpID IS NOT NULL 
+AND p.EmpID IS NOT NULL
 AND LTRIM(RTRIM(p.EmpID)) <> ''
 """.strip()
 
 STATUS_ACTIVE_AND_DELETED_WHERE_SQL = """
-p.PersonIsActive = 1 
+p.PersonIsActive = 1
 AND p.PersonIsDeleted = 1
 """.strip()
 
 STALE_TEMP_PERSONS_WHERE_SQL = """
-p.PersonIsTemp = 1 
+p.PersonIsTemp = 1
 AND DATEDIFF(day, p.PersonEntDt, GETDATE()) > 90
 """.strip()
 

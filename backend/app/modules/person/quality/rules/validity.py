@@ -24,7 +24,7 @@ class PersonInvalidEmailRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_emails,
             SUM(CASE WHEN c.TypeValue NOT LIKE '%_@_%._%' OR c.TypeValue LIKE '% %' THEN 1 ELSE 0 END) AS invalid_emails
         FROM dbo.DLPersonPhoneEmailURLDet c
@@ -65,14 +65,14 @@ class PersonInvalidPhoneRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_phones,
             SUM(CASE WHEN LEN(RTRIM(LTRIM(c.TypeValue))) < 5 OR c.TypeValue LIKE '%[a-zA-Z]%' THEN 1 ELSE 0 END) AS invalid_phones
         FROM dbo.DLPersonPhoneEmailURLDet c
         JOIN dbo.DLPersonMst p ON c.PersionID = p.PersonID
-        WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0 
-          AND c.TypeValue NOT LIKE '%@%' 
-          AND c.TypeValue NOT LIKE 'http%' 
+        WHERE p.PersonIsActive = 1 AND ISNULL(p.PersonIsDeleted, 0) = 0
+          AND c.TypeValue NOT LIKE '%@%'
+          AND c.TypeValue NOT LIKE 'http%'
           AND c.TypeValue NOT LIKE 'www%';
         """
         rows = execute_readonly_query(query)
@@ -109,7 +109,7 @@ class PersonInvalidUrlRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_urls,
             SUM(CASE WHEN c.TypeValue NOT LIKE '%.%' THEN 1 ELSE 0 END) AS invalid_urls
         FROM dbo.DLPersonPhoneEmailURLDet c
@@ -153,7 +153,7 @@ class PersonInvalidLatitudeRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_lats,
             SUM(CASE WHEN TRY_CAST(a.Latitude AS float) IS NULL OR TRY_CAST(a.Latitude AS float) < -90 OR TRY_CAST(a.Latitude AS float) > 90 THEN 1 ELSE 0 END) AS invalid_lats
         FROM dbo.DLPersonAddressDet a
@@ -197,7 +197,7 @@ class PersonInvalidLongitudeRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_longs,
             SUM(CASE WHEN TRY_CAST(a.Longitude AS float) IS NULL OR TRY_CAST(a.Longitude AS float) < -180 OR TRY_CAST(a.Longitude AS float) > 180 THEN 1 ELSE 0 END) AS invalid_longs
         FROM dbo.DLPersonAddressDet a

@@ -77,7 +77,9 @@ def mock_discovery() -> MagicMock:
     def get_structure_side_effect(schema_name: str, table_name: str):
         if table_name == "DLPerson":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPerson", estimated_rows=1000, column_count=4),
+                table=TableInfo(
+                    schema="dbo", table="DLPerson", estimated_rows=1000, column_count=4
+                ),
                 columns=[
                     make_col(1, "PersonID", "int"),
                     make_col(2, "FirstName", "varchar"),
@@ -90,7 +92,9 @@ def mock_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonAddressDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonAddressDet", estimated_rows=500, column_count=4),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonAddressDet", estimated_rows=500, column_count=4
+                ),
                 columns=[
                     make_col(1, "AddressID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -148,7 +152,9 @@ def test_duplicate_code_rejection(sample_definition: ModuleDefinition):
 
 
 @pytest.mark.asyncio
-async def test_module_validation_success(sample_definition: ModuleDefinition, mock_discovery: MagicMock):
+async def test_module_validation_success(
+    sample_definition: ModuleDefinition, mock_discovery: MagicMock
+):
     analyzer = ModuleAnalyzer(discovery=mock_discovery)
     result = await analyzer.validate(sample_definition)
 
@@ -206,7 +212,9 @@ async def test_module_validation_missing_optional_table(sample_definition: Modul
     def get_structure_side_effect(schema_name: str, table_name: str):
         if table_name == "DLPerson":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPerson", estimated_rows=1000, column_count=4),
+                table=TableInfo(
+                    schema="dbo", table="DLPerson", estimated_rows=1000, column_count=4
+                ),
                 columns=[
                     make_col(1, "PersonID", "int"),
                     make_col(2, "FirstName", "varchar"),

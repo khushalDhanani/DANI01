@@ -1,12 +1,13 @@
 import asyncio
-from collections.abc import Callable
-from datetime import datetime, timezone
 import logging
 import time
+from collections.abc import Callable
+from datetime import UTC, datetime
 
 from app.analysis.planner import AnalysisPlanner
 from app.analysis.table_analyzer import TableAnalyzer
-from app.core.config import Settings, settings as global_settings
+from app.core.config import Settings
+from app.core.config import settings as global_settings
 from app.core.logging import log_event
 from app.discovery.metadata import MetadataDiscovery
 from app.schemas.analysis import (
@@ -50,7 +51,7 @@ class DatabaseAnalyzer:
         Executes database-wide quick analysis orchestration.
         Safe, read-only, failure-isolated, and bounded in concurrency.
         """
-        started_at = datetime.now(timezone.utc)
+        started_at = datetime.now(UTC)
         t_start = time.perf_counter()
 
         # 1. Discover all tables (fetch up to 10,000 to cover all DB tables without truncation)
@@ -119,25 +120,17 @@ class DatabaseAnalyzer:
 
         # 5. Launch all table analyses concurrently respecting bounded semaphore
         if plan.table_plans:
-            table_results = await asyncio.gather(
-                *[_run_table_plan(tp) for tp in plan.table_plans]
-            )
+            table_results = await asyncio.gather(*[_run_table_plan(tp) for tp in plan.table_plans])
         else:
             table_results = []
 
         # 6. Database summary calculations
-        completed_at = datetime.now(timezone.utc)
+        completed_at = datetime.now(UTC)
         duration_ms = round((time.perf_counter() - t_start) * 1000, 2)
 
-        tables_analyzed = sum(
-            1 for r in table_results if r.status == TableAnalysisStatus.COMPLETED
-        )
-        tables_skipped = sum(
-            1 for r in table_results if r.status == TableAnalysisStatus.SKIPPED
-        )
-        tables_failed = sum(
-            1 for r in table_results if r.status == TableAnalysisStatus.FAILED
-        )
+        tables_analyzed = sum(1 for r in table_results if r.status == TableAnalysisStatus.COMPLETED)
+        tables_skipped = sum(1 for r in table_results if r.status == TableAnalysisStatus.SKIPPED)
+        tables_failed = sum(1 for r in table_results if r.status == TableAnalysisStatus.FAILED)
 
         columns_discovered = sum(r.column_count for r in table_results)
         columns_profiled = sum(r.profiled_columns for r in table_results)

@@ -35,16 +35,12 @@ app = FastAPI(
 # Exception handlers
 @app.exception_handler(TableNotFoundError)
 async def table_not_found_handler(request: Request, exc: TableNotFoundError):
-    return JSONResponse(
-        status_code=404, content={"error": "TableNotFound", "detail": str(exc)}
-    )
+    return JSONResponse(status_code=404, content={"error": "TableNotFound", "detail": str(exc)})
 
 
 @app.exception_handler(ReadOnlyViolationError)
 async def readonly_violation_handler(request: Request, exc: ReadOnlyViolationError):
-    return JSONResponse(
-        status_code=403, content={"error": "ReadOnlyViolation", "detail": str(exc)}
-    )
+    return JSONResponse(status_code=403, content={"error": "ReadOnlyViolation", "detail": str(exc)})
 
 
 @app.exception_handler(DatabaseConnectionError)
@@ -61,9 +57,7 @@ async def database_connection_handler(request: Request, exc: DatabaseConnectionE
 
 @app.exception_handler(DiscoveryError)
 async def discovery_error_handler(request: Request, exc: DiscoveryError):
-    return JSONResponse(
-        status_code=500, content={"error": "DiscoveryError", "detail": str(exc)}
-    )
+    return JSONResponse(status_code=500, content={"error": "DiscoveryError", "detail": str(exc)})
 
 
 @app.exception_handler(Exception)
@@ -105,6 +99,4 @@ app.include_router(modules.router, prefix="/api/v1", tags=["Modules"])
 
 @app.get("/", tags=["Root"])
 async def root():
-    return {
-        "message": "Welcome to AIRIS Insights API. Visit /docs for the API reference."
-    }
+    return {"message": "Welcome to AIRIS Insights API. Visit /docs for the API reference."}

@@ -13,11 +13,11 @@ from app.persistence.models.table_result import (
 )
 
 __all__ = [
-    "AnalysisRunStatus",
-    "AnalysisRunModel",
+    "AnalysisColumnClassificationModel",
+    "AnalysisColumnProfileModel",
     "AnalysisErrorModel",
+    "AnalysisRunModel",
+    "AnalysisRunStatus",
     "AnalysisTableResultModel",
     "AnalysisTableTimingModel",
-    "AnalysisColumnProfileModel",
-    "AnalysisColumnClassificationModel",
 ]

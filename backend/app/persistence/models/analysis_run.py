@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
-from enum import Enum
 import uuid
+from datetime import UTC, datetime
+from enum import StrEnum
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -9,10 +9,10 @@ from app.db.postgres import Base
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
-class AnalysisRunStatus(str, Enum):
+class AnalysisRunStatus(StrEnum):
     QUEUED = "QUEUED"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
@@ -25,9 +25,7 @@ class AnalysisRunStatus(str, Enum):
 class AnalysisRunModel(Base):
     __tablename__ = "analysis_runs"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     database_name: Mapped[str] = mapped_column(String(128), nullable=False)
     analysis_type: Mapped[str] = mapped_column(String(64), default="QUICK", nullable=False)
     schema_filter: Mapped[str | None] = mapped_column(String(128), nullable=True)
@@ -49,12 +47,8 @@ class AnalysisRunModel(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
-    started_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)

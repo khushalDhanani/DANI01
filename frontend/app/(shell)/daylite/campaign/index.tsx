@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import {
   BarChart3,
-  Calendar,
   Clock,
-  Filter,
   Gift,
   RefreshCw,
   Sparkles,

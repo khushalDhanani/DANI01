@@ -47,9 +47,7 @@ def get_classification_service() -> TableClassifier:
 DiscoveryServiceDep = Annotated[MetadataDiscovery, Depends(get_discovery_service)]
 SamplingServiceDep = Annotated[TableSampler, Depends(get_sampling_service)]
 ProfilingServiceDep = Annotated[TableProfiler, Depends(get_profiling_service)]
-ClassificationServiceDep = Annotated[
-    TableClassifier, Depends(get_classification_service)
-]
+ClassificationServiceDep = Annotated[TableClassifier, Depends(get_classification_service)]
 
 
 @router.get("/summary", response_model=DatabaseSummary)
@@ -84,9 +82,7 @@ async def get_tables(
     sort_by: Literal["schema", "table", "estimated_rows", "column_count"] = Query(
         default="table", description="Field to sort by"
     ),
-    sort_order: Literal["asc", "desc"] = Query(
-        default="asc", description="Sort order (asc/desc)"
-    ),
+    sort_order: Literal["asc", "desc"] = Query(default="asc", description="Sort order (asc/desc)"),
 ):
     """Discovers tables with pagination, schema filtering, search filtering, and safe sorting."""
     try:
@@ -218,9 +214,7 @@ async def profile_table(
     schema_name: str,
     table_name: str,
     service: ProfilingServiceDep,
-    limit: int = Query(
-        default=1000, ge=1, le=10000, description="Sample size to profile"
-    ),
+    limit: int = Query(default=1000, ge=1, le=10000, description="Sample size to profile"),
 ):
     """Generates an in-memory statistical profile of a table using Polars."""
     try:

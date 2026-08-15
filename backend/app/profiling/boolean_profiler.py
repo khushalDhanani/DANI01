@@ -33,13 +33,11 @@ def profile_boolean_column(
     distinct_count = series.n_unique()
     distinct_percent = round((distinct_count / total_rows) * 100, 2)
 
-    true_count = int((bool_series == True).sum()) if valid_count > 0 else 0
-    false_count = int((bool_series == False).sum()) if valid_count > 0 else 0
+    true_count = int(bool_series.sum()) if valid_count > 0 else 0
+    false_count = int((~bool_series).sum()) if valid_count > 0 else 0
 
     true_percent = round((true_count / total_rows) * 100, 2) if total_rows > 0 else 0.0
-    false_percent = (
-        round((false_count / total_rows) * 100, 2) if total_rows > 0 else 0.0
-    )
+    false_percent = round((false_count / total_rows) * 100, 2) if total_rows > 0 else 0.0
 
     vc = non_null_series.value_counts(sort=True).head(5)
     top_values = [

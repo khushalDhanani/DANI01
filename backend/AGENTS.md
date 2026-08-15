@@ -53,6 +53,10 @@ backend/
 │   └── main.py
 ├── migrations/
 ├── tests/
+│   ├── unit/
+│   ├── api/
+│   ├── integration/
+│   └── conftest.py
 ├── .env.example
 ├── alembic.ini
 ├── docker-compose.yml
@@ -513,11 +517,23 @@ Run API:
 uv run uvicorn app.main:app --reload
 ```
 
-Tests:
+Tests (Unit & API suite):
 
 ```bash
-uv run pytest
+uv run pytest -m "not integration"
 ```
+
+Live Integration Tests (requiring configured live MSSQL database):
+
+```bash
+uv run pytest -m integration
+```
+
+### Testing Rules & Coverage Enforcement:
+- **Coverage Gate**: `pytest-cov` is configured in `pyproject.toml` with a mandatory **80% minimum coverage gate** (`fail_under = 80`). Any PR/feature that drops test coverage below 80% will fail `uv run pytest`.
+- **API & Route Unit Tests** (`tests/api/`): MUST patch `execute_readonly_query` or the service layer so that tests run deterministically and fast without requiring an active external MSSQL database connection or specific database record IDs.
+- **Integration Tests** (`tests/integration/`): Tests performing live database operations or testing ODBC connection drivers must be marked with `@pytest.mark.integration`.
+- **Fixtures**: Shared test fixtures and mocks belong in `tests/conftest.py`.
 
 Lint:
 
@@ -541,16 +557,18 @@ uv run ruff format .
 
 A backend change is complete only when relevant items below are satisfied:
 
-- [ ] source MSSQL read-only guarantees are preserved;
+- [ ] `uv run ruff check .` passes;
+- [ ] `uv run ruff format --check .` passes;
+- [ ] `uv run pytest -m "not integration"` passes (with minimum 80% coverage threshold maintained);
+- [ ] new feature/business behavior includes corresponding deterministic unit/API tests;
+- [ ] live DB integration tests are isolated in `tests/integration/` and marked with `@pytest.mark.integration`;
+- [ ] source MSSQL read-only guarantees are strictly preserved;
 - [ ] no unbounded query/table scan was introduced;
 - [ ] runtime limits come from configuration where applicable;
 - [ ] data-quality rules have one canonical implementation;
 - [ ] KPI/count/list/export paths remain consistent;
-- [ ] request/response contracts are typed;
+- [ ] request/response contracts are typed with Pydantic schemas;
 - [ ] `.env.example` is synchronized for new settings;
 - [ ] migrations target only AIRIS internal persistence;
-- [ ] affected tests pass;
-- [ ] `uv run ruff check .` passes;
-- [ ] formatting is valid;
 - [ ] frontend consumers were updated if the API contract changed;
 - [ ] no secrets or unnecessary PII are logged/exposed.

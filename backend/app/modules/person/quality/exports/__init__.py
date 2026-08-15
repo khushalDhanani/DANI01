@@ -53,15 +53,17 @@ def export_summary_report(
     rows: list[list[Any]] = []
     for rule in ALL_RULES:
         val = getattr(summary, rule.summary_field, 0)
-        rows.append([
-            dimension_display_map.get(rule.dimension, rule.dimension),
-            rule.title,
-            rule.code.value,
-            rule.severity,
-            rule.unit_label_plural,
-            val,
-            rule.description,
-        ])
+        rows.append(
+            [
+                dimension_display_map.get(rule.dimension, rule.dimension),
+                rule.title,
+                rule.code.value,
+                rule.severity,
+                rule.unit_label_plural,
+                val,
+                rule.description,
+            ]
+        )
 
     if is_csv:
         content = generate_csv(headers, rows)
@@ -103,17 +105,19 @@ def export_issues_dataset(
 
     data_rows: list[list[Any]] = []
     for item in items:
-        data_rows.append([
-            item.person_id,
-            item.person_name,
-            item.issue_code,
-            item.severity,
-            item.contact_type,
-            item.label_name or "",
-            item.masked_value or item.current_value or "",
-            item.issue_description,
-            "Yes" if item.is_active else "No",
-        ])
+        data_rows.append(
+            [
+                item.person_id,
+                item.person_name,
+                item.issue_code,
+                item.severity,
+                item.contact_type,
+                item.label_name or "",
+                item.masked_value or item.current_value or "",
+                item.issue_description,
+                "Yes" if item.is_active else "No",
+            ]
+        )
 
     if is_csv:
         content = generate_csv(headers, data_rows)

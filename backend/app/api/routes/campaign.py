@@ -4,8 +4,8 @@ from app.modules.campaign.campaign_service import CampaignService
 from app.schemas.campaign import (
     PRCampaignDetail,
     PRCampaignSummary,
-    PRTransactionPageResponse,
     PRTransactionLogPageResponse,
+    PRTransactionPageResponse,
 )
 
 router = APIRouter()
@@ -20,9 +20,15 @@ def get_campaigns():
 @router.get("/transactions", response_model=PRTransactionPageResponse)
 def get_pr_transactions(
     camp_id: int | None = Query(None, description="Filter by Campaign ID"),
-    review_status_id: int | None = Query(None, description="Filter by Review Status ID (548=Pending, 550=Approved, 551=Reject)"),
-    delivery_status_id: int | None = Query(None, description="Filter by Delivery Status ID (554=Pending, 555=Delivered, 559=Decline)"),
-    search: str | None = Query(None, description="Search recipient name, PR owner name, or campaign title"),
+    review_status_id: int | None = Query(
+        None, description="Filter by Review Status ID (548=Pending, 550=Approved, 551=Reject)"
+    ),
+    delivery_status_id: int | None = Query(
+        None, description="Filter by Delivery Status ID (554=Pending, 555=Delivered, 559=Decline)"
+    ),
+    search: str | None = Query(
+        None, description="Search recipient name, PR owner name, or campaign title"
+    ),
     limit: int = Query(25, ge=1, le=200, description="Page size limit"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
 ):

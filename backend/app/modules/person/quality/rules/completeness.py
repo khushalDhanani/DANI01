@@ -29,7 +29,7 @@ class PersonMissingAddressRule(PersonQualityRule):
         WITH DistinctAddresses AS (
             SELECT DISTINCT PersonID FROM dbo.DLPersonAddressDet WHERE PersonID IS NOT NULL
         )
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_active,
             SUM(CASE WHEN a.PersonID IS NULL THEN 1 ELSE 0 END) AS missing_addr
         FROM dbo.DLPersonMst p
@@ -75,7 +75,7 @@ class PersonMissingContactRule(PersonQualityRule):
         WITH DistinctContacts AS (
             SELECT DISTINCT PersionID AS PersonID FROM dbo.DLPersonPhoneEmailURLDet WHERE PersionID IS NOT NULL
         )
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_active,
             SUM(CASE WHEN c.PersonID IS NULL THEN 1 ELSE 0 END) AS missing_contact
         FROM dbo.DLPersonMst p
@@ -119,10 +119,10 @@ class PersonMissingEmailRule(PersonQualityRule):
     def evaluate(self) -> QualityFinding:
         query = """
         WITH DistinctEmails AS (
-            SELECT DISTINCT PersionID AS PersonID FROM dbo.DLPersonPhoneEmailURLDet 
+            SELECT DISTINCT PersionID AS PersonID FROM dbo.DLPersonPhoneEmailURLDet
             WHERE PersionID IS NOT NULL AND TypeValue LIKE '%@%'
         )
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_active,
             SUM(CASE WHEN e.PersonID IS NULL THEN 1 ELSE 0 END) AS missing_email
         FROM dbo.DLPersonMst p
@@ -166,13 +166,13 @@ class PersonMissingPhoneRule(PersonQualityRule):
     def evaluate(self) -> QualityFinding:
         query = """
         WITH DistinctPhones AS (
-            SELECT DISTINCT PersionID AS PersonID FROM dbo.DLPersonPhoneEmailURLDet 
-            WHERE PersionID IS NOT NULL 
-              AND TypeValue NOT LIKE '%@%' 
-              AND TypeValue NOT LIKE 'http%' 
+            SELECT DISTINCT PersionID AS PersonID FROM dbo.DLPersonPhoneEmailURLDet
+            WHERE PersionID IS NOT NULL
+              AND TypeValue NOT LIKE '%@%'
+              AND TypeValue NOT LIKE 'http%'
               AND TypeValue NOT LIKE 'www%'
         )
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_active,
             SUM(CASE WHEN ph.PersonID IS NULL THEN 1 ELSE 0 END) AS missing_phone
         FROM dbo.DLPersonMst p
@@ -204,7 +204,9 @@ class PersonMissingCompanyLinkRule(PersonQualityRule):
     category = QualityCategory.COMPLETENESS
     severity = QualitySeverity.MEDIUM
     title = "Active persons without company link"
-    description = "Checks active persons who have no organization or corporate affiliation link records."
+    description = (
+        "Checks active persons who have no organization or corporate affiliation link records."
+    )
 
     def check_applicability(self, tables_map: dict[str, Any]) -> tuple[bool, str | None]:
         if "dlpersonmst" not in tables_map:
@@ -218,7 +220,7 @@ class PersonMissingCompanyLinkRule(PersonQualityRule):
         WITH DistinctCompanyLinks AS (
             SELECT DISTINCT PersonID FROM dbo.DLPersonCompanyLinkDet WHERE PersonID IS NOT NULL
         )
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_active,
             SUM(CASE WHEN cl.PersonID IS NULL THEN 1 ELSE 0 END) AS missing_company
         FROM dbo.DLPersonMst p

@@ -1,7 +1,8 @@
 import logging
 import time
 
-from sqlalchemy.exc import SQLAlchemyError, TimeoutError as SQLTimeoutError
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import TimeoutError as SQLTimeoutError
 
 from app.classification.classifier import TableClassifier
 from app.core.exceptions import (
@@ -29,7 +30,7 @@ class TableAnalyzer:
     1. Structural discovery (columns, types, constraints)
     2. Safe bounded TOP N sampling & Polars profiling
     3. Semantic classification & sensitivity rating
-    
+
     Provides strict failure isolation — an error on one table is captured and sanitized,
     never crashing the wider database analysis.
     """
@@ -43,9 +44,7 @@ class TableAnalyzer:
     ):
         self.discovery = discovery or MetadataDiscovery()
         self.sampler = sampler or TableSampler(discovery=self.discovery)
-        self.profiler = profiler or TableProfiler(
-            sampler=self.sampler, discovery=self.discovery
-        )
+        self.profiler = profiler or TableProfiler(sampler=self.sampler, discovery=self.discovery)
         self.classifier = classifier or TableClassifier(discovery=self.discovery)
 
     def analyze_table(self, plan: TableAnalysisPlan) -> TableAnalysisSummary:
@@ -93,26 +92,18 @@ class TableAnalyzer:
             # Step 1: Structural Metadata Discovery
             t_struct = time.perf_counter()
             columns_meta = self.discovery.get_columns(schema, table)
-            timings.structure_duration_ms = round(
-                (time.perf_counter() - t_struct) * 1000, 2
-            )
+            timings.structure_duration_ms = round((time.perf_counter() - t_struct) * 1000, 2)
             column_count = len(columns_meta)
 
             # Step 2: Sampling & Polars Profiling
             t_prof = time.perf_counter()
-            profile_response = self.profiler.profile_table(
-                schema, table, limit=plan.sample_size
-            )
-            timings.profiling_duration_ms = round(
-                (time.perf_counter() - t_prof) * 1000, 2
-            )
+            profile_response = self.profiler.profile_table(schema, table, limit=plan.sample_size)
+            timings.profiling_duration_ms = round((time.perf_counter() - t_prof) * 1000, 2)
 
             # Step 3: Semantic Classification
             t_class = time.perf_counter()
             classification_response = self.classifier.classify_table(schema, table)
-            timings.classification_duration_ms = round(
-                (time.perf_counter() - t_class) * 1000, 2
-            )
+            timings.classification_duration_ms = round((time.perf_counter() - t_class) * 1000, 2)
 
             # Calculate total duration
             total_duration_ms = round((time.perf_counter() - t_start) * 1000, 2)
@@ -144,7 +135,7 @@ class TableAnalyzer:
             )
             return summary
 
-        except (SQLTimeoutError, TimeoutError) as e:
+        except (SQLTimeoutError, TimeoutError):
             total_duration_ms = round((time.perf_counter() - t_start) * 1000, 2)
             timings.total_duration_ms = total_duration_ms
             error_code = "QUERY_TIMEOUT"
@@ -169,7 +160,7 @@ class TableAnalyzer:
                 error_message=error_msg,
             )
 
-        except TableNotFoundError as e:
+        except TableNotFoundError:
             total_duration_ms = round((time.perf_counter() - t_start) * 1000, 2)
             timings.total_duration_ms = total_duration_ms
             error_code = "TABLE_NOT_FOUND"
@@ -199,9 +190,7 @@ class TableAnalyzer:
             timings.total_duration_ms = total_duration_ms
             error_code = "DATABASE_ERROR"
             error_msg = f"Database operation failed during analysis of '{schema}.{table}'."
-            logger.error(
-                f"Database error analyzing table {schema}.{table}: {e}", exc_info=False
-            )
+            logger.error(f"Database error analyzing table {schema}.{table}: {e}", exc_info=False)
             log_event(
                 "analysis.table.failed",
                 level=logging.ERROR,

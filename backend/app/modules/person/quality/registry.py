@@ -164,7 +164,6 @@ class PersonQualityRuleRegistry:
 person_quality_rule_registry = PersonQualityRuleRegistry()
 
 
-
 __all__ = [
     "ACTIVE_EMP_MISSING_TITLE_WHERE_SQL",
     "ACTIVE_PERSON_WHERE_SQL",

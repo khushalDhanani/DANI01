@@ -9,9 +9,7 @@ from app.schemas.analysis import TableAnalysisTimings
 class CreateAnalysisRunRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    analysis_type: str = Field(
-        default="QUICK", description="Type of analysis (e.g. 'QUICK')"
-    )
+    analysis_type: str = Field(default="QUICK", description="Type of analysis (e.g. 'QUICK')")
     schema_name: str | None = Field(
         default=None,
         alias="schema",

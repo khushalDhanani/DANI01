@@ -12,23 +12,23 @@ from app.modules.person.quality.models import (
 
 # Canonical Predicates
 PERSON_ANNIVERSARY_BEFORE_BIRTH_WHERE_SQL = """
-p.PersonAnneversaryDate IS NOT NULL 
-AND p.PersonBirthDate IS NOT NULL 
+p.PersonAnneversaryDate IS NOT NULL
+AND p.PersonBirthDate IS NOT NULL
 AND p.PersonAnneversaryDate < p.PersonBirthDate
 """.strip()
 
 PERSON_INVALID_BIRTH_DATE_WHERE_SQL = """
-p.PersonBirthDate IS NOT NULL 
+p.PersonBirthDate IS NOT NULL
 AND (
-    p.PersonBirthDate > GETDATE() 
+    p.PersonBirthDate > GETDATE()
     OR p.PersonBirthDate < '1900-01-01'
 )
 """.strip()
 
 PERSON_BIRTH_DATE_ANCIENT_WHERE_SQL = """
-p.PersonBirthDate IS NOT NULL 
+p.PersonBirthDate IS NOT NULL
 AND (
-    CAST(p.PersonBirthDate AS DATE) = '1900-01-01' 
+    CAST(p.PersonBirthDate AS DATE) = '1900-01-01'
     OR DATEDIFF(year, p.PersonBirthDate, GETDATE()) > 100
 )
 """.strip()
@@ -43,8 +43,8 @@ PERSON_SUSPICIOUS_DUMMY_NAMES_WHERE_SQL = """
 """.strip()
 
 PERSON_MISSING_LASTNAME_ONLY_WHERE_SQL = """
-p.PersonFirstName IS NOT NULL 
-AND LTRIM(RTRIM(p.PersonFirstName)) <> '' 
+p.PersonFirstName IS NOT NULL
+AND LTRIM(RTRIM(p.PersonFirstName)) <> ''
 AND (p.PersonLastName IS NULL OR LTRIM(RTRIM(p.PersonLastName)) = '')
 """.strip()
 

@@ -12,34 +12,34 @@ from app.modules.person.quality.models import (
 
 # Canonical Predicates
 BLACKLIST_UNAPPROVED_WHERE_SQL = """
-p.PersonIsBlackList = 1 
+p.PersonIsBlackList = 1
 AND (p.PersonBlackListHODApprove IS NULL OR p.PersonBlackListHODApprove = 0)
 """.strip()
 
 BLACKLIST_MISSING_DETAILS_WHERE_SQL = """
-p.PersonIsBlackList = 1 
+p.PersonIsBlackList = 1
 AND (
-    p.PersonBlackListDate IS NULL 
-    OR p.PersonBlackListType IS NULL 
+    p.PersonBlackListDate IS NULL
+    OR p.PersonBlackListType IS NULL
     OR LTRIM(RTRIM(CAST(p.PersonBlackListType AS VARCHAR(100)))) = ''
 )
 """.strip()
 
 COMPANY_ORPHAN_LINKS_WHERE_SQL = """
-l.DLCompID IS NOT NULL 
+l.DLCompID IS NOT NULL
 AND l.DLCompID > 0
 AND NOT EXISTS (
-    SELECT 1 
-    FROM dbo.DLCompanyMst c 
+    SELECT 1
+    FROM dbo.DLCompanyMst c
     WHERE c.DLCompID = l.DLCompID
 )
 """.strip()
 
 COMPANY_DUPLICATE_LINKS_WHERE_SQL = """
-l.DLCompID IS NOT NULL 
+l.DLCompID IS NOT NULL
 AND l.DLCompID > 0
 AND EXISTS (
-    SELECT 1 
+    SELECT 1
     FROM dbo.DLPersonCompanyLinkDet dup
     WHERE dup.PersonID = l.PersonID
       AND dup.PersonLinkID <> l.PersonLinkID
@@ -48,26 +48,26 @@ AND EXISTS (
 """.strip()
 
 COMPANY_MISSING_ROLE_WHERE_SQL = """
-l.DLCompID IS NOT NULL 
+l.DLCompID IS NOT NULL
 AND l.DLCompID > 0
 AND (l.CompPersonRoleID IS NULL OR l.CompPersonRoleID = 0)
 """.strip()
 
 EXTRA_FIELD_ORPHAN_ID_WHERE_SQL = """
-e.ExtraFieldID IS NOT NULL 
+e.ExtraFieldID IS NOT NULL
 AND e.ExtraFieldID > 0
 AND NOT EXISTS (
-    SELECT 1 
-    FROM dbo.DLExtraFieldDet ef 
+    SELECT 1
+    FROM dbo.DLExtraFieldDet ef
     WHERE ef.ExtraFieldID = e.ExtraFieldID
 )
 """.strip()
 
 EXTRA_FIELD_DUPLICATE_ENTRIES_WHERE_SQL = """
-e.ExtraFieldID IS NOT NULL 
+e.ExtraFieldID IS NOT NULL
 AND e.ExtraFieldID > 0
 AND EXISTS (
-    SELECT 1 
+    SELECT 1
     FROM dbo.DLPersonExtraFieldValueDet dup
     WHERE dup.PersonID = e.PersonID
       AND dup.PersonExtraFieldValueID <> e.PersonExtraFieldValueID

@@ -16,9 +16,7 @@ def test_get_database_summary():
         "column_count": 14682,
         "estimated_rows": 284021923,
     }
-    with patch(
-        "app.discovery.metadata.execute_readonly_query", return_value=[mock_row]
-    ):
+    with patch("app.discovery.metadata.execute_readonly_query", return_value=[mock_row]):
         service = MetadataDiscovery(db_name="AIRIS_TEST")
         summary = service.get_database_summary()
         assert summary.database == "AIRIS_TEST"

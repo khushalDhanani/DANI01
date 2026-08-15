@@ -66,9 +66,7 @@ class MetadataDiscovery:
         except (TableNotFoundError, DatabaseConnectionError, DiscoveryError):
             raise
         except SQLAlchemyError as e:
-            logger.error(
-                f"Failed to check table existence '{schema_name}.{table_name}': {e}"
-            )
+            logger.error(f"Failed to check table existence '{schema_name}.{table_name}': {e}")
             raise DiscoveryError(
                 f"Error checking table existence '{schema_name}.{table_name}': {e}"
             ) from e
@@ -76,26 +74,26 @@ class MetadataDiscovery:
     def get_database_summary(self) -> DatabaseSummary:
         """Fetches high-level metadata summary of the MSSQL database."""
         query = f"""
-        SELECT 
+        SELECT
             (SELECT COUNT(DISTINCT s.schema_id)
              FROM sys.schemas s
              JOIN sys.tables t ON t.schema_id = s.schema_id
              WHERE s.name NOT IN ({SYSTEM_SCHEMAS})
                AND t.is_ms_shipped = 0) AS schema_count,
-               
+
             (SELECT COUNT(t.object_id)
              FROM sys.tables t
              JOIN sys.schemas s ON t.schema_id = s.schema_id
              WHERE s.name NOT IN ({SYSTEM_SCHEMAS})
                AND t.is_ms_shipped = 0) AS table_count,
-               
+
             (SELECT COUNT(c.column_id)
              FROM sys.columns c
              JOIN sys.tables t ON c.object_id = t.object_id
              JOIN sys.schemas s ON t.schema_id = s.schema_id
              WHERE s.name NOT IN ({SYSTEM_SCHEMAS})
                AND t.is_ms_shipped = 0) AS column_count,
-               
+
             (SELECT ISNULL(SUM(p.rows), 0)
              FROM sys.partitions p
              JOIN sys.tables t ON p.object_id = t.object_id
@@ -125,7 +123,7 @@ class MetadataDiscovery:
     def get_schemas(self) -> SchemaListResponse:
         """Discovers non-system schemas and their associated table counts."""
         query = f"""
-        SELECT 
+        SELECT
             s.name AS name,
             COUNT(t.object_id) AS table_count
         FROM sys.schemas s
@@ -137,10 +135,7 @@ class MetadataDiscovery:
         """
         try:
             rows = execute_readonly_query(query)
-            items = [
-                SchemaInfo(name=r["name"], table_count=r["table_count"] or 0)
-                for r in rows
-            ]
+            items = [SchemaInfo(name=r["name"], table_count=r["table_count"] or 0) for r in rows]
             return SchemaListResponse(items=items, total=len(items))
         except (DatabaseConnectionError, DiscoveryError):
             raise
@@ -179,7 +174,7 @@ class MetadataDiscovery:
 
         data_query = f"""
         WITH TableData AS (
-            SELECT 
+            SELECT
                 s.name AS [schema],
                 t.name AS [table],
                 ISNULL(part.estimated_rows, 0) AS estimated_rows,
@@ -231,9 +226,7 @@ class MetadataDiscovery:
                 for r in data_rows
             ]
 
-            return TableListResponse(
-                items=items, total=total, limit=limit, offset=offset
-            )
+            return TableListResponse(items=items, total=total, limit=limit, offset=offset)
         except (DatabaseConnectionError, DiscoveryError):
             raise
         except SQLAlchemyError as e:
@@ -243,7 +236,7 @@ class MetadataDiscovery:
     def get_table(self, schema_name: str, table_name: str) -> TableInfo:
         """Fetches metadata for a single specific table."""
         query = """
-        SELECT 
+        SELECT
             s.name AS [schema],
             t.name AS [table],
             ISNULL(part.estimated_rows, 0) AS estimated_rows,
@@ -281,20 +274,18 @@ class MetadataDiscovery:
             raise
         except SQLAlchemyError as e:
             logger.error(f"Failed to fetch table '{schema_name}.{table_name}': {e}")
-            raise DiscoveryError(
-                f"Error fetching table '{schema_name}.{table_name}': {e}"
-            ) from e
+            raise DiscoveryError(f"Error fetching table '{schema_name}.{table_name}': {e}") from e
 
     def get_columns(self, schema_name: str, table_name: str) -> list[ColumnInfo]:
         """Discovers column specifications for a specific table."""
         self._verify_table_exists(schema_name, table_name)
 
         query = """
-        SELECT 
+        SELECT
             c.column_id AS ordinal,
             c.name AS name,
             tp.name AS data_type,
-            CASE 
+            CASE
                 WHEN tp.name IN ('nchar', 'nvarchar') AND c.max_length > 0 THEN c.max_length / 2
                 WHEN tp.name IN ('nchar', 'nvarchar') AND c.max_length = -1 THEN -1
                 WHEN tp.name IN ('char', 'varchar', 'binary', 'varbinary') AND c.max_length = -1 THEN -1
@@ -337,12 +328,8 @@ class MetadataDiscovery:
                     ordinal=r["ordinal"],
                     name=r["name"],
                     data_type=r["data_type"],
-                    max_length=int(r["max_length"])
-                    if r["max_length"] is not None
-                    else None,
-                    precision=int(r["precision"])
-                    if r["precision"] is not None
-                    else None,
+                    max_length=int(r["max_length"]) if r["max_length"] is not None else None,
+                    precision=int(r["precision"]) if r["precision"] is not None else None,
                     scale=int(r["scale"]) if r["scale"] is not None else None,
                     nullable=bool(r["nullable"]),
                     identity=bool(r["identity"]),
@@ -357,16 +344,12 @@ class MetadataDiscovery:
         except (TableNotFoundError, DatabaseConnectionError, DiscoveryError):
             raise
         except SQLAlchemyError as e:
-            logger.error(
-                f"Failed to fetch columns for '{schema_name}.{table_name}': {e}"
-            )
+            logger.error(f"Failed to fetch columns for '{schema_name}.{table_name}': {e}")
             raise DiscoveryError(
                 f"Error fetching columns for '{schema_name}.{table_name}': {e}"
             ) from e
 
-    def get_column_list_response(
-        self, schema_name: str, table_name: str
-    ) -> ColumnListResponse:
+    def get_column_list_response(self, schema_name: str, table_name: str) -> ColumnListResponse:
         """Returns the full ColumnListResponse model for a table."""
         columns = self.get_columns(schema_name, table_name)
         return ColumnListResponse(
@@ -375,14 +358,12 @@ class MetadataDiscovery:
             columns=columns,
         )
 
-    def get_primary_key(
-        self, schema_name: str, table_name: str
-    ) -> PrimaryKeyInfo | None:
+    def get_primary_key(self, schema_name: str, table_name: str) -> PrimaryKeyInfo | None:
         """Discovers primary key constraint and key columns for a specific table."""
         self._verify_table_exists(schema_name, table_name)
 
         query = """
-        SELECT 
+        SELECT
             i.name AS constraint_name,
             c.name AS column_name,
             ic.key_ordinal AS ordinal
@@ -402,29 +383,22 @@ class MetadataDiscovery:
                 return None
 
             constraint_name = rows[0]["constraint_name"]
-            columns = [
-                PrimaryKeyColumn(name=r["column_name"], ordinal=r["ordinal"])
-                for r in rows
-            ]
+            columns = [PrimaryKeyColumn(name=r["column_name"], ordinal=r["ordinal"]) for r in rows]
             return PrimaryKeyInfo(name=constraint_name, columns=columns)
         except (TableNotFoundError, DatabaseConnectionError, DiscoveryError):
             raise
         except SQLAlchemyError as e:
-            logger.error(
-                f"Failed to fetch primary key for '{schema_name}.{table_name}': {e}"
-            )
+            logger.error(f"Failed to fetch primary key for '{schema_name}.{table_name}': {e}")
             raise DiscoveryError(
                 f"Error fetching primary key for '{schema_name}.{table_name}': {e}"
             ) from e
 
-    def get_foreign_keys(
-        self, schema_name: str, table_name: str
-    ) -> list[ForeignKeyInfo]:
+    def get_foreign_keys(self, schema_name: str, table_name: str) -> list[ForeignKeyInfo]:
         """Discovers foreign key constraints for a specific table."""
         self._verify_table_exists(schema_name, table_name)
 
         query = """
-        SELECT 
+        SELECT
             fk.name AS fk_name,
             fk.delete_referential_action_desc AS on_delete,
             fk.update_referential_action_desc AS on_update,
@@ -474,9 +448,7 @@ class MetadataDiscovery:
         except (TableNotFoundError, DatabaseConnectionError, DiscoveryError):
             raise
         except SQLAlchemyError as e:
-            logger.error(
-                f"Failed to fetch foreign keys for '{schema_name}.{table_name}': {e}"
-            )
+            logger.error(f"Failed to fetch foreign keys for '{schema_name}.{table_name}': {e}")
             raise DiscoveryError(
                 f"Error fetching foreign keys for '{schema_name}.{table_name}': {e}"
             ) from e
@@ -486,7 +458,7 @@ class MetadataDiscovery:
         self._verify_table_exists(schema_name, table_name)
 
         query = """
-        SELECT 
+        SELECT
             i.name AS index_name,
             i.type_desc AS type_desc,
             i.is_unique,
@@ -502,7 +474,7 @@ class MetadataDiscovery:
         JOIN sys.indexes i ON t.object_id = i.object_id
         JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
         JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-        WHERE s.name = :schema_name 
+        WHERE s.name = :schema_name
           AND t.name = :table_name
           AND i.type > 0
         ORDER BY i.name, ic.is_included_column, ic.key_ordinal, c.name;
@@ -541,16 +513,12 @@ class MetadataDiscovery:
         except (TableNotFoundError, DatabaseConnectionError, DiscoveryError):
             raise
         except SQLAlchemyError as e:
-            logger.error(
-                f"Failed to fetch indexes for '{schema_name}.{table_name}': {e}"
-            )
+            logger.error(f"Failed to fetch indexes for '{schema_name}.{table_name}': {e}")
             raise DiscoveryError(
                 f"Error fetching indexes for '{schema_name}.{table_name}': {e}"
             ) from e
 
-    def get_index_list_response(
-        self, schema_name: str, table_name: str
-    ) -> IndexListResponse:
+    def get_index_list_response(self, schema_name: str, table_name: str) -> IndexListResponse:
         """Returns the full IndexListResponse model for a table."""
         indexes = self.get_indexes(schema_name, table_name)
         return IndexListResponse(
@@ -570,9 +538,7 @@ class MetadataDiscovery:
             foreign_keys=fks,
         )
 
-    def get_table_structure(
-        self, schema_name: str, table_name: str
-    ) -> TableStructureResponse:
+    def get_table_structure(self, schema_name: str, table_name: str) -> TableStructureResponse:
         """Discovers full table structure (table metadata, columns, PK, FKs, and indexes)."""
         table_info = self.get_table(schema_name, table_name)
         columns = self.get_columns(schema_name, table_name)

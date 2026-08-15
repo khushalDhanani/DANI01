@@ -1,3 +1,5 @@
+# Ensure built-in definitions are loaded
+import app.modules.definitions  # noqa: F401
 from app.modules.analyzer import ModuleAnalyzer
 from app.modules.models import (
     ModuleAnalysisContext,
@@ -12,21 +14,18 @@ from app.modules.models import (
 )
 from app.modules.registry import DuplicateModuleError, ModuleRegistry, module_registry
 
-# Ensure built-in definitions are loaded
-import app.modules.definitions  # noqa: F401
-
 __all__ = [
+    "DuplicateModuleError",
+    "ModuleAnalysisContext",
+    "ModuleAnalysisResult",
     "ModuleAnalyzer",
     "ModuleDefinition",
     "ModuleInfo",
+    "ModuleRegistry",
+    "ModuleRelationshipDefinition",
     "ModuleTableDefinition",
     "ModuleTableRole",
-    "ModuleRelationshipDefinition",
     "ModuleValidationResult",
     "ModuleValidationStatus",
-    "ModuleAnalysisContext",
-    "ModuleAnalysisResult",
-    "ModuleRegistry",
-    "DuplicateModuleError",
     "module_registry",
 ]

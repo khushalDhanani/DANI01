@@ -6,7 +6,7 @@ Domain models, enums, dataclasses, and Pydantic schemas for the Daylite Person Q
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -17,14 +17,14 @@ from app.modules.person.quality.common.persons import (
 )
 
 
-class QualityCategory(str, Enum):
+class QualityCategory(StrEnum):
     COMPLETENESS = "COMPLETENESS"
     VALIDITY = "VALIDITY"
     INTEGRITY = "INTEGRITY"
     CONSISTENCY = "CONSISTENCY"
 
 
-class QualitySeverity(str, Enum):
+class QualitySeverity(StrEnum):
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -32,7 +32,7 @@ class QualitySeverity(str, Enum):
     INFO = "INFO"
 
 
-class QualityFindingStatus(str, Enum):
+class QualityFindingStatus(StrEnum):
     PASSED = "PASSED"
     FAILED = "FAILED"
     WARNING = "WARNING"
@@ -81,18 +81,16 @@ class PersonQualityResponse(BaseModel):
     evaluated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
-
-
-class IssueCountUnit(str, Enum):
-    PERSON = "PERSON"                    # Root entity (dbo.DLPersonMst)
-    CONTACT = "CONTACT"                  # Communication channel (dbo.DLPersonPhoneEmailURLDet)
-    ADDRESS = "ADDRESS"                  # Physical location (dbo.DLPersonAddressDet)
-    COMPANY_LINK = "COMPANY_LINK"        # Corporate affiliation (dbo.DLPersonCompanyLinkDet)
-    EXTRA_FIELD = "EXTRA_FIELD"          # Custom attribute (dbo.DLPersonExtraFieldValueDet)
+class IssueCountUnit(StrEnum):
+    PERSON = "PERSON"  # Root entity (dbo.DLPersonMst)
+    CONTACT = "CONTACT"  # Communication channel (dbo.DLPersonPhoneEmailURLDet)
+    ADDRESS = "ADDRESS"  # Physical location (dbo.DLPersonAddressDet)
+    COMPANY_LINK = "COMPANY_LINK"  # Corporate affiliation (dbo.DLPersonCompanyLinkDet)
+    EXTRA_FIELD = "EXTRA_FIELD"  # Custom attribute (dbo.DLPersonExtraFieldValueDet)
     DUPLICATE_GROUP = "DUPLICATE_GROUP"  # Anomaly cluster sharing identical invalid identity
 
 
-class ContactQualityIssueType(str, Enum):
+class ContactQualityIssueType(StrEnum):
     # 1. Contact Issues
     MISSING_EMAIL = "MISSING_EMAIL"
     MISSING_PHONE = "MISSING_PHONE"
@@ -205,7 +203,9 @@ class QualityRule:
         elif self.target_entity == "COMPANY_LINK":
             return "dbo.DLPersonCompanyLinkDet l JOIN dbo.DLPersonMst p ON l.PersonID = p.PersonID"
         elif self.target_entity == "EXTRA_FIELD":
-            return "dbo.DLPersonExtraFieldValueDet e JOIN dbo.DLPersonMst p ON e.PersonID = p.PersonID"
+            return (
+                "dbo.DLPersonExtraFieldValueDet e JOIN dbo.DLPersonMst p ON e.PersonID = p.PersonID"
+            )
         else:  # PERSON
             return "dbo.DLPersonMst p"
 
@@ -317,67 +317,156 @@ class ContactQualitySummaryResponse(BaseModel):
     invalid_phones: int = Field(default=0, description="Malformed or invalid phone contact records")
     invalid_urls: int = Field(default=0, description="Malformed web URL contact records")
     unverified_contacts: int = Field(default=0, description="Total unverified contact records")
-    duplicate_email_cross_persons: int = Field(default=0, description="Unique email groups shared across multiple Persons")
-    duplicate_email_same_person: int = Field(default=0, description="Duplicate email sets entered more than once for same Person")
-    duplicate_phone_cross_persons: int = Field(default=0, description="Unique phone groups shared across multiple Persons")
-    duplicate_phone_same_person: int = Field(default=0, description="Duplicate phone sets entered more than once for same Person")
-    persons_multiple_primary: int = Field(default=0, description="Persons with more than 1 primary contact record")
-    primary_contact_inactive: int = Field(default=0, description="Primary contact marked inactive/disabled")
+    duplicate_email_cross_persons: int = Field(
+        default=0, description="Unique email groups shared across multiple Persons"
+    )
+    duplicate_email_same_person: int = Field(
+        default=0, description="Duplicate email sets entered more than once for same Person"
+    )
+    duplicate_phone_cross_persons: int = Field(
+        default=0, description="Unique phone groups shared across multiple Persons"
+    )
+    duplicate_phone_same_person: int = Field(
+        default=0, description="Duplicate phone sets entered more than once for same Person"
+    )
+    persons_multiple_primary: int = Field(
+        default=0, description="Persons with more than 1 primary contact record"
+    )
+    primary_contact_inactive: int = Field(
+        default=0, description="Primary contact marked inactive/disabled"
+    )
 
     # 2. Address Quality
-    addr_missing_postal_code: int = Field(default=0, description="Address records without postal code")
-    addr_invalid_pin_format: int = Field(default=0, description="Postal codes with invalid length or non-numeric digits")
-    addr_street_without_city: int = Field(default=0, description="Addresses with street populated but missing city")
-    addr_city_without_state: int = Field(default=0, description="Addresses with city populated but missing state")
-    addr_missing_geocodes: int = Field(default=0, description="Addresses missing latitude or longitude coordinates")
-    addr_duplicate_same_person: int = Field(default=0, description="Duplicate address sets entered more than once for same Person")
+    addr_missing_postal_code: int = Field(
+        default=0, description="Address records without postal code"
+    )
+    addr_invalid_pin_format: int = Field(
+        default=0, description="Postal codes with invalid length or non-numeric digits"
+    )
+    addr_street_without_city: int = Field(
+        default=0, description="Addresses with street populated but missing city"
+    )
+    addr_city_without_state: int = Field(
+        default=0, description="Addresses with city populated but missing state"
+    )
+    addr_missing_geocodes: int = Field(
+        default=0, description="Addresses missing latitude or longitude coordinates"
+    )
+    addr_duplicate_same_person: int = Field(
+        default=0, description="Duplicate address sets entered more than once for same Person"
+    )
 
     # 3. Profile & Chronological Integrity
-    person_anniversary_before_birth: int = Field(default=0, description="Persons with anniversary earlier than birth date")
-    person_invalid_birth_date: int = Field(default=0, description="Persons with future birth dates or dates prior to 1900")
-    person_birth_date_ancient: int = Field(default=0, description="Persons with placeholder birth date (1900-01-01) or age > 100")
-    person_suspicious_dummy_names: int = Field(default=0, description="Persons with dummy or placeholder names")
-    person_missing_lastname_only: int = Field(default=0, description="Persons having first name but missing last name")
+    person_anniversary_before_birth: int = Field(
+        default=0, description="Persons with anniversary earlier than birth date"
+    )
+    person_invalid_birth_date: int = Field(
+        default=0, description="Persons with future birth dates or dates prior to 1900"
+    )
+    person_birth_date_ancient: int = Field(
+        default=0, description="Persons with placeholder birth date (1900-01-01) or age > 100"
+    )
+    person_suspicious_dummy_names: int = Field(
+        default=0, description="Persons with dummy or placeholder names"
+    )
+    person_missing_lastname_only: int = Field(
+        default=0, description="Persons having first name but missing last name"
+    )
 
     # 4. Employment & Status Consistency
-    active_emp_missing_title: int = Field(default=0, description="Active employees having EmpID but missing job title")
-    inactive_with_empid: int = Field(default=0, description="Inactive persons still holding active EmpID")
-    status_active_and_deleted: int = Field(default=0, description="Persons marked simultaneously Active and Deleted")
+    active_emp_missing_title: int = Field(
+        default=0, description="Active employees having EmpID but missing job title"
+    )
+    inactive_with_empid: int = Field(
+        default=0, description="Inactive persons still holding active EmpID"
+    )
+    status_active_and_deleted: int = Field(
+        default=0, description="Persons marked simultaneously Active and Deleted"
+    )
     stale_temp_persons: int = Field(default=0, description="Temporary persons older than 90 days")
 
     # 5. Governance & Blacklist Compliance
-    blacklist_unapproved: int = Field(default=0, description="Blacklisted persons lacking HOD approval")
-    blacklist_missing_details: int = Field(default=0, description="Blacklisted persons missing date or reason type")
+    blacklist_unapproved: int = Field(
+        default=0, description="Blacklisted persons lacking HOD approval"
+    )
+    blacklist_missing_details: int = Field(
+        default=0, description="Blacklisted persons missing date or reason type"
+    )
 
     # 6. Entity Linkages & Child Records
-    company_orphan_links: int = Field(default=0, description="Company affiliation link records referencing invalid company ID")
-    company_duplicate_links: int = Field(default=0, description="Duplicate company affiliation sets for same Person")
-    company_missing_role: int = Field(default=0, description="Company link records missing job role designation")
-    extra_field_orphan_id: int = Field(default=0, description="Custom field records referencing invalid field schema")
-    extra_field_duplicate_entries: int = Field(default=0, description="Duplicate custom field value sets under same Person")
+    company_orphan_links: int = Field(
+        default=0, description="Company affiliation link records referencing invalid company ID"
+    )
+    company_duplicate_links: int = Field(
+        default=0, description="Duplicate company affiliation sets for same Person"
+    )
+    company_missing_role: int = Field(
+        default=0, description="Company link records missing job role designation"
+    )
+    extra_field_orphan_id: int = Field(
+        default=0, description="Custom field records referencing invalid field schema"
+    )
+    extra_field_duplicate_entries: int = Field(
+        default=0, description="Duplicate custom field value sets under same Person"
+    )
 
     # 7. Audit Trail & Sync Integration
-    deleted_missing_del_date: int = Field(default=0, description="Deleted persons missing deletion timestamp")
-    audit_del_before_ent: int = Field(default=0, description="Persons with deletion timestamp earlier than creation timestamp")
-    sync_zimbra_missing_id: int = Field(default=0, description="Sync enabled persons missing Zimbra contact ID")
+    deleted_missing_del_date: int = Field(
+        default=0, description="Deleted persons missing deletion timestamp"
+    )
+    audit_del_before_ent: int = Field(
+        default=0, description="Persons with deletion timestamp earlier than creation timestamp"
+    )
+    sync_zimbra_missing_id: int = Field(
+        default=0, description="Sync enabled persons missing Zimbra contact ID"
+    )
 
     # 8. Distinct Person Quality Telemetry (Entity-Level Analytics)
-    persons_with_critical_issues: int = Field(default=0, description="COUNT(DISTINCT PersonID) of active persons with >= 1 critical quality issue")
-    persons_with_warning_issues: int = Field(default=0, description="COUNT(DISTINCT PersonID) of active persons with >= 1 warning quality issue")
-    persons_with_any_issue: int = Field(default=0, description="COUNT(DISTINCT PersonID) of active persons with >= 1 quality issue")
-    total_clean_persons: int = Field(default=0, description="Active evaluated persons with 0 quality issues")
-    health_score_pct: float = Field(default=100.0, description="Percentage of active evaluated persons with clean data (0 issues)")
+    persons_with_critical_issues: int = Field(
+        default=0,
+        description="COUNT(DISTINCT PersonID) of active persons with >= 1 critical quality issue",
+    )
+    persons_with_warning_issues: int = Field(
+        default=0,
+        description="COUNT(DISTINCT PersonID) of active persons with >= 1 warning quality issue",
+    )
+    persons_with_any_issue: int = Field(
+        default=0, description="COUNT(DISTINCT PersonID) of active persons with >= 1 quality issue"
+    )
+    total_clean_persons: int = Field(
+        default=0, description="Active evaluated persons with 0 quality issues"
+    )
+    health_score_pct: float = Field(
+        default=100.0,
+        description="Percentage of active evaluated persons with clean data (0 issues)",
+    )
 
     # 9. Standardized Aggregate Findings (Rule-Level Analytics)
-    total_critical_findings: int = Field(default=0, description="Sum of findings across all critical validation checks")
-    total_warning_findings: int = Field(default=0, description="Sum of findings across all warning validation checks")
-    total_info_findings: int = Field(default=0, description="Sum of findings across all info validation checks")
+    total_critical_findings: int = Field(
+        default=0, description="Sum of findings across all critical validation checks"
+    )
+    total_warning_findings: int = Field(
+        default=0, description="Sum of findings across all warning validation checks"
+    )
+    total_info_findings: int = Field(
+        default=0, description="Sum of findings across all info validation checks"
+    )
 
     # Scope & Metadata (Root Entity: dbo.DLPersonMst)
-    total_persons_evaluated: int = Field(default=0, description="COUNT(DISTINCT PersonID) WHERE PersonIsActive = 1 AND ISNULL(PersonIsDeleted, 0) = 0")
-    total_inactive_persons: int = Field(default=0, description="Informational count of inactive persons (PersonIsActive = 0 or NULL)")
-    total_deleted_persons: int = Field(default=0, description="Informational count of deleted persons (PersonIsDeleted = 1)")
-    related_tables_checked: int = Field(default=8, description="Count of related PERSON tables checked")
+    total_persons_evaluated: int = Field(
+        default=0,
+        description="COUNT(DISTINCT PersonID) WHERE PersonIsActive = 1 AND ISNULL(PersonIsDeleted, 0) = 0",
+    )
+    total_inactive_persons: int = Field(
+        default=0,
+        description="Informational count of inactive persons (PersonIsActive = 0 or NULL)",
+    )
+    total_deleted_persons: int = Field(
+        default=0, description="Informational count of deleted persons (PersonIsDeleted = 1)"
+    )
+    related_tables_checked: int = Field(
+        default=8, description="Count of related PERSON tables checked"
+    )
     calculated_at: str = Field(...)
     duration_ms: float = Field(...)
 
@@ -432,14 +521,27 @@ class ContactQualityIssuesResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     issue: str = Field(..., description="Active issue filter code")
-    count_unit: IssueCountUnit = Field(default=IssueCountUnit.PERSON, description="Declared counting unit for this rule")
+    count_unit: IssueCountUnit = Field(
+        default=IssueCountUnit.PERSON, description="Declared counting unit for this rule"
+    )
     unit_label_singular: str = Field(default="Record", description="Display label singular")
     unit_label_plural: str = Field(default="Records", description="Display label plural")
     total: int = Field(..., description="Total count in units of count_unit")
-    total_affected_persons: int | None = Field(default=None, description="Total affected persons count if applicable")
-    total_affected_records: int | None = Field(default=None, description="Total underlying records count if applicable")
+    total_affected_persons: int | None = Field(
+        default=None, description="Total affected persons count if applicable"
+    )
+    total_affected_records: int | None = Field(
+        default=None, description="Total underlying records count if applicable"
+    )
     limit: int = Field(..., description="Page size limit")
     offset: int = Field(..., description="Pagination offset")
-    items: list[ContactQualityIssueItem] = Field(default_factory=list, description="Issue items (for 1-to-1/record rules)")
-    groups: list[ContactQualityGroupItem] = Field(default_factory=list, description="Group items (for DUPLICATE_GROUP rules)")
-    calculated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), description="ISO calculation timestamp of the snapshot")
+    items: list[ContactQualityIssueItem] = Field(
+        default_factory=list, description="Issue items (for 1-to-1/record rules)"
+    )
+    groups: list[ContactQualityGroupItem] = Field(
+        default_factory=list, description="Group items (for DUPLICATE_GROUP rules)"
+    )
+    calculated_at: str = Field(
+        default_factory=lambda: datetime.now(UTC).isoformat(),
+        description="ISO calculation timestamp of the snapshot",
+    )

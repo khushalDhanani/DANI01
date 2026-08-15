@@ -57,7 +57,9 @@ def mock_quality_discovery() -> MagicMock:
     def get_structure_side_effect(schema_name: str, table_name: str):
         if table_name == "DLPersonMst":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonMst", estimated_rows=1000, column_count=7),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonMst", estimated_rows=1000, column_count=7
+                ),
                 columns=[
                     make_col(1, "PersonID", "int"),
                     make_col(2, "PersonFirstName", "varchar"),
@@ -73,7 +75,9 @@ def mock_quality_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonAddressDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonAddressDet", estimated_rows=500, column_count=9),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonAddressDet", estimated_rows=500, column_count=9
+                ),
                 columns=[
                     make_col(1, "PersonAddID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -91,7 +95,12 @@ def mock_quality_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonPhoneEmailURLDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonPhoneEmailURLDet", estimated_rows=800, column_count=6),
+                table=TableInfo(
+                    schema="dbo",
+                    table="DLPersonPhoneEmailURLDet",
+                    estimated_rows=800,
+                    column_count=6,
+                ),
                 columns=[
                     make_col(1, "PersonPhoneID", "int"),
                     make_col(2, "PersionID", "int"),
@@ -106,7 +115,9 @@ def mock_quality_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonCompanyLinkDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonCompanyLinkDet", estimated_rows=300, column_count=5),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonCompanyLinkDet", estimated_rows=300, column_count=5
+                ),
                 columns=[
                     make_col(1, "PersonLinkID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -120,7 +131,9 @@ def mock_quality_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonRelationDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonRelationDet", estimated_rows=50, column_count=4),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonRelationDet", estimated_rows=50, column_count=4
+                ),
                 columns=[
                     make_col(1, "PersonRelationID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -304,7 +317,16 @@ async def test_person_quality_engine_execution(mock_quality_discovery: MagicMock
 
     with patch("app.db.mssql.execute_readonly_query") as mock_exec:
         # Provide responses for all executed rules
-        mock_exec.return_value = [{"total_active": 1000, "missing_addr": 200, "total_emails": 500, "invalid_emails": 10, "total_addresses": 500, "orphan_addresses": 0}]
+        mock_exec.return_value = [
+            {
+                "total_active": 1000,
+                "missing_addr": 200,
+                "total_emails": 500,
+                "invalid_emails": 10,
+                "total_addresses": 500,
+                "orphan_addresses": 0,
+            }
+        ]
         res = await engine.evaluate_quality()
 
     assert res.module == "PERSON"
@@ -322,7 +344,9 @@ async def test_person_quality_engine_skipped_rule():
     def get_structure_side_effect(schema_name: str, table_name: str):
         if table_name == "DLPersonMst":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonMst", estimated_rows=1000, column_count=5),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonMst", estimated_rows=1000, column_count=5
+                ),
                 columns=[
                     make_col(1, "PersonID", "int"),
                     make_col(2, "PersonFirstName", "varchar"),
@@ -336,7 +360,9 @@ async def test_person_quality_engine_skipped_rule():
             )
         elif table_name == "DLPersonAddressDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonAddressDet", estimated_rows=500, column_count=4),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonAddressDet", estimated_rows=500, column_count=4
+                ),
                 columns=[
                     make_col(1, "PersonAddID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -370,8 +396,15 @@ async def test_person_quality_engine_rule_isolation(mock_quality_discovery: Magi
 
     # Patch first rule evaluate to fail with an exception
     first_rule = engine.registry.get_all_rules()[0]
-    with patch.object(first_rule, "evaluate", side_effect=Exception("Simulated DB connection error")):
-        with patch("app.db.mssql.execute_readonly_query", return_value=[{"total_active": 100, "missing_addr": 0, "total_emails": 100, "invalid_emails": 0}]):
+    with patch.object(
+        first_rule, "evaluate", side_effect=Exception("Simulated DB connection error")
+    ):
+        with patch(
+            "app.db.mssql.execute_readonly_query",
+            return_value=[
+                {"total_active": 100, "missing_addr": 0, "total_emails": 100, "invalid_emails": 0}
+            ],
+        ):
             res = await engine.evaluate_quality()
 
     # The engine should isolate the failure for the first rule and succeed for the rest

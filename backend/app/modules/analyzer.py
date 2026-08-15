@@ -78,7 +78,7 @@ class ModuleAnalyzer(BaseModuleAnalyzer):
                 validation_errors.append(err)
                 items.append(ModuleValidationItem(level="ERROR", target="root_key", message=err))
         except (TableNotFoundError, Exception) as e:
-            err = f"Root table '{root_schema}.{root_table}' does not exist in catalog: {str(e)}"
+            err = f"Root table '{root_schema}.{root_table}' does not exist in catalog: {e!s}"
             validation_errors.append(err)
             items.append(ModuleValidationItem(level="ERROR", target="root_table", message=err))
 
@@ -89,13 +89,15 @@ class ModuleAnalyzer(BaseModuleAnalyzer):
 
         # Ensure root table is represented in table validations if not explicitly listed
         has_explicit_root = any(
-            t.table_name.lower() == root_table.lower() and t.schema_name.lower() == root_schema.lower()
+            t.table_name.lower() == root_table.lower()
+            and t.schema_name.lower() == root_schema.lower()
             for t in definition.tables
         )
 
         all_tables_to_check = list(definition.tables)
         if not has_explicit_root:
             from app.modules.models import ModuleTableDefinition
+
             all_tables_to_check.insert(
                 0,
                 ModuleTableDefinition(
@@ -128,7 +130,9 @@ class ModuleAnalyzer(BaseModuleAnalyzer):
                     else:
                         missing_cols.append(col)
                         if t_required:
-                            err = f"Configured column '{col}' missing from table '{s_name}.{t_name}'"
+                            err = (
+                                f"Configured column '{col}' missing from table '{s_name}.{t_name}'"
+                            )
                             validation_errors.append(err)
                             items.append(
                                 ModuleValidationItem(
@@ -203,11 +207,19 @@ class ModuleAnalyzer(BaseModuleAnalyzer):
         for rel in definition.relationships:
             # Check if parent and child exist in validations
             parent_ok = any(
-                tv.exists and (tv.table_name.lower() in rel.parent_table.lower() or f"{tv.schema_name}.{tv.table_name}".lower() == rel.parent_table.lower())
+                tv.exists
+                and (
+                    tv.table_name.lower() in rel.parent_table.lower()
+                    or f"{tv.schema_name}.{tv.table_name}".lower() == rel.parent_table.lower()
+                )
                 for tv in table_validations
             )
             child_ok = any(
-                tv.exists and (tv.table_name.lower() in rel.child_table.lower() or f"{tv.schema_name}.{tv.table_name}".lower() == rel.child_table.lower())
+                tv.exists
+                and (
+                    tv.table_name.lower() in rel.child_table.lower()
+                    or f"{tv.schema_name}.{tv.table_name}".lower() == rel.child_table.lower()
+                )
                 for tv in table_validations
             )
 
@@ -215,10 +227,22 @@ class ModuleAnalyzer(BaseModuleAnalyzer):
                 msg = f"Relationship {rel.parent_table}.{rel.parent_key} -> {rel.child_table}.{rel.child_key} is degraded: entity missing"
                 if rel.required:
                     validation_errors.append(msg)
-                    items.append(ModuleValidationItem(level="ERROR", target=f"rel:{rel.parent_table}->{rel.child_table}", message=msg))
+                    items.append(
+                        ModuleValidationItem(
+                            level="ERROR",
+                            target=f"rel:{rel.parent_table}->{rel.child_table}",
+                            message=msg,
+                        )
+                    )
                 else:
                     validation_warnings.append(msg)
-                    items.append(ModuleValidationItem(level="WARNING", target=f"rel:{rel.parent_table}->{rel.child_table}", message=msg))
+                    items.append(
+                        ModuleValidationItem(
+                            level="WARNING",
+                            target=f"rel:{rel.parent_table}->{rel.child_table}",
+                            message=msg,
+                        )
+                    )
 
         # 4. Determine Overall Status
         if not root_table_exists or not root_key_exists or len(validation_errors) > 0:

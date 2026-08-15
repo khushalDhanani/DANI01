@@ -1,9 +1,10 @@
 from unittest.mock import MagicMock, patch
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.db.postgres import Base, get_db_session
 from app.main import app
@@ -16,8 +17,6 @@ from app.persistence.models.table_result import (
     AnalysisTableResultModel,
     AnalysisTableTimingModel,
 )
-
-from sqlalchemy.pool import StaticPool
 
 # Test SQLite Engine with StaticPool to share connection across threads
 test_engine = create_engine(
@@ -49,7 +48,7 @@ client = TestClient(app)
 def clean_db():
     Base.metadata.drop_all(bind=test_engine)
     Base.metadata.create_all(bind=test_engine)
-    yield
+    return
 
 
 def test_create_analysis_run_endpoint_returns_202():
@@ -211,7 +210,9 @@ def test_cancel_analysis_run():
 
     # Attempt to cancel a completed run should fail
     session = TestingSessionLocal()
-    completed_run = AnalysisRunModel(id="completed-run", database_name="AIRIS_TEST", status="COMPLETED")
+    completed_run = AnalysisRunModel(
+        id="completed-run", database_name="AIRIS_TEST", status="COMPLETED"
+    )
     session.add(completed_run)
     session.commit()
     session.close()

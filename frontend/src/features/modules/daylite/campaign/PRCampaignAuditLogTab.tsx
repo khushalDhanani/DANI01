@@ -7,8 +7,6 @@ import {
   ChevronRight,
   Clock,
   FileCode,
-  ShieldAlert,
-  UserCheck,
   XCircle,
 } from "lucide-react-native";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";

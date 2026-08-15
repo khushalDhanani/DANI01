@@ -6,11 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.classification.taxonomy import SensitivityLevel
-from app.db.postgres import Base, get_db_context
+from app.db.postgres import Base
 from app.persistence.models.analysis_run import AnalysisRunModel, AnalysisRunStatus
-from app.persistence.repositories.analysis_runs import AnalysisRunRepository
-from app.persistence.repositories.profiles import AnalysisProfileRepository
-from app.persistence.repositories.table_results import AnalysisTableResultRepository
 from app.schemas.analysis import (
     AnalysisStatus,
     DatabaseAnalysisResponse,
@@ -135,7 +132,9 @@ def test_worker_task_successful_execution():
         tables=[mock_summary],
     )
 
-    with patch("app.workers.analysis_tasks.DatabaseAnalyzer.analyze_database", new_callable=AsyncMock) as mock_analyze:
+    with patch(
+        "app.workers.analysis_tasks.DatabaseAnalyzer.analyze_database", new_callable=AsyncMock
+    ) as mock_analyze:
         mock_analyze.return_value = mock_db_response
 
         # Execute Celery task via .apply()
@@ -207,7 +206,9 @@ def test_worker_task_failure_isolation():
         ],
     )
 
-    with patch("app.workers.analysis_tasks.DatabaseAnalyzer.analyze_database", new_callable=AsyncMock) as mock_analyze:
+    with patch(
+        "app.workers.analysis_tasks.DatabaseAnalyzer.analyze_database", new_callable=AsyncMock
+    ) as mock_analyze:
         mock_analyze.return_value = mock_db_response
 
         result = run_database_analysis_task.apply(args=["worker-fail-run"]).get()

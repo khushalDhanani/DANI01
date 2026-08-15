@@ -26,7 +26,7 @@ class PersonOrphanAddressRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_addresses,
             SUM(CASE WHEN p.PersonID IS NULL THEN 1 ELSE 0 END) AS orphan_addresses
         FROM dbo.DLPersonAddressDet a
@@ -69,7 +69,7 @@ class PersonOrphanContactRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_contacts,
             SUM(CASE WHEN p.PersonID IS NULL THEN 1 ELSE 0 END) AS orphan_contacts
         FROM dbo.DLPersonPhoneEmailURLDet c
@@ -112,7 +112,7 @@ class PersonOrphanCompanyLinkRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_company_links,
             SUM(CASE WHEN p.PersonID IS NULL THEN 1 ELSE 0 END) AS orphan_company_links
         FROM dbo.DLPersonCompanyLinkDet cl
@@ -155,7 +155,7 @@ class PersonOrphanRelationshipRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_relationships,
             SUM(CASE WHEN p1.PersonID IS NULL OR (r.RelatedPersonID IS NOT NULL AND p2.PersonID IS NULL) THEN 1 ELSE 0 END) AS orphan_relationships
         FROM dbo.DLPersonRelationDet r

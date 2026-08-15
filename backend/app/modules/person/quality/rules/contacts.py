@@ -17,17 +17,17 @@ from app.modules.person.quality.models import (
 # Canonical Predicates
 INVALID_EMAIL_WHERE_SQL = """
 c.ContactCategory = 'EMAIL'
-AND c.TypeValue IS NOT NULL 
+AND c.TypeValue IS NOT NULL
 AND LTRIM(RTRIM(c.TypeValue)) <> ''
 AND (
-    CASE 
+    CASE
         WHEN LEN(LTRIM(RTRIM(c.TypeValue))) > 254 THEN 1
         WHEN LEN(LTRIM(RTRIM(c.TypeValue))) - LEN(REPLACE(LTRIM(RTRIM(c.TypeValue)), '@', '')) <> 1 THEN 1
         WHEN CHARINDEX('@', LTRIM(RTRIM(c.TypeValue))) <= 1 THEN 1
         WHEN CHARINDEX('@', LTRIM(RTRIM(c.TypeValue))) = LEN(LTRIM(RTRIM(c.TypeValue))) THEN 1
-        WHEN LTRIM(RTRIM(c.TypeValue)) LIKE '% %' 
-             OR LTRIM(RTRIM(c.TypeValue)) LIKE '%' + CHAR(9) + '%' 
-             OR LTRIM(RTRIM(c.TypeValue)) LIKE '%' + CHAR(10) + '%' 
+        WHEN LTRIM(RTRIM(c.TypeValue)) LIKE '% %'
+             OR LTRIM(RTRIM(c.TypeValue)) LIKE '%' + CHAR(9) + '%'
+             OR LTRIM(RTRIM(c.TypeValue)) LIKE '%' + CHAR(10) + '%'
              OR LTRIM(RTRIM(c.TypeValue)) LIKE '%' + CHAR(13) + '%' THEN 1
         WHEN CHARINDEX('@', LTRIM(RTRIM(c.TypeValue))) - 1 > 64 THEN 1
         WHEN PATINDEX('%[^a-zA-Z0-9!#$%&''*+/=?^_`{|}~.-]%', LEFT(LTRIM(RTRIM(c.TypeValue)), CHARINDEX('@', LTRIM(RTRIM(c.TypeValue))) - 1)) > 0 THEN 1
@@ -120,7 +120,7 @@ c.ContactCategory = 'EMAIL'
 AND c.TypeValue IS NOT NULL
 AND LTRIM(RTRIM(c.TypeValue)) <> ''
 AND EXISTS (
-    SELECT 1 
+    SELECT 1
     FROM ClassifiedContacts dup
     WHERE dup.PersonID = c.PersonID
       AND dup.PersonPhoneID <> c.PersonPhoneID
@@ -134,7 +134,7 @@ c.ContactCategory = 'PHONE'
 AND c.TypeValue IS NOT NULL
 AND LTRIM(RTRIM(c.TypeValue)) <> ''
 AND EXISTS (
-    SELECT 1 
+    SELECT 1
     FROM ClassifiedContacts dup
     WHERE dup.PersonID = c.PersonID
       AND dup.PersonPhoneID <> c.PersonPhoneID

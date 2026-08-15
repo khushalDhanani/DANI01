@@ -1,6 +1,6 @@
 import asyncio
-from datetime import datetime, timezone
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from celery.exceptions import MaxRetriesExceededError
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=10)
@@ -109,9 +109,7 @@ def run_database_analysis_task(self, run_id: str) -> dict[str, Any]:
                         table_summary.profile_response,
                         table_summary.classification_response,
                     )
-                    profile_repo.save_column_profiles(
-                        table_record.id, sanitized_profiles
-                    )
+                    profile_repo.save_column_profiles(table_record.id, sanitized_profiles)
                     profile_repo.save_column_classifications(
                         table_record.id,
                         table_summary.classification_response.columns,
@@ -192,10 +190,8 @@ def run_database_analysis_task(self, run_id: str) -> dict[str, Any]:
                 run_id,
                 status=AnalysisRunStatus.FAILED,
                 error_code="EXECUTION_ERROR",
-                error_message=f"Fatal analysis failure: {str(e)}",
+                error_message=f"Fatal analysis failure: {e!s}",
                 completed_at=utcnow(),
             )
-            run_repo.record_error(
-                run_id, "EXECUTION_ERROR", f"Fatal analysis failure: {str(e)}"
-            )
+            run_repo.record_error(run_id, "EXECUTION_ERROR", f"Fatal analysis failure: {e!s}")
         return {"status": "FAILED", "error": str(e)}

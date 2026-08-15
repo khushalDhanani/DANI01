@@ -52,3 +52,11 @@ export async function fetchPRAuditLogs(
   );
   return response.data;
 }
+
+export const campaignApi = {
+  getCampaigns: fetchCampaigns,
+  getCampaignDetail: fetchCampaignDetail,
+  getPRTransactions: fetchPRTransactions,
+  getCampaignAuditLog: fetchPRAuditLogs,
+};
+

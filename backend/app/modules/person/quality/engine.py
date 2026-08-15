@@ -48,7 +48,9 @@ class PersonQualityEngine:
                     "columns": [c.name for c in struct.columns],
                 }
             except Exception as e:
-                logger.warning(f"Quality engine could not load table '{t_def.schema_name}.{t_def.table_name}': {e}")
+                logger.warning(
+                    f"Quality engine could not load table '{t_def.schema_name}.{t_def.table_name}': {e}"
+                )
 
         # 2. Iterate Rules
         rules = self.registry.get_all_rules()
@@ -60,7 +62,9 @@ class PersonQualityEngine:
             is_applicable, skip_reason = rule.check_applicability(tables_map)
             if not is_applicable:
                 rules_skipped += 1
-                findings.append(rule.skipped_finding(skip_reason or "Required tables/columns missing."))
+                findings.append(
+                    rule.skipped_finding(skip_reason or "Required tables/columns missing.")
+                )
                 continue
 
             rules_evaluated += 1

@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import BigInteger, Boolean, Float, ForeignKey, Integer, JSON, String
+from sqlalchemy import JSON, BigInteger, Boolean, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.postgres import Base

@@ -8,9 +8,9 @@ from app.schemas.campaign import (
     PRCampaignItem,
     PRCampaignSummary,
     PRTransactionItem,
-    PRTransactionPageResponse,
     PRTransactionLogItem,
     PRTransactionLogPageResponse,
+    PRTransactionPageResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class CampaignService:
     def get_campaign_summaries() -> list[PRCampaignSummary]:
         """Returns overview summaries of all PR Campaigns."""
         query = """
-        SELECT 
+        SELECT
             c.CampID,
             c.CampName,
             c.CampStartDate,
@@ -44,7 +44,7 @@ class CampaignService:
         FROM dbo.PRCampaignMst c
         LEFT JOIN dbo.TransactionStatusMst s ON c.CampStatusID = s.StatusID
         LEFT JOIN dbo.PRTransactionDetails t ON c.CampID = t.CampID
-        GROUP BY 
+        GROUP BY
             c.CampID, c.CampName, c.CampStartDate, c.CampReviewCutOfDate,
             c.CampDelReminderDate, c.TransCutOffDate, c.CampCloseDate,
             c.CampStatusID, s.StatusDesc, c.CampIsActive, c.EntUser, c.EntDt
@@ -86,7 +86,7 @@ class CampaignService:
 
         # Fetch Items per PR Grade
         item_query = """
-        SELECT 
+        SELECT
             d.CampDetID,
             d.CampID,
             d.PRClassID,
@@ -97,8 +97,8 @@ class CampaignService:
         FROM dbo.PRCampaignDet d
         LEFT JOIN dbo.PRClassMst cls ON d.PRClassID = cls.PRClassID
         OUTER APPLY (
-            SELECT TOP 1 RowMaterialName 
-            FROM dbo.CntRowMaterialMst 
+            SELECT TOP 1 RowMaterialName
+            FROM dbo.CntRowMaterialMst
             WHERE ItemRefID = d.ItemRefID OR CntRowMaterialId = d.ItemRefID
             ORDER BY CntRowMaterialId
         ) m
@@ -121,7 +121,7 @@ class CampaignService:
 
         # Fetch Event Mappings
         event_query = """
-        SELECT 
+        SELECT
             m.ID,
             m.CampID,
             m.LocID,
@@ -203,7 +203,7 @@ class CampaignService:
         total = total_res[0]["total"] if total_res else 0
 
         items_sql = f"""
-        SELECT 
+        SELECT
             t.PRID,
             t.CampID,
             c.CampName,
@@ -301,7 +301,7 @@ class CampaignService:
         total = total_res[0]["total"] if total_res else 0
 
         items_sql = f"""
-        SELECT 
+        SELECT
             l.TransactionID,
             l.CampID,
             c.CampName,

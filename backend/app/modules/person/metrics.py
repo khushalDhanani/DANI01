@@ -6,7 +6,6 @@ from app.db.mssql import execute_readonly_query
 from app.discovery.metadata import MetadataDiscovery
 from app.modules.definitions.person import PersonModuleDefinition
 from app.modules.person.queries import (
-    build_child_table_counts_query,
     build_person_metrics_query,
 )
 from app.modules.person.schemas import (
@@ -70,11 +69,13 @@ class PersonMetricsService:
                 self.discovery.get_table_structure(t_def.schema_name, t_def.table_name)
                 return f"{t_def.schema_name}.{t_def.table_name}"
             except Exception:
-                warnings.append(f"Optional table '{t_def.schema_name}.{t_def.table_name}' is missing; corresponding metrics will be unavailable.")
+                warnings.append(
+                    f"Optional table '{t_def.schema_name}.{t_def.table_name}' is missing; corresponding metrics will be unavailable."
+                )
                 return None
 
-        address_tbl = resolve_child_table("DLPersonAddressDet")
-        contact_tbl = resolve_child_table("DLPersonPhoneEmailURLDet")
+        resolve_child_table("DLPersonAddressDet")
+        resolve_child_table("DLPersonPhoneEmailURLDet")
 
         # 3. Build & Execute Person Aggregate Query
         agg_sql = build_person_metrics_query(
@@ -100,8 +101,6 @@ class PersonMetricsService:
                 duration_ms=round((time.perf_counter() - start_time) * 1000, 2),
             )
 
-        child_counts: dict[str, Any] = {}
-
         # 5. Process Metrics & Percentages
         total_persons = int(row.get("total_persons") or 0)
         active_persons = row.get("active_persons")
@@ -116,7 +115,6 @@ class PersonMetricsService:
         temp_cnt = int(temp_persons) if temp_persons is not None else None
         blacklist_cnt = int(blacklist_persons) if blacklist_persons is not None else None
 
-
         summary = PersonMetricsSummary(
             total_persons=total_persons,
             active_persons=active_cnt,
@@ -129,20 +127,18 @@ class PersonMetricsService:
             temp_percent=safe_percent(temp_cnt, total_persons),
             blacklist_persons=blacklist_cnt,
             blacklist_percent=safe_percent(blacklist_cnt, total_persons),
-
             # Business Mappings: PersonIsVisitor_Contact (1=Visitor, 2=Contact)
             visitor_count=int(row.get("visitor_count") or 0),
             visitor_percent=safe_percent(int(row.get("visitor_count") or 0), total_persons),
             contact_entity_count=int(row.get("contact_entity_count") or 0),
-            contact_entity_percent=safe_percent(int(row.get("contact_entity_count") or 0), total_persons),
-
+            contact_entity_percent=safe_percent(
+                int(row.get("contact_entity_count") or 0), total_persons
+            ),
             # Business Mappings: PersonIsShareContact (0=Private, 1=Public)
             public_count=int(row.get("public_count") or 0),
             public_percent=safe_percent(int(row.get("public_count") or 0), total_persons),
             private_count=int(row.get("private_count") or 0),
             private_percent=safe_percent(int(row.get("private_count") or 0), total_persons),
-
-
         )
 
         duration_ms = (time.perf_counter() - start_time) * 1000

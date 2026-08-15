@@ -6,7 +6,7 @@ Common CTEs and qualifying contact predicate expressions for Daylite Person comm
 
 CLASSIFIED_CONTACTS_CTE_SQL = """
 WITH ClassifiedContacts AS (
-    SELECT 
+    SELECT
         c.PersonPhoneID,
         c.PersionID AS PersonID,
         c.LabelTypeID,
@@ -15,7 +15,7 @@ WITH ClassifiedContacts AS (
         c.IsVerified,
         c.IsPrimary,
         c.PersonPhoneIsActive,
-        CASE 
+        CASE
             WHEN l.LabelType = 'EMail' OR (c.LabelTypeID IS NULL AND c.TypeValue LIKE '%@%') THEN 'EMAIL'
             WHEN l.LabelType = 'PhoneNumbers' OR (c.LabelTypeID IS NULL AND c.TypeValue NOT LIKE '%@%' AND c.TypeValue NOT LIKE 'http%' AND c.TypeValue NOT LIKE 'www%') THEN 'PHONE'
             WHEN l.LabelType = 'URL' OR (c.LabelTypeID IS NULL AND (c.TypeValue LIKE 'http%' OR c.TypeValue LIKE 'www%')) THEN 'URL'
@@ -32,22 +32,22 @@ WITH ClassifiedContacts AS (
 
 QUALIFYING_EMAIL_EXISTS_SQL = """
 EXISTS (
-    SELECT 1 
+    SELECT 1
     FROM ClassifiedContacts c
-    WHERE c.PersonID = p.PersonID 
+    WHERE c.PersonID = p.PersonID
       AND c.ContactCategory = 'EMAIL'
-      AND c.TypeValue IS NOT NULL 
+      AND c.TypeValue IS NOT NULL
       AND LTRIM(RTRIM(c.TypeValue)) <> ''
 )
 """.strip()
 
 QUALIFYING_PHONE_EXISTS_SQL = """
 EXISTS (
-    SELECT 1 
+    SELECT 1
     FROM ClassifiedContacts c
-    WHERE c.PersonID = p.PersonID 
+    WHERE c.PersonID = p.PersonID
       AND c.ContactCategory = 'PHONE'
-      AND c.TypeValue IS NOT NULL 
+      AND c.TypeValue IS NOT NULL
       AND LTRIM(RTRIM(c.TypeValue)) <> ''
 )
 """.strip()

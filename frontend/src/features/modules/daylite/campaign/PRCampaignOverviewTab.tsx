@@ -10,7 +10,6 @@ import {
   MapPin,
   PackageCheck,
   ShieldCheck,
-  Sparkles,
   UserCheck,
   XCircle,
 } from "lucide-react-native";

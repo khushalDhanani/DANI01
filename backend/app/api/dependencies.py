@@ -11,12 +11,11 @@ from app.modules.analyzer import ModuleAnalyzer
 from app.modules.person.analyzer import PersonModuleAnalyzer
 from app.modules.person.contact_quality_service import ContactQualityService
 from app.modules.person.metrics import PersonMetricsService
-from app.modules.person.records_service import PersonRecordsService
 from app.modules.person.quality.engine import PersonQualityEngine
 from app.modules.person.quality.registry import (
-    PersonQualityRuleRegistry,
     person_quality_rule_registry,
 )
+from app.modules.person.records_service import PersonRecordsService
 from app.modules.registry import ModuleRegistry, module_registry
 from app.profiling.profiler import TableProfiler
 from app.sampling.sampler import TableSampler

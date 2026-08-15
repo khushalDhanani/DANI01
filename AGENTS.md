@@ -258,6 +258,15 @@ A change is not complete because one edited file looks correct.
 Run the relevant backend/frontend validation from the nested `AGENTS.md` files.
 For cross-layer changes, validate both sides.
 
+### 15. Automated CI Quality Gate & Branch Protection
+
+All Pull Requests and commits to `main` are automatically verified by GitHub Actions ([`.github/workflows/quality.yml`](.github/workflows/quality.yml)):
+
+- **Backend Gate**: `uv run ruff check .` + `uv run ruff format --check .` + `uv run pytest -m "not integration"` (with **80% minimum branch coverage gate**).
+- **Frontend Gate**: `npm run typecheck` + `npm run lint` (`--max-warnings=0`) + `npm test` (Jest under `__tests__/`) + `npm run build:web`.
+
+Both jobs must pass for a PR to be mergeable. Live MSSQL integration tests are marked with `@pytest.mark.integration` and run separately on demand.
+
 ## Repository-Wide Do / Don't
 
 ### Do

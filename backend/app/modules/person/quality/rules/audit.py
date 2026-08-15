@@ -12,18 +12,18 @@ from app.modules.person.quality.models import (
 
 # Canonical Predicates
 DELETED_MISSING_DEL_DATE_WHERE_SQL = """
-p.PersonIsDeleted = 1 
+p.PersonIsDeleted = 1
 AND p.PersonDelDt IS NULL
 """.strip()
 
 AUDIT_DEL_BEFORE_ENT_WHERE_SQL = """
-p.PersonIsDeleted = 1 
-AND p.PersonDelDt IS NOT NULL 
+p.PersonIsDeleted = 1
+AND p.PersonDelDt IS NOT NULL
 AND p.PersonDelDt < p.PersonEntDt
 """.strip()
 
 SYNC_ZIMBRA_MISSING_ID_WHERE_SQL = """
-p.IsContactSync = 1 
+p.IsContactSync = 1
 AND (p.ZimbraContactID IS NULL OR LTRIM(RTRIM(p.ZimbraContactID)) = '')
 """.strip()
 

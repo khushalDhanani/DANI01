@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from app.analysis.sanitization import ProfileSanitizer
 from app.classification.taxonomy import SensitivityLevel
 from app.db.postgres import Base
-from app.persistence.models.analysis_run import AnalysisRunModel, AnalysisRunStatus
+from app.persistence.models.analysis_run import AnalysisRunStatus
 from app.persistence.repositories.analysis_runs import AnalysisRunRepository
 from app.persistence.repositories.profiles import AnalysisProfileRepository
 from app.persistence.repositories.table_results import AnalysisTableResultRepository
@@ -212,9 +212,7 @@ def test_privacy_sanitization_redacts_pii_top_values():
         ],
     )
 
-    sanitized = ProfileSanitizer.sanitize_column_profiles(
-        profile_response, classification_response
-    )
+    sanitized = ProfileSanitizer.sanitize_column_profiles(profile_response, classification_response)
 
     # 1. EmailAddress: top_values must be completely redacted
     email_prof = next(p for p in sanitized if p["column_name"] == "EmailAddress")

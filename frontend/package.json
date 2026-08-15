@@ -39,13 +39,26 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@react-native/jest-preset": "^0.87.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "^29.5.14",
     "@types/react": "~19.2.2",
+    "@types/react-test-renderer": "^19.1.0",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.67.0",
+    "@vitejs/plugin-react": "^6.0.5",
     "eslint": "^10.8.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "typescript": "~6.0.3"
+    "jest": "~29.7.0",
+    "jest-expo": "~57.0.4",
+    "jsdom": "^30.0.1",
+    "react-test-renderer": "^19.2.3",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "start": "expo start",
@@ -53,9 +66,23 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/ app/ --ext .ts,.tsx",
+    "lint": "eslint src/ app/ __tests__/ --ext .ts,.tsx --max-warnings=0",
+    "lint:fix": "eslint src/ app/ __tests__/ --ext .ts,.tsx --fix",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
     "build:web": "expo export --platform web",
     "export": "expo export"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|nativewind|react-native-reanimated)"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^react-native/setup-env$": "<rootDir>/src/__mocks__/setup-env.js",
+      "^test-renderer$": "<rootDir>/src/__mocks__/test-renderer.js"
+    }
   },
   "private": true
 }

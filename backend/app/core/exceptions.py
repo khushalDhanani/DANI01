@@ -30,8 +30,6 @@ class InvalidSortFieldError(DiscoveryError):
     """Raised when an invalid sort field is requested."""
 
     def __init__(self, field: str, allowed: list[str]):
-        super().__init__(
-            f"Invalid sort field '{field}'. Allowed fields: {', '.join(allowed)}"
-        )
+        super().__init__(f"Invalid sort field '{field}'. Allowed fields: {', '.join(allowed)}")
         self.field = field
         self.allowed = allowed

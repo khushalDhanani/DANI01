@@ -1,11 +1,11 @@
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class ModuleTableRole(str, Enum):
+class ModuleTableRole(StrEnum):
     ROOT = "ROOT"
     DETAIL = "DETAIL"
     LOOKUP = "LOOKUP"
@@ -14,7 +14,7 @@ class ModuleTableRole(str, Enum):
     REFERENCE = "REFERENCE"
 
 
-class ModuleValidationStatus(str, Enum):
+class ModuleValidationStatus(StrEnum):
     READY = "READY"
     DEGRADED = "DEGRADED"
     INVALID = "INVALID"
@@ -23,12 +23,16 @@ class ModuleValidationStatus(str, Enum):
 class ModuleRelationshipDefinition(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    parent_table: str = Field(..., description="Full parent table name e.g. 'dbo.DLPerson' or 'DLPerson'")
+    parent_table: str = Field(
+        ..., description="Full parent table name e.g. 'dbo.DLPerson' or 'DLPerson'"
+    )
     child_table: str = Field(..., description="Full child table name e.g. 'dbo.DLPersonAddressDet'")
     parent_key: str = Field(..., description="Parent key column name e.g. 'PersonID'")
     child_key: str = Field(..., description="Child foreign key column name e.g. 'PersonID'")
     relationship_type: str = Field(default="ONE_TO_MANY", description="ONE_TO_ONE or ONE_TO_MANY")
-    required: bool = Field(default=False, description="Whether this relationship is strictly required")
+    required: bool = Field(
+        default=False, description="Whether this relationship is strictly required"
+    )
 
 
 class ModuleTableDefinition(BaseModel):
@@ -36,11 +40,21 @@ class ModuleTableDefinition(BaseModel):
 
     schema_name: str = Field(default="dbo", alias="schema", serialization_alias="schema")
     table_name: str = Field(..., alias="table", serialization_alias="table")
-    role: ModuleTableRole = Field(default=ModuleTableRole.DETAIL, description="Role of the table in the module")
-    required: bool = Field(default=True, description="Whether table must exist for module to be valid")
-    key_columns: list[str] = Field(default_factory=list, description="Primary or linkage key columns")
-    important_columns: list[str] = Field(default_factory=list, description="Key domain columns to validate")
-    description: str | None = Field(default=None, description="Optional explanation of table's role")
+    role: ModuleTableRole = Field(
+        default=ModuleTableRole.DETAIL, description="Role of the table in the module"
+    )
+    required: bool = Field(
+        default=True, description="Whether table must exist for module to be valid"
+    )
+    key_columns: list[str] = Field(
+        default_factory=list, description="Primary or linkage key columns"
+    )
+    important_columns: list[str] = Field(
+        default_factory=list, description="Key domain columns to validate"
+    )
+    description: str | None = Field(
+        default=None, description="Optional explanation of table's role"
+    )
 
 
 class ModuleDefinition(BaseModel):
@@ -52,8 +66,12 @@ class ModuleDefinition(BaseModel):
     root_schema: str = Field(default="dbo", description="Schema of the root entity table")
     root_table: str = Field(..., description="Root table name e.g. 'DLPerson'")
     root_key: str = Field(..., description="Root entity primary key e.g. 'PersonID'")
-    tables: list[ModuleTableDefinition] = Field(default_factory=list, description="Configured module tables")
-    relationships: list[ModuleRelationshipDefinition] = Field(default_factory=list, description="Expected relationships")
+    tables: list[ModuleTableDefinition] = Field(
+        default_factory=list, description="Configured module tables"
+    )
+    relationships: list[ModuleRelationshipDefinition] = Field(
+        default_factory=list, description="Expected relationships"
+    )
     enabled: bool = Field(default=True, description="Whether the module is active")
     tags: list[str] = Field(default_factory=list, description="Optional metadata tags")
 
@@ -130,5 +148,5 @@ class ModuleAnalysisResult(BaseModel):
     validation: ModuleValidationResult
     tables_analyzed: int
     duration_ms: float = 0.0
-    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     table_summaries: list[dict[str, Any]] = Field(default_factory=list)

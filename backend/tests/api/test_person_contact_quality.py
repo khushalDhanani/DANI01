@@ -54,10 +54,10 @@ async def test_get_contact_quality_summary():
         "persons_with_any_issue": 135,
     }
 
-    with patch("app.modules.person.contact_quality_service.execute_readonly_query", return_value=[mock_row]):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+    with patch(
+        "app.modules.person.contact_quality_service.execute_readonly_query", return_value=[mock_row]
+    ):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.get("/api/v1/modules/PERSON/contact-quality")
             assert response.status_code == 200
             data = response.json()
@@ -101,9 +101,7 @@ async def test_get_contact_quality_issues_invalid_email():
         "app.modules.person.contact_quality_service.execute_readonly_query",
         side_effect=[mock_count, mock_items],
     ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.get(
                 "/api/v1/modules/PERSON/contact-quality/issues?issue=INVALID_EMAIL&limit=5&sort_by=PersonID&sort_order=desc"
             )
@@ -143,9 +141,7 @@ async def test_get_contact_quality_issues_multiple_primary():
         "app.modules.person.contact_quality_service.execute_readonly_query",
         side_effect=[mock_count, mock_items],
     ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.get(
                 "/api/v1/modules/PERSON/contact-quality/issues?issue=MULTIPLE_PRIMARY&limit=10"
             )
@@ -181,9 +177,7 @@ async def test_get_contact_quality_issues_primary_inactive():
         "app.modules.person.contact_quality_service.execute_readonly_query",
         side_effect=[mock_count, mock_items],
     ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.get(
                 "/api/v1/modules/PERSON/contact-quality/issues?issue=PRIMARY_INACTIVE&limit=5"
             )
@@ -219,9 +213,7 @@ async def test_get_contact_quality_issues_with_search_and_sorting():
         "app.modules.person.contact_quality_service.execute_readonly_query",
         side_effect=[mock_count, mock_items],
     ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.get(
                 "/api/v1/modules/PERSON/contact-quality/issues?issue=INVALID_PIN_CODE_FORMAT&search=Alice&sort_by=PersonName&sort_order=asc&limit=5"
             )
@@ -255,9 +247,7 @@ async def test_export_contact_quality_issues_csv():
         "app.modules.person.contact_quality_service.execute_readonly_query",
         return_value=mock_items,
     ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.get(
                 "/api/v1/modules/PERSON/contact-quality/export?issue=INVALID_EMAIL&format=csv"
             )
@@ -295,9 +285,7 @@ async def test_export_contact_quality_issues_xlsx():
         "app.modules.person.contact_quality_service.execute_readonly_query",
         return_value=mock_items,
     ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.get(
                 "/api/v1/modules/PERSON/contact-quality/export?issue=INVALID_EMAIL&format=xlsx"
             )
@@ -371,9 +359,7 @@ async def test_export_contact_quality_issues_batches_beyond_100_rows():
         "app.modules.person.contact_quality_service.execute_readonly_query",
         side_effect=[batch_1, batch_2, batch_3],
     ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.get(
                 "/api/v1/modules/PERSON/contact-quality/export?issue=INVALID_EMAIL&format=csv"
             )
@@ -384,7 +370,6 @@ async def test_export_contact_quality_issues_batches_beyond_100_rows():
             assert "User 1" in lines[1]
             assert "User 1500" in lines[1500]
             assert "User 2500" in lines[2500]
-
 
 
 @pytest.mark.asyncio
@@ -432,10 +417,10 @@ async def test_export_contact_quality_summary_xlsx():
         "total_deleted_persons": 150,
     }
 
-    with patch("app.modules.person.contact_quality_service.execute_readonly_query", return_value=[mock_row]):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+    with patch(
+        "app.modules.person.contact_quality_service.execute_readonly_query", return_value=[mock_row]
+    ):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.get(
                 "/api/v1/modules/PERSON/contact-quality/summary/export?format=xlsx"
             )
@@ -541,7 +526,10 @@ async def test_missing_email_consistency_and_person_name_formatting():
     ]
 
     # 1. Summary KPI endpoint
-    with patch("app.modules.person.contact_quality_service.execute_readonly_query", return_value=[mock_summary_row]):
+    with patch(
+        "app.modules.person.contact_quality_service.execute_readonly_query",
+        return_value=[mock_summary_row],
+    ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             summary_res = await ac.get("/api/v1/modules/PERSON/contact-quality")
             assert summary_res.status_code == 200
@@ -549,9 +537,14 @@ async def test_missing_email_consistency_and_person_name_formatting():
             assert summary_count == 3
 
     # 2. Issues drilldown endpoint
-    with patch("app.modules.person.contact_quality_service.execute_readonly_query", side_effect=[mock_count, mock_items]):
+    with patch(
+        "app.modules.person.contact_quality_service.execute_readonly_query",
+        side_effect=[mock_count, mock_items],
+    ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            issues_res = await ac.get("/api/v1/modules/PERSON/contact-quality/issues?issue=MISSING_EMAIL&limit=10")
+            issues_res = await ac.get(
+                "/api/v1/modules/PERSON/contact-quality/issues?issue=MISSING_EMAIL&limit=10"
+            )
             assert issues_res.status_code == 200
             issues_data = issues_res.json()
             assert issues_data["total"] == summary_count
@@ -566,9 +559,13 @@ async def test_missing_email_consistency_and_person_name_formatting():
                 assert item["CurrentValue"] is None
 
     # 3. Export endpoint
-    with patch("app.modules.person.contact_quality_service.execute_readonly_query", return_value=mock_items):
+    with patch(
+        "app.modules.person.contact_quality_service.execute_readonly_query", return_value=mock_items
+    ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            export_res = await ac.get("/api/v1/modules/PERSON/contact-quality/export?issue=MISSING_EMAIL&format=csv")
+            export_res = await ac.get(
+                "/api/v1/modules/PERSON/contact-quality/export?issue=MISSING_EMAIL&format=csv"
+            )
             assert export_res.status_code == 200
             csv_content = export_res.text
             assert "MISSING_EMAIL" in csv_content
@@ -587,7 +584,10 @@ async def test_all_quality_issue_types_supported():
     # Verify that each enum value produces a valid query without syntax error / unhandled branch
     for issue_type in ContactQualityIssueType:
         mock_count = [{"total": 0}]
-        with patch("app.modules.person.contact_quality_service.execute_readonly_query", return_value=mock_count):
+        with patch(
+            "app.modules.person.contact_quality_service.execute_readonly_query",
+            return_value=mock_count,
+        ):
             res = await svc.get_contact_quality_issues(issue=issue_type.value, limit=5)
             assert res.issue == issue_type.value
             assert res.total == 0
@@ -845,16 +845,22 @@ async def test_cross_layer_predicate_identity_all_37_rules():
             assert group_sql is not None, f"Group groups_sql is None for {issue_type}"
             # Verify the canonical predicate is embedded in the standard row-fetch query as well
             _, items_sql, _ = _build_issue_queries(issue_type.value)
-            assert canonical_pred in items_sql, f"Canonical predicate drifted in items_sql for {issue_type}"
+            assert canonical_pred in items_sql, (
+                f"Canonical predicate drifted in items_sql for {issue_type}"
+            )
         else:
             count_sql, items_sql, _ = _build_issue_queries(issue_type.value)
             assert count_sql is not None, f"count_sql is None for {issue_type}"
             assert items_sql is not None, f"items_sql is None for {issue_type}"
-            assert canonical_pred in items_sql, f"Canonical predicate drifted in items_sql for {issue_type}"
+            assert canonical_pred in items_sql, (
+                f"Canonical predicate drifted in items_sql for {issue_type}"
+            )
             if issue_type == ContactQualityIssueType.MULTIPLE_PRIMARY:
                 assert "HAVING COUNT(1) > 1" in count_sql
             else:
-                assert canonical_pred in count_sql, f"Canonical predicate drifted in count_sql for {issue_type}"
+                assert canonical_pred in count_sql, (
+                    f"Canonical predicate drifted in count_sql for {issue_type}"
+                )
 
 
 @pytest.mark.asyncio
@@ -1060,8 +1066,12 @@ async def test_summary_equals_issue_total(issue, summary_field):
         # Summary queries (6 parallel): return the full cardinality dict for any
         # query that contains recognized summary field aliases.
         summary_markers = [
-            "AS TOTAL_PERSONS_EVALUATED", "AS PERSONS_WITHOUT_EMAIL", "AS INVALID_EMAILS",
-            "AS ADDR_MISSING_POSTAL_CODE", "AS COMPANY_ORPHAN_LINKS", "AS EXTRA_FIELD_ORPHAN_ID",
+            "AS TOTAL_PERSONS_EVALUATED",
+            "AS PERSONS_WITHOUT_EMAIL",
+            "AS INVALID_EMAILS",
+            "AS ADDR_MISSING_POSTAL_CODE",
+            "AS COMPANY_ORPHAN_LINKS",
+            "AS EXTRA_FIELD_ORPHAN_ID",
             "AS PERSONS_WITH_CRITICAL_ISSUES",
         ]
         if any(m in sql_upper for m in summary_markers):
@@ -1090,6 +1100,7 @@ def test_address_duplicate_normalization_and_city_matching_semantics():
     - Same Person + Same Street with case/whitespace variations + Same City -> DUPLICATE
     - Different Person + Same Street + Same City -> NOT DUPLICATE under same person
     """
+
     def normalize_addr(person_id: int, street: str | None, city: str | None, postal: str | None):
         if not street or not street.strip():
             return None
@@ -1126,20 +1137,65 @@ def test_address_duplicate_normalization_and_city_matching_semantics():
 
     test_table = [
         # Case 1: Same person, same street, same city -> Duplicate
-        {"PersonAddID": 1, "PersonID": 10, "Street": "12 Station Road", "CityName": "Pune", "PostalCode": "411001"},
-        {"PersonAddID": 2, "PersonID": 10, "Street": "12 Station Road", "CityName": "Pune", "PostalCode": "411001"},
-
+        {
+            "PersonAddID": 1,
+            "PersonID": 10,
+            "Street": "12 Station Road",
+            "CityName": "Pune",
+            "PostalCode": "411001",
+        },
+        {
+            "PersonAddID": 2,
+            "PersonID": 10,
+            "Street": "12 Station Road",
+            "CityName": "Pune",
+            "PostalCode": "411001",
+        },
         # Case 2: Same person, same street, DIFFERENT city -> NOT Duplicate
-        {"PersonAddID": 3, "PersonID": 20, "Street": "12 Station Road", "CityName": "Pune", "PostalCode": "411001"},
-        {"PersonAddID": 4, "PersonID": 20, "Street": "12 Station Road", "CityName": "Mumbai", "PostalCode": "400001"},
-
+        {
+            "PersonAddID": 3,
+            "PersonID": 20,
+            "Street": "12 Station Road",
+            "CityName": "Pune",
+            "PostalCode": "411001",
+        },
+        {
+            "PersonAddID": 4,
+            "PersonID": 20,
+            "Street": "12 Station Road",
+            "CityName": "Mumbai",
+            "PostalCode": "400001",
+        },
         # Case 3: Same person, case & whitespace variations -> Duplicate
-        {"PersonAddID": 5, "PersonID": 30, "Street": "  100 MG ROAD  ", "CityName": "bengaluru", "PostalCode": "560001"},
-        {"PersonAddID": 6, "PersonID": 30, "Street": "100 mg road", "CityName": "Bengaluru", "PostalCode": "560001"},
-
+        {
+            "PersonAddID": 5,
+            "PersonID": 30,
+            "Street": "  100 MG ROAD  ",
+            "CityName": "bengaluru",
+            "PostalCode": "560001",
+        },
+        {
+            "PersonAddID": 6,
+            "PersonID": 30,
+            "Street": "100 mg road",
+            "CityName": "Bengaluru",
+            "PostalCode": "560001",
+        },
         # Case 4: Different person, same street and city -> NOT Duplicate under same person
-        {"PersonAddID": 7, "PersonID": 40, "Street": "55 Park Avenue", "CityName": "Delhi", "PostalCode": "110001"},
-        {"PersonAddID": 8, "PersonID": 41, "Street": "55 Park Avenue", "CityName": "Delhi", "PostalCode": "110001"},
+        {
+            "PersonAddID": 7,
+            "PersonID": 40,
+            "Street": "55 Park Avenue",
+            "CityName": "Delhi",
+            "PostalCode": "110001",
+        },
+        {
+            "PersonAddID": 8,
+            "PersonID": 41,
+            "Street": "55 Park Avenue",
+            "CityName": "Delhi",
+            "PostalCode": "110001",
+        },
     ]
 
     # Assert Case 1 (Duplicates)
@@ -1172,8 +1228,12 @@ def test_severity_parameter_elimination_contract():
     )
     from app.modules.person.contact_quality_service import ContactQualityService
 
-    svc_issues_params = inspect.signature(ContactQualityService.get_contact_quality_issues).parameters
-    svc_export_params = inspect.signature(ContactQualityService.export_contact_quality_issues).parameters
+    svc_issues_params = inspect.signature(
+        ContactQualityService.get_contact_quality_issues
+    ).parameters
+    svc_export_params = inspect.signature(
+        ContactQualityService.export_contact_quality_issues
+    ).parameters
     route_issues_params = inspect.signature(get_contact_quality_issues).parameters
     route_export_params = inspect.signature(export_contact_quality_issues).parameters
 
@@ -1201,10 +1261,3 @@ async def test_get_contact_quality_rules_endpoint():
         assert r.severity in {"CRITICAL", "WARNING", "INFO"}
         assert r.unit_label_singular != ""
         assert r.unit_label_plural != ""
-
-
-
-
-
-
-

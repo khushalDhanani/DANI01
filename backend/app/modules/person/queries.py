@@ -1,5 +1,3 @@
-
-
 def build_person_metrics_query(
     root_table: str = "dbo.DLPersonMst",
     root_key: str = "PersonID",
@@ -30,7 +28,9 @@ def build_person_metrics_query(
         select_fields.append("NULL AS inactive_persons")
 
     if has_deleted_col:
-        select_fields.append("SUM(CASE WHEN p.PersonIsDeleted = 1 THEN 1 ELSE 0 END) AS deleted_persons")
+        select_fields.append(
+            "SUM(CASE WHEN p.PersonIsDeleted = 1 THEN 1 ELSE 0 END) AS deleted_persons"
+        )
     else:
         select_fields.append("NULL AS deleted_persons")
 
@@ -40,17 +40,27 @@ def build_person_metrics_query(
         select_fields.append("NULL AS temp_persons")
 
     if has_blacklist_col:
-        select_fields.append("SUM(CASE WHEN p.PersonIsBlackList = 1 THEN 1 ELSE 0 END) AS blacklist_persons")
+        select_fields.append(
+            "SUM(CASE WHEN p.PersonIsBlackList = 1 THEN 1 ELSE 0 END) AS blacklist_persons"
+        )
     else:
         select_fields.append("NULL AS blacklist_persons")
 
     # Business Mappings: PersonIsVisitor_Contact (1=Visitor, 2=Contact)
-    select_fields.append("SUM(CASE WHEN p.PersonIsVisitor_Contact = 1 THEN 1 ELSE 0 END) AS visitor_count")
-    select_fields.append("SUM(CASE WHEN p.PersonIsVisitor_Contact = 2 THEN 1 ELSE 0 END) AS contact_entity_count")
+    select_fields.append(
+        "SUM(CASE WHEN p.PersonIsVisitor_Contact = 1 THEN 1 ELSE 0 END) AS visitor_count"
+    )
+    select_fields.append(
+        "SUM(CASE WHEN p.PersonIsVisitor_Contact = 2 THEN 1 ELSE 0 END) AS contact_entity_count"
+    )
 
     # Business Mappings: PersonIsShareContact (0=Private, 1=Public)
-    select_fields.append("SUM(CASE WHEN p.PersonIsShareContact = 1 THEN 1 ELSE 0 END) AS public_count")
-    select_fields.append("SUM(CASE WHEN p.PersonIsShareContact = 0 OR p.PersonIsShareContact IS NULL THEN 1 ELSE 0 END) AS private_count")
+    select_fields.append(
+        "SUM(CASE WHEN p.PersonIsShareContact = 1 THEN 1 ELSE 0 END) AS public_count"
+    )
+    select_fields.append(
+        "SUM(CASE WHEN p.PersonIsShareContact = 0 OR p.PersonIsShareContact IS NULL THEN 1 ELSE 0 END) AS private_count"
+    )
 
     cte_block = "WITH " + ",\n".join(ctes) if ctes else ""
     select_block = "SELECT\n    " + ",\n    ".join(select_fields)
@@ -72,7 +82,6 @@ def build_child_table_counts_query(
         return "SELECT 1 AS dummy;"
 
     select_items = [
-        f"(SELECT COUNT_BIG(1) FROM {tbl}) AS {alias}"
-        for alias, tbl in tables_dict.items()
+        f"(SELECT COUNT_BIG(1) FROM {tbl}) AS {alias}" for alias, tbl in tables_dict.items()
     ]
     return "SELECT\n    " + ",\n    ".join(select_items) + ";"

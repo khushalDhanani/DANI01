@@ -1,9 +1,7 @@
-import asyncio
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.exc import TimeoutError as SQLTimeoutError
 
 from app.analysis.database_analyzer import DatabaseAnalyzer
@@ -11,12 +9,11 @@ from app.analysis.planner import AnalysisPlanner
 from app.analysis.table_analyzer import TableAnalyzer
 from app.classification.taxonomy import SensitivityLevel
 from app.core.config import Settings
-from app.core.exceptions import DiscoveryError, TableNotFoundError
+from app.core.exceptions import TableNotFoundError
 from app.main import app
 from app.schemas.analysis import (
     AnalysisStatus,
     DatabaseAnalysisResponse,
-    QuickAnalysisRequest,
     TableAnalysisPlan,
     TableAnalysisStatus,
     TableAnalysisSummary,
@@ -146,15 +143,9 @@ def test_planner_sample_never_exceeds_max_cap():
 def test_planner_database_plan_with_schema_filter():
     planner = AnalysisPlanner()
     tables = [
-        TableInfo(
-            schema="dbo", table="Users", estimated_rows=1000, column_count=5
-        ),
-        TableInfo(
-            schema="dbo", table="EmptyAudit", estimated_rows=0, column_count=3
-        ),
-        TableInfo(
-            schema="staging", table="StgData", estimated_rows=5000, column_count=10
-        ),
+        TableInfo(schema="dbo", table="Users", estimated_rows=1000, column_count=5),
+        TableInfo(schema="dbo", table="EmptyAudit", estimated_rows=0, column_count=3),
+        TableInfo(schema="staging", table="StgData", estimated_rows=5000, column_count=10),
     ]
 
     # Without filter
@@ -164,9 +155,7 @@ def test_planner_database_plan_with_schema_filter():
     assert all_plan.skipped_tables == 1
 
     # With schema filter
-    dbo_plan = planner.create_database_plan(
-        tables, database_name="AIRIS_TEST", schema_filter="dbo"
-    )
+    dbo_plan = planner.create_database_plan(tables, database_name="AIRIS_TEST", schema_filter="dbo")
     assert dbo_plan.total_tables == 2
     assert dbo_plan.planned_tables == 1
     assert dbo_plan.skipped_tables == 1
@@ -581,7 +570,7 @@ async def test_database_analyzer_progress_callback():
         table_analyzer=mock_table_analyzer,
     )
 
-    result = await analyzer.analyze_database(progress_callback=callback)
+    await analyzer.analyze_database(progress_callback=callback)
 
     assert len(progress_updates) == 3
     assert progress_updates[-1].progress_percent == 100.0
@@ -622,9 +611,7 @@ def test_api_quick_analysis_endpoint():
         ],
     )
 
-    with patch.object(
-        DatabaseAnalyzer, "analyze_database", new_callable=AsyncMock
-    ) as mock_analyze:
+    with patch.object(DatabaseAnalyzer, "analyze_database", new_callable=AsyncMock) as mock_analyze:
         mock_analyze.return_value = mock_response
 
         response = client.post("/api/v1/analysis/quick", json={})
@@ -655,9 +642,7 @@ def test_api_quick_analysis_with_schema_filter():
         tables=[],
     )
 
-    with patch.object(
-        DatabaseAnalyzer, "analyze_database", new_callable=AsyncMock
-    ) as mock_analyze:
+    with patch.object(DatabaseAnalyzer, "analyze_database", new_callable=AsyncMock) as mock_analyze:
         mock_analyze.return_value = mock_response
 
         response = client.post(

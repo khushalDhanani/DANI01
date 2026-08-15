@@ -59,9 +59,7 @@ class TableSampler:
         pk_info = self.discovery.get_primary_key(schema_name, table_name)
 
         if not columns_info:
-            raise DiscoveryError(
-                f"No columns discovered for table '{schema_name}.{table_name}'."
-            )
+            raise DiscoveryError(f"No columns discovered for table '{schema_name}.{table_name}'.")
 
         # 2. Clamp sample size safely
         requested_rows = limit
@@ -84,17 +82,12 @@ class TableSampler:
                 f"ORDER BY {order_by_clause};"
             )
         else:
-            query = (
-                f"SELECT TOP ({clamped_limit}) {cols_str} "
-                f"FROM {safe_schema}.{safe_table};"
-            )
+            query = f"SELECT TOP ({clamped_limit}) {cols_str} FROM {safe_schema}.{safe_table};"
 
         # 5. Execute query safely with read-only protections
         try:
             raw_rows = execute_readonly_query(query)
-            serialized_rows = [
-                {k: serialize_value(v) for k, v in row.items()} for row in raw_rows
-            ]
+            serialized_rows = [{k: serialize_value(v) for k, v in row.items()} for row in raw_rows]
 
             return TableSampleResponse(
                 schema_name=table_info.schema_name,
@@ -108,6 +101,4 @@ class TableSampler:
             raise
         except SQLAlchemyError as e:
             logger.error(f"Failed to sample table '{schema_name}.{table_name}': {e}")
-            raise DiscoveryError(
-                f"Error sampling table '{schema_name}.{table_name}': {e}"
-            ) from e
+            raise DiscoveryError(f"Error sampling table '{schema_name}.{table_name}': {e}") from e

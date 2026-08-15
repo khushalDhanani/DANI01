@@ -44,10 +44,7 @@ class TableProfiler:
                 df = pl.DataFrame(sample.rows, infer_schema_length=None, strict=False)
             except Exception:
                 # Fallback: Construct series column-by-column
-                col_data = {
-                    col: [row.get(col) for row in sample.rows]
-                    for col in sample.columns
-                }
+                col_data = {col: [row.get(col) for row in sample.rows] for col in sample.columns}
                 df = pl.DataFrame(col_data, strict=False)
         else:
             # Empty DataFrame with string/null schema

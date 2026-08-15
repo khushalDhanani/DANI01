@@ -27,7 +27,7 @@ class PersonSelfRelationshipRule(PersonQualityRule):
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_relationships,
             SUM(CASE WHEN r.PersonID = r.RelatedPersonID THEN 1 ELSE 0 END) AS self_relationships
         FROM dbo.DLPersonRelationDet r
@@ -67,12 +67,15 @@ class PersonCreatedAfterUpdatedRule(PersonQualityRule):
         cols = tables_map["dlpersonmst"].get("columns", [])
         col_names = [c.lower() for c in cols]
         if "personentdt" not in col_names or "personupddt" not in col_names:
-            return False, "Timestamp columns 'PersonEntDt' or 'PersonUpdDt' missing from master table."
+            return (
+                False,
+                "Timestamp columns 'PersonEntDt' or 'PersonUpdDt' missing from master table.",
+            )
         return True, None
 
     def evaluate(self) -> QualityFinding:
         query = """
-        SELECT 
+        SELECT
             COUNT_BIG(1) AS total_timestamped,
             SUM(CASE WHEN PersonEntDt > PersonUpdDt THEN 1 ELSE 0 END) AS invalid_timestamps
         FROM dbo.DLPersonMst

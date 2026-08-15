@@ -80,18 +80,35 @@ async def get_person_quality(
 )
 async def get_person_records_list(
     records_service: Annotated[PersonRecordsService, Depends(get_person_records_service)],
-    search: str | None = Query(default=None, description="Search term across name, title, email, phone, city, company"),
-    status_filter: str = Query(default="ALL", alias="status", description="Status filter (ALL, ACTIVE, INACTIVE, DELETED, TEMP, BLACKLIST)"),
+    search: str | None = Query(
+        default=None, description="Search term across name, title, email, phone, city, company"
+    ),
+    status_filter: str = Query(
+        default="ALL",
+        alias="status",
+        description="Status filter (ALL, ACTIVE, INACTIVE, DELETED, TEMP, BLACKLIST)",
+    ),
     has_email: bool | None = Query(default=None, description="Filter for presence of email"),
     has_phone: bool | None = Query(default=None, description="Filter for presence of phone"),
     has_address: bool | None = Query(default=None, description="Filter for presence of address"),
-    has_company: bool | None = Query(default=None, description="Filter for presence of company link"),
-    has_owner: bool | None = Query(default=None, description="Filter for presence of assigned contact owner"),
-    visitor_contact: int | None = Query(default=None, description="Filter classification: 1=Visitor, 2=Contact"),
-    share_contact: int | None = Query(default=None, description="Filter visibility: 0=Private, 1=Public"),
+    has_company: bool | None = Query(
+        default=None, description="Filter for presence of company link"
+    ),
+    has_owner: bool | None = Query(
+        default=None, description="Filter for presence of assigned contact owner"
+    ),
+    visitor_contact: int | None = Query(
+        default=None, description="Filter classification: 1=Visitor, 2=Contact"
+    ),
+    share_contact: int | None = Query(
+        default=None, description="Filter visibility: 0=Private, 1=Public"
+    ),
     limit: int = Query(default=25, ge=1, le=100, description="Page limit"),
     offset: int = Query(default=0, ge=0, description="Page offset"),
-    sort_by: str = Query(default="PersonID", description="Sort column (PersonID, PersonFirstName, PersonLastName, PersonEntDt)"),
+    sort_by: str = Query(
+        default="PersonID",
+        description="Sort column (PersonID, PersonFirstName, PersonLastName, PersonEntDt)",
+    ),
     sort_order: str = Query(default="desc", description="Sort direction (asc, desc)"),
 ) -> PersonListResponse:
     return await records_service.get_persons_list(
@@ -160,9 +177,16 @@ async def get_contact_quality_summary(
 )
 async def get_contact_quality_issues(
     quality_service: Annotated[ContactQualityService, Depends(get_contact_quality_service)],
-    issue: str = Query(default="INVALID_EMAIL", description="Issue code (e.g. INVALID_EMAIL, DUPLICATE_EMAIL_CROSS, MISSING_PHONE)"),
-    search: str | None = Query(default=None, description="Filter issues by Person name, ID, or value"),
-    sort_by: str = Query(default="PersonID", description="Sort column (PersonID, PersonName, CurrentValue)"),
+    issue: str = Query(
+        default="INVALID_EMAIL",
+        description="Issue code (e.g. INVALID_EMAIL, DUPLICATE_EMAIL_CROSS, MISSING_PHONE)",
+    ),
+    search: str | None = Query(
+        default=None, description="Filter issues by Person name, ID, or value"
+    ),
+    sort_by: str = Query(
+        default="PersonID", description="Sort column (PersonID, PersonName, CurrentValue)"
+    ),
     sort_order: str = Query(default="desc", description="Sort direction (asc, desc)"),
     limit: int = Query(default=25, ge=1, le=100, description="Page limit"),
     offset: int = Query(default=0, ge=0, description="Page offset"),

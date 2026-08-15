@@ -3,7 +3,7 @@ from app.analysis.planner import AnalysisPlanner
 from app.analysis.table_analyzer import TableAnalyzer
 
 __all__ = [
-    "DatabaseAnalyzer",
     "AnalysisPlanner",
+    "DatabaseAnalyzer",
     "TableAnalyzer",
 ]

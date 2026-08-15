@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
 import logging
-from typing import Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime
 
 from sqlalchemy import desc, func, select, update
 from sqlalchemy.orm import Session
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class AnalysisRunRepository:
@@ -119,7 +119,12 @@ class AnalysisRunRepository:
         if not run:
             return False
 
-        if run.status in (AnalysisRunStatus.COMPLETED.value, AnalysisRunStatus.COMPLETED_WITH_ERRORS.value, AnalysisRunStatus.FAILED.value, AnalysisRunStatus.CANCELLED.value):
+        if run.status in (
+            AnalysisRunStatus.COMPLETED.value,
+            AnalysisRunStatus.COMPLETED_WITH_ERRORS.value,
+            AnalysisRunStatus.FAILED.value,
+            AnalysisRunStatus.CANCELLED.value,
+        ):
             return False
 
         if run.status == AnalysisRunStatus.QUEUED.value:

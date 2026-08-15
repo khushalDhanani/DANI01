@@ -1,11 +1,11 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class TableAnalysisStatus(str, Enum):
+class TableAnalysisStatus(StrEnum):
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
@@ -13,7 +13,7 @@ class TableAnalysisStatus(str, Enum):
     FAILED = "FAILED"
 
 
-class AnalysisStatus(str, Enum):
+class AnalysisStatus(StrEnum):
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
@@ -21,7 +21,7 @@ class AnalysisStatus(str, Enum):
     FAILED = "FAILED"
 
 
-class TableSkipReason(str, Enum):
+class TableSkipReason(StrEnum):
     EMPTY_TABLE = "EMPTY_TABLE"
     FILTERED = "FILTERED"
 

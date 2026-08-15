@@ -31,7 +31,9 @@ def resolve_order_clause(
     if col in ("personid", "id"):
         return f"p.PersonID {direction}"
     elif col in ("personname", "name"):
-        return f"ISNULL(p.PersonFirstName, '') {direction}, ISNULL(p.PersonLastName, '') {direction}"
+        return (
+            f"ISNULL(p.PersonFirstName, '') {direction}, ISNULL(p.PersonLastName, '') {direction}"
+        )
     elif col in ("currentvalue", "value"):
         return f"CurrentValue {direction}, p.PersonID {direction}"
     return default_clause
@@ -108,10 +110,10 @@ def compile_summary_query() -> str:
             if rule.code == ContactQualityIssueType.MULTIPLE_PRIMARY:
                 subq = f"""
                 (SELECT COUNT_BIG(1) FROM (
-                    SELECT c.PersonID 
-                    FROM ClassifiedContacts c 
-                    WHERE c.IsPrimary = 1 
-                    GROUP BY c.PersonID 
+                    SELECT c.PersonID
+                    FROM ClassifiedContacts c
+                    WHERE c.IsPrimary = 1
+                    GROUP BY c.PersonID
                     HAVING COUNT_BIG(1) > 1
                 ) t) AS {field_name}
                 """.strip()
@@ -132,7 +134,11 @@ def compile_summary_query() -> str:
             (SELECT COUNT_BIG(1) FROM dbo.DLPersonExtraFieldValueDet e JOIN dbo.DLPersonMst p ON e.PersonID = p.PersonID WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}) AS {field_name}
             """.strip()
         else:  # PERSON
-            active_clause = f"WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}" if rule.requires_active_person else f"WHERE {pred}"
+            active_clause = (
+                f"WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}"
+                if rule.requires_active_person
+                else f"WHERE {pred}"
+            )
             subq = f"""
             (SELECT COUNT_BIG(1) FROM dbo.DLPersonMst p {active_clause}) AS {field_name}
             """.strip()
@@ -154,12 +160,22 @@ def compile_summary_query() -> str:
         elif rule.target_entity == "EXTRA_FIELD":
             defect_select = f"SELECT e.PersonID FROM dbo.DLPersonExtraFieldValueDet e JOIN dbo.DLPersonMst p ON e.PersonID = p.PersonID WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}"
         else:  # PERSON
-            if "NOT EXISTS (SELECT 1 FROM ClassifiedContacts c WHERE c.PersonID = p.PersonID AND c.ContactCategory = 'EMAIL'" in pred:
+            if (
+                "NOT EXISTS (SELECT 1 FROM ClassifiedContacts c WHERE c.PersonID = p.PersonID AND c.ContactCategory = 'EMAIL'"
+                in pred
+            ):
                 defect_select = f"SELECT p.PersonID FROM dbo.DLPersonMst p WHERE {ACTIVE_PERSON_WHERE_SQL} AND p.PersonID NOT IN (SELECT PersonID FROM ClassifiedContacts WHERE ContactCategory = 'EMAIL' AND TypeValue IS NOT NULL AND LTRIM(RTRIM(TypeValue)) <> '')"
-            elif "NOT EXISTS (SELECT 1 FROM ClassifiedContacts c WHERE c.PersonID = p.PersonID AND c.ContactCategory = 'PHONE'" in pred:
+            elif (
+                "NOT EXISTS (SELECT 1 FROM ClassifiedContacts c WHERE c.PersonID = p.PersonID AND c.ContactCategory = 'PHONE'"
+                in pred
+            ):
                 defect_select = f"SELECT p.PersonID FROM dbo.DLPersonMst p WHERE {ACTIVE_PERSON_WHERE_SQL} AND p.PersonID NOT IN (SELECT PersonID FROM ClassifiedContacts WHERE ContactCategory = 'PHONE' AND TypeValue IS NOT NULL AND LTRIM(RTRIM(TypeValue)) <> '')"
             else:
-                active_clause = f"WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}" if rule.requires_active_person else f"WHERE {pred}"
+                active_clause = (
+                    f"WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}"
+                    if rule.requires_active_person
+                    else f"WHERE {pred}"
+                )
                 defect_select = f"SELECT p.PersonID FROM dbo.DLPersonMst p {active_clause}"
 
         if rule.severity == "CRITICAL":
@@ -345,9 +361,7 @@ def compile_contact_rules_query() -> str:
                 f") t) AS {fn}"
             )
         else:
-            cond_agg_cases.append(
-                f"ISNULL(SUM(CASE WHEN {pred} THEN 1 ELSE 0 END), 0) AS {fn}"
-            )
+            cond_agg_cases.append(f"ISNULL(SUM(CASE WHEN {pred} THEN 1 ELSE 0 END), 0) AS {fn}")
 
     all_cols = cond_agg_cases + scalar_subqueries
     projections = ",\n            ".join(all_cols)
@@ -396,9 +410,7 @@ def compile_address_rules_query() -> str:
                 f") t) AS {fn}"
             )
         else:
-            cond_agg_cases.append(
-                f"ISNULL(SUM(CASE WHEN {pred} THEN 1 ELSE 0 END), 0) AS {fn}"
-            )
+            cond_agg_cases.append(f"ISNULL(SUM(CASE WHEN {pred} THEN 1 ELSE 0 END), 0) AS {fn}")
 
     all_cols = cond_agg_cases + scalar_subqueries
     projections = ",\n            ".join(all_cols)
@@ -646,7 +658,7 @@ def compile_drilldown_queries(
 
     items_sql = f"""
     {cte_prefix}
-    SELECT 
+    SELECT
         {rule.select_columns_sql}
     FROM {rule.from_clause_sql}
     WHERE {rule.where_clause_sql} {search_clause}
@@ -674,7 +686,9 @@ def compile_group_queries(
         term = f"%{search.strip()}%"
         params["search"] = term
         search_clause_contact = "AND (c.NormalizedEmail LIKE :search OR c.NormalizedPhone LIKE :search OR CAST(c.PersonID AS VARCHAR(20)) LIKE :search)"
-        search_clause_person = "AND (a.Street LIKE :search OR CAST(a.PersonID AS VARCHAR(20)) LIKE :search)"
+        search_clause_person = (
+            "AND (a.Street LIKE :search OR CAST(a.PersonID AS VARCHAR(20)) LIKE :search)"
+        )
 
     pred = rule.predicate_sql
     group_key = rule.group_key_sql or "c.NormalizedEmail"
@@ -696,7 +710,7 @@ def compile_group_queries(
 
         groups_sql = f"""
         {CLASSIFIED_CONTACTS_CTE_SQL}
-        SELECT 
+        SELECT
             {group_key} AS GroupKey,
             MIN({group_label}) AS GroupLabel,
             {pers_count} AS AffectedPersonsCount,
@@ -711,7 +725,7 @@ def compile_group_queries(
 
         members_sql = f"""
         {CLASSIFIED_CONTACTS_CTE_SQL}
-        SELECT 
+        SELECT
             {group_key} AS GroupKey,
             c.PersonID,
             {PERSON_NAME_SQL} AS PersonName,
@@ -744,7 +758,7 @@ def compile_group_queries(
         """
 
         groups_sql = f"""
-        SELECT 
+        SELECT
             {group_key} AS GroupKey,
             MIN({group_label}) AS GroupLabel,
             {pers_count} AS AffectedPersonsCount,
@@ -758,7 +772,7 @@ def compile_group_queries(
         """
 
         members_sql = f"""
-        SELECT 
+        SELECT
             {group_key} AS GroupKey,
             a.PersonID,
             {PERSON_NAME_SQL} AS PersonName,
@@ -791,7 +805,7 @@ def compile_group_queries(
         """
 
         groups_sql = f"""
-        SELECT 
+        SELECT
             {group_key} AS GroupKey,
             MIN({group_label}) AS GroupLabel,
             {pers_count} AS AffectedPersonsCount,
@@ -805,7 +819,7 @@ def compile_group_queries(
         """
 
         members_sql = f"""
-        SELECT 
+        SELECT
             {group_key} AS GroupKey,
             l.PersonID,
             {PERSON_NAME_SQL} AS PersonName,
@@ -838,7 +852,7 @@ def compile_group_queries(
         """
 
         groups_sql = f"""
-        SELECT 
+        SELECT
             {group_key} AS GroupKey,
             MIN({group_label}) AS GroupLabel,
             {pers_count} AS AffectedPersonsCount,
@@ -852,7 +866,7 @@ def compile_group_queries(
         """
 
         members_sql = f"""
-        SELECT 
+        SELECT
             {group_key} AS GroupKey,
             e.PersonID,
             {PERSON_NAME_SQL} AS PersonName,

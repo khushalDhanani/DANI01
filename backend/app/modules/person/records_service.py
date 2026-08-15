@@ -97,7 +97,9 @@ class PersonRecordsService:
             if share_contact in (1, True, "1", "true", "TRUE"):
                 where_clauses.append("p.PersonIsShareContact = 1")
             elif share_contact in (0, False, "0", "false", "FALSE"):
-                where_clauses.append("(p.PersonIsShareContact = 0 OR p.PersonIsShareContact IS NULL)")
+                where_clauses.append(
+                    "(p.PersonIsShareContact = 0 OR p.PersonIsShareContact IS NULL)"
+                )
 
         # 3. Attribute Presence Filters
         if has_email is True:
@@ -171,7 +173,7 @@ class PersonRecordsService:
         params["offset"] = max(0, offset)
 
         items_sql = f"""
-        SELECT 
+        SELECT
             p.PersonID,
             p.PersonPrefix,
             p.PersonFirstName,
@@ -248,7 +250,7 @@ class PersonRecordsService:
         """
         # 1. Root entity (all 75 columns from dbo.DLPersonMst)
         person_sql = """
-        SELECT 
+        SELECT
             p.PersonID,
             p.PersonPrefix,
             p.PersonFirstName,
@@ -363,7 +365,7 @@ class PersonRecordsService:
 
         # 2. Addresses (all 24 columns from dbo.DLPersonAddressDet)
         addr_sql = """
-        SELECT 
+        SELECT
             PersonAddID, PersonID, LabelTypeID, Street, CityName, CityID, StateName, StateID,
             PostalCode, CountryID, LocationMapURL, Notes, PersonAddIsActive,
             PersonAddEntDt, PresonAddEntUser, PersonAddEntTerm,
@@ -373,11 +375,14 @@ class PersonRecordsService:
         FROM dbo.DLPersonAddressDet
         WHERE PersonID = :person_id;
         """
-        addrs = [PersonAddressDetail.model_validate(r) for r in execute_readonly_query(addr_sql, {"person_id": person_id})]
+        addrs = [
+            PersonAddressDetail.model_validate(r)
+            for r in execute_readonly_query(addr_sql, {"person_id": person_id})
+        ]
 
         # 3. Contacts (all 14 columns from dbo.DLPersonPhoneEmailURLDet)
         contact_sql = """
-        SELECT 
+        SELECT
             PersonPhoneID, PersionID, LabelTypeID, TypeValue, PersonPhoneNotes, IsVerified,
             PersonPhoneEntDt, PersonPhoneEntUser, PersonPhoneEntTerm,
             PersonPhoneUpdDt, PersonPhoneUpdUser, PersonPhoneUpdTerm,
@@ -385,11 +390,14 @@ class PersonRecordsService:
         FROM dbo.DLPersonPhoneEmailURLDet
         WHERE PersionID = :person_id;
         """
-        contacts = [PersonContactDetail.model_validate(r) for r in execute_readonly_query(contact_sql, {"person_id": person_id})]
+        contacts = [
+            PersonContactDetail.model_validate(r)
+            for r in execute_readonly_query(contact_sql, {"person_id": person_id})
+        ]
 
         # 4. Companies (all 14 columns from dbo.DLPersonCompanyLinkDet + DLCompName)
         comp_sql = """
-        SELECT 
+        SELECT
             l.PersonLinkID, l.PersonID, l.DLCompID, c.DLCompName, l.CompPersonRoleID, l.IsPrimary,
             l.PersonLinkEntDt, l.PersonLinkEntUser, l.PersonLinkEntTerm,
             l.PersonLinkUpdDt, l.PersonLinkUpdUser, l.PersonLinkUpdTerm,
@@ -398,11 +406,14 @@ class PersonRecordsService:
         LEFT JOIN dbo.DLCompanyMst c ON l.DLCompID = c.DLCompID
         WHERE l.PersonID = :person_id;
         """
-        companies = [PersonCompanyLinkDetail.model_validate(r) for r in execute_readonly_query(comp_sql, {"person_id": person_id})]
+        companies = [
+            PersonCompanyLinkDetail.model_validate(r)
+            for r in execute_readonly_query(comp_sql, {"person_id": person_id})
+        ]
 
         # 5. Relations (all 15 columns from dbo.DLPersonRelationDet + RelatedPersonName)
         rel_sql = """
-        SELECT 
+        SELECT
             r.PersonRelationID, r.PersonID, r.RelatedPersonID,
             ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(p2.PersonFirstName, '') + ' ' + ISNULL(p2.PersonLastName, ''))), ''), 'Person #' + CAST(r.RelatedPersonID AS varchar)) AS RelatedPersonName,
             r.RelationShipTypeID, r.RelationDetail, r.PersonRelationIsDeleted,
@@ -413,11 +424,14 @@ class PersonRecordsService:
         LEFT JOIN dbo.DLPersonMst p2 ON r.RelatedPersonID = p2.PersonID
         WHERE r.PersonID = :person_id;
         """
-        relations = [PersonRelationDetail.model_validate(r) for r in execute_readonly_query(rel_sql, {"person_id": person_id})]
+        relations = [
+            PersonRelationDetail.model_validate(r)
+            for r in execute_readonly_query(rel_sql, {"person_id": person_id})
+        ]
 
         # 6. Documents (all 13 columns from dbo.DLPersonDocumentDet)
         doc_sql = """
-        SELECT 
+        SELECT
             PersonDocID, PersonID, PersonDocExtention, PersonDocDesc, PersonDocIsReadOnly,
             PersonDocIsDownloadable, PersonDocUploadByUserID,
             PersonDocEntDt, PersonDocEntUser, PersonDocEntTerm,
@@ -425,11 +439,14 @@ class PersonRecordsService:
         FROM dbo.DLPersonDocumentDet
         WHERE PersonID = :person_id;
         """
-        documents = [PersonDocumentDetail.model_validate(r) for r in execute_readonly_query(doc_sql, {"person_id": person_id})]
+        documents = [
+            PersonDocumentDetail.model_validate(r)
+            for r in execute_readonly_query(doc_sql, {"person_id": person_id})
+        ]
 
         # 7. Extra Fields (all 15 columns from dbo.DLPersonExtraFieldValueDet)
         extra_sql = """
-        SELECT 
+        SELECT
             PersonExtraFieldValueID, PersonID, ExtraFieldID, PersonExtraFieldValue,
             PersonExtraFieldIsActive, PersonExtraFieldIsDeleted,
             PersonExtraFieldEntDt, PersonExtraFieldEntUser, PersonExtraFieldEntTerm,
@@ -438,22 +455,28 @@ class PersonRecordsService:
         FROM dbo.DLPersonExtraFieldValueDet
         WHERE PersonID = :person_id;
         """
-        extra_fields = [PersonExtraFieldDetail.model_validate(r) for r in execute_readonly_query(extra_sql, {"person_id": person_id})]
+        extra_fields = [
+            PersonExtraFieldDetail.model_validate(r)
+            for r in execute_readonly_query(extra_sql, {"person_id": person_id})
+        ]
 
         # 8. Instant Messaging (all 12 columns from dbo.DLPersonIMDet)
         im_sql = """
-        SELECT 
+        SELECT
             PersonIMID, PersionID, LabelTypeAIMID, LabelTypeIMID, TypeValue, PersonPhoneNotes,
             PersonPhoneEntDt, PersonPhoneEntUser, PersonPhoneEntTerm,
             PersonPhoneUpdDt, PersonPhoneUpdUser, PersonPhoneUpdTerm
         FROM dbo.DLPersonIMDet
         WHERE PersionID = :person_id;
         """
-        ims = [PersonIMDetail.model_validate(r) for r in execute_readonly_query(im_sql, {"person_id": person_id})]
+        ims = [
+            PersonIMDetail.model_validate(r)
+            for r in execute_readonly_query(im_sql, {"person_id": person_id})
+        ]
 
         # 9. Contact Ownership Transfer History (dbo.ChangeContactOwnershipTransaction)
         history_sql = """
-        SELECT 
+        SELECT
             t.ChangeOwnershipID,
             t.PersonID,
             t.LastPersonID,

@@ -30,7 +30,9 @@ def mock_person_discovery() -> MagicMock:
     def get_structure_side_effect(schema_name: str, table_name: str):
         if table_name == "DLPersonMst":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonMst", estimated_rows=1000, column_count=8),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonMst", estimated_rows=1000, column_count=8
+                ),
                 columns=[
                     make_col(1, "PersonID", "int"),
                     make_col(2, "PersonFirstName", "varchar"),
@@ -47,7 +49,9 @@ def mock_person_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonAddressDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonAddressDet", estimated_rows=500, column_count=11),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonAddressDet", estimated_rows=500, column_count=11
+                ),
                 columns=[
                     make_col(1, "PersonAddID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -67,7 +71,12 @@ def mock_person_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonPhoneEmailURLDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonPhoneEmailURLDet", estimated_rows=800, column_count=7),
+                table=TableInfo(
+                    schema="dbo",
+                    table="DLPersonPhoneEmailURLDet",
+                    estimated_rows=800,
+                    column_count=7,
+                ),
                 columns=[
                     make_col(1, "PersonPhoneID", "int"),
                     make_col(2, "PersionID", "int"),
@@ -83,7 +92,9 @@ def mock_person_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonCompanyLinkDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonCompanyLinkDet", estimated_rows=300, column_count=5),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonCompanyLinkDet", estimated_rows=300, column_count=5
+                ),
                 columns=[
                     make_col(1, "PersonLinkID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -97,7 +108,9 @@ def mock_person_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonRelationDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonRelationDet", estimated_rows=50, column_count=4),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonRelationDet", estimated_rows=50, column_count=4
+                ),
                 columns=[
                     make_col(1, "PersonRelationID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -110,7 +123,9 @@ def mock_person_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonDocumentDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonDocumentDet", estimated_rows=0, column_count=5),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonDocumentDet", estimated_rows=0, column_count=5
+                ),
                 columns=[
                     make_col(1, "PersonDocID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -124,7 +139,12 @@ def mock_person_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonExtraFieldValueDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonExtraFieldValueDet", estimated_rows=100, column_count=5),
+                table=TableInfo(
+                    schema="dbo",
+                    table="DLPersonExtraFieldValueDet",
+                    estimated_rows=100,
+                    column_count=5,
+                ),
                 columns=[
                     make_col(1, "PersonExtraFieldValueID", "int"),
                     make_col(2, "PersonID", "int"),
@@ -138,7 +158,9 @@ def mock_person_discovery() -> MagicMock:
             )
         elif table_name == "DLPersonIMDet":
             return TableStructureResponse(
-                table=TableInfo(schema="dbo", table="DLPersonIMDet", estimated_rows=10, column_count=4),
+                table=TableInfo(
+                    schema="dbo", table="DLPersonIMDet", estimated_rows=10, column_count=4
+                ),
                 columns=[
                     make_col(1, "PersonIMID", "int"),
                     make_col(2, "PersionID", "int"),

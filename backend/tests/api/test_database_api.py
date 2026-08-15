@@ -14,9 +14,7 @@ def test_api_database_summary():
         "column_count": 14682,
         "estimated_rows": 284021923,
     }
-    with patch(
-        "app.discovery.metadata.execute_readonly_query", return_value=[mock_row]
-    ):
+    with patch("app.discovery.metadata.execute_readonly_query", return_value=[mock_row]):
         response = client.get("/api/v1/database/summary")
         assert response.status_code == 200
         data = response.json()
@@ -54,9 +52,7 @@ def test_api_database_tables():
         "app.discovery.metadata.execute_readonly_query",
         side_effect=[mock_count, mock_data],
     ):
-        response = client.get(
-            "/api/v1/database/tables?schema=dbo&search=Person&limit=50&offset=0"
-        )
+        response = client.get("/api/v1/database/tables?schema=dbo&search=Person&limit=50&offset=0")
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 1
@@ -128,9 +124,7 @@ def test_api_table_columns():
 
 def test_api_table_keys():
     mock_exists_pk = [{"exists_flag": 1}]
-    mock_pk_rows = [
-        {"constraint_name": "PK_Person", "column_name": "PersonID", "ordinal": 1}
-    ]
+    mock_pk_rows = [{"constraint_name": "PK_Person", "column_name": "PersonID", "ordinal": 1}]
     mock_exists_fk = [{"exists_flag": 1}]
     mock_fk_rows = []
     with patch(
@@ -204,9 +198,7 @@ def test_api_table_structure():
         }
     ]
     mock_exists_pk = [{"exists_flag": 1}]
-    mock_pk = [
-        {"constraint_name": "PK_Person", "column_name": "PersonID", "ordinal": 1}
-    ]
+    mock_pk = [{"constraint_name": "PK_Person", "column_name": "PersonID", "ordinal": 1}]
     mock_exists_fk = [{"exists_flag": 1}]
     mock_fk = []
     mock_exists_idx = [{"exists_flag": 1}]
@@ -264,9 +256,7 @@ def test_api_table_sample():
         }
     ]
     mock_exists_pk = [{"exists_flag": 1}]
-    mock_pk = [
-        {"constraint_name": "PK_Person", "column_name": "PersonID", "ordinal": 1}
-    ]
+    mock_pk = [{"constraint_name": "PK_Person", "column_name": "PersonID", "ordinal": 1}]
     mock_sample_rows = [{"PersonID": 101}, {"PersonID": 102}]
 
     with (
@@ -325,9 +315,7 @@ def test_api_table_profile():
         }
     ]
     mock_exists_pk = [{"exists_flag": 1}]
-    mock_pk = [
-        {"constraint_name": "PK_Person", "column_name": "PersonID", "ordinal": 1}
-    ]
+    mock_pk = [{"constraint_name": "PK_Person", "column_name": "PersonID", "ordinal": 1}]
     mock_sample_rows = [{"PersonID": 101}, {"PersonID": 102}]
 
     with (

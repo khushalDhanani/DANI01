@@ -20,8 +20,12 @@ class PersonListItem(BaseModel):
     is_deleted: bool | None = Field(default=None, alias="PersonIsDeleted")
     is_temp: bool | None = Field(default=None, alias="PersonIsTemp")
     is_blacklist: bool | None = Field(default=None, alias="PersonIsBlackList")
-    is_visitor_contact: int | None = Field(default=None, alias="PersonIsVisitor_Contact", description="1=Visitor, 2=Contact")
-    is_share_contact: bool | None = Field(default=None, alias="PersonIsShareContact", description="0=Private, 1=Public")
+    is_visitor_contact: int | None = Field(
+        default=None, alias="PersonIsVisitor_Contact", description="1=Visitor, 2=Contact"
+    )
+    is_share_contact: bool | None = Field(
+        default=None, alias="PersonIsShareContact", description="0=Private, 1=Public"
+    )
     created_at: datetime | None = Field(default=None, alias="PersonEntDt")
 
     # Linked Primary Contact / Reachability Information
@@ -60,6 +64,7 @@ class PersonFullRootDetail(BaseModel):
     """
     Every column from dbo.DLPersonMst (75 columns).
     """
+
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True, extra="ignore")
 
     # 1. Primary Keys & Identifiers
@@ -163,6 +168,7 @@ class PersonAddressDetail(BaseModel):
     """
     Every column from dbo.DLPersonAddressDet (24 columns).
     """
+
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True, extra="ignore")
 
     PersonAddID: int = Field(...)
@@ -197,6 +203,7 @@ class PersonContactDetail(BaseModel):
     """
     Every column from dbo.DLPersonPhoneEmailURLDet (14 columns).
     """
+
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True, extra="ignore")
 
     PersonPhoneID: int = Field(...)
@@ -221,6 +228,7 @@ class PersonCompanyLinkDetail(BaseModel):
     """
     Every column from dbo.DLPersonCompanyLinkDet (14 columns) + DLCompName.
     """
+
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True, extra="ignore")
 
     PersonLinkID: int = Field(...)
@@ -246,6 +254,7 @@ class PersonRelationDetail(BaseModel):
     """
     Every column from dbo.DLPersonRelationDet (15 columns) + RelatedPersonName.
     """
+
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True, extra="ignore")
 
     PersonRelationID: int = Field(...)
@@ -272,6 +281,7 @@ class PersonDocumentDetail(BaseModel):
     """
     Every column from dbo.DLPersonDocumentDet (13 columns).
     """
+
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True, extra="ignore")
 
     PersonDocID: int = Field(...)
@@ -295,6 +305,7 @@ class PersonExtraFieldDetail(BaseModel):
     """
     Every column from dbo.DLPersonExtraFieldValueDet (15 columns).
     """
+
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True, extra="ignore")
 
     PersonExtraFieldValueID: int = Field(...)
@@ -320,6 +331,7 @@ class PersonIMDetail(BaseModel):
     """
     Every column from dbo.DLPersonIMDet (12 columns).
     """
+
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True, extra="ignore")
 
     PersonIMID: int = Field(...)
@@ -342,6 +354,7 @@ class PersonOwnershipHistoryItem(BaseModel):
     """
     Historical Contact Ownership change records from dbo.ChangeContactOwnershipTransaction.
     """
+
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True, extra="ignore")
 
     ChangeOwnershipID: int = Field(...)

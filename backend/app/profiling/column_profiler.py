@@ -60,14 +60,10 @@ def profile_column(
     else:
         # Generic / Binary fallback
         null_count = series.null_count()
-        null_percent = (
-            round((null_count / total_rows) * 100, 2) if total_rows > 0 else 0.0
-        )
+        null_percent = round((null_count / total_rows) * 100, 2) if total_rows > 0 else 0.0
         non_null_series = series.drop_nulls()
         distinct_count = series.n_unique()
-        distinct_percent = (
-            round((distinct_count / total_rows) * 100, 2) if total_rows > 0 else 0.0
-        )
+        distinct_percent = round((distinct_count / total_rows) * 100, 2) if total_rows > 0 else 0.0
 
         vc = non_null_series.value_counts(sort=True).head(5)
         top_values = [
@@ -82,9 +78,7 @@ def profile_column(
         return BaseColumnProfile(
             name=col_name,
             data_type=data_type,
-            profile_type="binary"
-            if "binary" in dt_lower or "image" in dt_lower
-            else "generic",
+            profile_type="binary" if "binary" in dt_lower or "image" in dt_lower else "generic",
             null_count=null_count,
             null_percent=null_percent,
             distinct_count=distinct_count,

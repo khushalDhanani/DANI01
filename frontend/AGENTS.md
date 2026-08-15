@@ -37,6 +37,11 @@ Current high-level layout:
 
 ```text
 frontend/
+├── __tests__/
+│   ├── api/
+│   ├── hooks/
+│   ├── features/
+│   └── routes/
 ├── app/
 │   ├── _layout.tsx
 │   └── (shell)/
@@ -71,7 +76,7 @@ frontend/
 └── tsconfig.json
 ```
 
-This is descriptive, not permission to invent missing files.
+Do not place tests inside `app/` because Expo Router treats files there as route entries. All test suites belong inside `__tests__/`.
 
 # 1. Mandatory Server-Data Flow
 
@@ -337,14 +342,12 @@ concrete architecture decision.
 
 # 17. Frontend Testing / Validation
 
-There is currently no dedicated frontend unit-test script in `package.json`.
+Frontend unit and integration testing is powered by **Vitest** and **React Testing Library**.
 
-Do not invent a test framework in a feature change unless testing infrastructure
-is part of the task.
-
-Required existing validation:
+Required validation for frontend changes:
 
 ```bash
+npm run test
 npm run typecheck
 npm run lint
 ```
@@ -362,8 +365,7 @@ Ensure the Expo dev server starts for meaningful runtime changes:
 npm run start
 ```
 
-When a frontend test framework is introduced later, add focused behavioral
-tests for complex business/UI behavior instead of relying only on snapshots.
+When creating or modifying frontend features, hooks, or complex UI components, add focused behavioral unit/integration tests in Jest (`jest-expo` and React Native Testing Library) under `__tests__/` (`*.test.ts` or `*.test.tsx`).
 
 # 18. What Not to Do
 
@@ -388,9 +390,11 @@ tests for complex business/UI behavior instead of relying only on snapshots.
 
 A frontend change is complete only when relevant items below are satisfied:
 
-- [ ] `npm run typecheck` passes;
-- [ ] `npm run lint` passes with no introduced warnings/errors;
+- [ ] `npm run typecheck` passes with zero type errors;
+- [ ] `npm run lint` passes with zero errors and zero warnings (`--max-warnings=0`);
+- [ ] `npm test` passes (Jest component, hook, and API tests in `__tests__/`);
 - [ ] `npm run build:web` passes for web-impacting changes;
+- [ ] new feature/behavior includes corresponding tests in `__tests__/` (hooks, API, components, empty/loading/error states);
 - [ ] Expo starts for meaningful runtime changes;
 - [ ] affected routes render correctly on an appropriate target;
 - [ ] loading/error/empty/success states are handled;

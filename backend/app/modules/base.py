@@ -21,7 +21,6 @@ class BaseModuleRule(ABC):
     @abstractmethod
     def evaluate(self, context: ModuleAnalysisContext) -> list[dict[str, Any]]:
         """Evaluate rule against the module analysis context and return findings."""
-        pass
 
 
 class BaseModuleMetric(ABC):
@@ -35,7 +34,6 @@ class BaseModuleMetric(ABC):
     @abstractmethod
     def calculate(self, context: ModuleAnalysisContext) -> Any:
         """Compute metric value from module analysis context."""
-        pass
 
 
 class BaseModuleAnalyzer(ABC):
@@ -46,18 +44,15 @@ class BaseModuleAnalyzer(ABC):
     @abstractmethod
     async def validate(self, definition: ModuleDefinition) -> ModuleValidationResult:
         """Validate module definition against database discovery metadata."""
-        pass
 
     @abstractmethod
     async def build_context(
         self, definition: ModuleDefinition, sample_size: int = 1000
     ) -> ModuleAnalysisContext:
         """Collect metadata, profiles, and classifications for module tables."""
-        pass
 
     @abstractmethod
     async def analyze(
         self, definition: ModuleDefinition, sample_size: int = 1000
     ) -> ModuleAnalysisResult:
         """Execute framework-level analysis for the module."""
-        pass

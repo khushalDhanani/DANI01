@@ -97,6 +97,7 @@ EXPORT_BATCH_SIZE = 1000
 # Backward Compatibility Query Builders
 # =====================================================================
 
+
 def _build_issue_queries(
     issue: str = "INVALID_EMAIL",
     search: str | None = None,
@@ -127,6 +128,7 @@ def _build_group_queries(
 def _execute_query(query: str, params: dict | None = None) -> list[dict[str, Any]]:
     try:
         from app.modules.person import contact_quality_service
+
         return contact_quality_service.execute_readonly_query(query, params=params)
     except Exception:
         return execute_readonly_query(query, params=params)
@@ -135,6 +137,7 @@ def _execute_query(query: str, params: dict | None = None) -> list[dict[str, Any
 # =====================================================================
 # Contact Quality Service
 # =====================================================================
+
 
 class ContactQualityService:
     """
@@ -156,7 +159,9 @@ class ContactQualityService:
         self._summary_cache = None
         self._cache_timestamp = 0.0
 
-    async def get_contact_quality_summary(self, force_refresh: bool = False) -> ContactQualitySummaryResponse:
+    async def get_contact_quality_summary(
+        self, force_refresh: bool = False
+    ) -> ContactQualitySummaryResponse:
         """
         Executes 6 parallel entity-grouped quality queries via asyncio.gather().
         Each query targets a specific entity type, avoiding monolithic CTE re-evaluation.

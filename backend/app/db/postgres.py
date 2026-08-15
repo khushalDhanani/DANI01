@@ -1,6 +1,6 @@
+import logging
 from collections.abc import Generator
 from contextlib import contextmanager
-import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
@@ -13,8 +13,6 @@ logger = logging.getLogger(__name__)
 
 class Base(DeclarativeBase):
     """Base class for all DB Insights internal PostgreSQL models."""
-
-    pass
 
 
 def create_postgres_engine(url: str | None = None) -> Engine:
@@ -39,7 +37,9 @@ def create_postgres_engine(url: str | None = None) -> Engine:
 
 
 engine = create_postgres_engine()
-SessionFactory = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+SessionFactory = sessionmaker(
+    bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
+)
 
 
 @contextmanager

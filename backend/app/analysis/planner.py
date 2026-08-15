@@ -1,6 +1,7 @@
 import logging
 
-from app.core.config import Settings, settings as global_settings
+from app.core.config import Settings
+from app.core.config import settings as global_settings
 from app.schemas.analysis import AnalysisPlan, TableAnalysisPlan, TableSkipReason
 from app.schemas.database import TableInfo
 
@@ -70,9 +71,7 @@ class AnalysisPlanner:
 
         # Optional schema filtering
         if schema_filter:
-            target_tables = [
-                t for t in tables if t.schema_name.lower() == schema_filter.lower()
-            ]
+            target_tables = [t for t in tables if t.schema_name.lower() == schema_filter.lower()]
         else:
             target_tables = tables
 

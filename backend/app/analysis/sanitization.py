@@ -4,7 +4,6 @@ from typing import Any
 from app.classification.taxonomy import SensitivityLevel
 from app.schemas.classification import TableClassificationResponse
 from app.schemas.profiling import (
-    BaseColumnProfile,
     BooleanColumnProfile,
     DateTimeColumnProfile,
     NumericColumnProfile,
@@ -40,15 +39,15 @@ class ProfileSanitizer:
         for col_prof in profile_response.columns:
             classification = class_map.get(col_prof.name)
             expose_values = classification.expose_values if classification else True
-            sensitivity = classification.sensitivity if classification else SensitivityLevel.PUBLIC.value
+            sensitivity = (
+                classification.sensitivity if classification else SensitivityLevel.PUBLIC.value
+            )
 
             # If expose_values is False or sensitivity is PII, redact top_values
             if not expose_values or sensitivity == SensitivityLevel.PII.value:
                 sanitized_top_values = []
             else:
-                sanitized_top_values = [
-                    v.model_dump(mode="json") for v in col_prof.top_values
-                ]
+                sanitized_top_values = [v.model_dump(mode="json") for v in col_prof.top_values]
 
             # Extract type-specific stats
             stats: dict[str, Any] = {}

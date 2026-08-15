@@ -4,23 +4,15 @@ import { useRouter } from "expo-router";
 import type { Href } from "expo-router";
 import {
   AlertCircle,
-  Building2,
-  Calendar,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Clock,
   ExternalLink,
-  Package,
   Search,
   User,
-  UserCheck,
-  XCircle,
 } from "lucide-react-native";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { THEME_COLORS } from "@/constants/theme";
 import { usePRTransactions } from "@/hooks/useCampaigns";
-import type { PRTransactionItem } from "@/types/campaign.types";
 
 interface PRCampaignTransactionsTabProps {
   campId?: number;

@@ -21,6 +21,21 @@ const reactNativeGlobals = {
   __DEV__: "readonly",
 };
 
+/** Jest test runner globals */
+const jestGlobals = {
+  jest: "readonly",
+  describe: "readonly",
+  it: "readonly",
+  test: "readonly",
+  expect: "readonly",
+  beforeEach: "readonly",
+  afterEach: "readonly",
+  beforeAll: "readonly",
+  afterAll: "readonly",
+  module: "readonly",
+  require: "readonly",
+};
+
 /** @type {import("eslint").Linter.Config[]} */
 export default [
   // Base JS recommended rules
@@ -50,23 +65,74 @@ export default [
     rules: {
       // TypeScript strict rules
       "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unused-vars": ["error", {
-        argsIgnorePattern: "^_",
-        varsIgnorePattern: "^_",
-        caughtErrorsIgnorePattern: "^_",
-      }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
       "@typescript-eslint/explicit-function-return-type": "off",
-      "@typescript-eslint/consistent-type-imports": ["warn", { prefer: "type-imports" }],
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        { prefer: "type-imports", fixStyle: "separate-type-imports" },
+      ],
 
       // React rules
-      "react/react-in-jsx-scope": "off",           // Not needed in React 17+
-      "react/prop-types": "off",                   // TypeScript handles this
+      "react/react-in-jsx-scope": "off", // Not needed in React 17+
+      "react/prop-types": "off", // TypeScript handles this
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/exhaustive-deps": "error",
 
       // General code quality
-      "no-console": ["warn", { allow: ["warn", "error"] }],
-      "no-unused-vars": "off",                     // Handled by @typescript-eslint/no-unused-vars
+      "no-console": ["error", { allow: ["warn", "error"] }],
+      "no-unused-vars": "off", // Handled by @typescript-eslint/no-unused-vars
+    },
+  },
+
+  // Test files and test mocks (allow Jest globals)
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "src/__mocks__/**/*"],
+    languageOptions: {
+      globals: {
+        ...reactNativeGlobals,
+        ...jestGlobals,
+      },
+    },
+  },
+
+  // Architectural boundary rules for screens, features, components, and hooks:
+  // Forbid direct Axios or raw apiClient imports in screens/features/hooks (must use TanStack Query hooks and domain API modules)
+  {
+    files: [
+      "app/**/*.ts",
+      "app/**/*.tsx",
+      "src/features/**/*.ts",
+      "src/features/**/*.tsx",
+      "src/components/**/*.ts",
+      "src/components/**/*.tsx",
+      "src/hooks/**/*.ts",
+      "src/hooks/**/*.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "axios",
+              message:
+                "Do not call Axios here. Use a TanStack Query hook and domain API module.",
+            },
+            {
+              name: "@/api/client",
+              message:
+                "Do not access apiClient directly here. Use a domain API module.",
+            },
+          ],
+        },
+      ],
     },
   },
 
@@ -79,8 +145,10 @@ export default [
       "scripts/",
       "*.config.js",
       "*.config.ts",
+      "*.config.mts",
       "babel.config.js",
       "metro.config.js",
+      "jest.config.js",
     ],
   },
 ];

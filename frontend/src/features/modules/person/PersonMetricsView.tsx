@@ -12,7 +12,6 @@ import {
   UserX,
 } from "lucide-react-native";
 import { Text, View } from "react-native";
-import { CoverageBar } from "../components/CoverageBar";
 import { ContactQualitySection } from "./ContactQualitySection";
 import { THEME_COLORS } from "@/constants/theme";
 import type { PersonModuleMetricsResponse } from "@/types/modules.types";
