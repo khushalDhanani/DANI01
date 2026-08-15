@@ -342,7 +342,7 @@ concrete architecture decision.
 
 # 17. Frontend Testing / Validation
 
-Frontend unit and integration testing is powered by **Vitest** and **React Testing Library**.
+Frontend unit and integration testing is powered by **Jest** (`jest-expo`) and **React Native Testing Library** (`@testing-library/react-native`).
 
 Required validation for frontend changes:
 

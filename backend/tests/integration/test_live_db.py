@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.db.mssql import test_connection
+from app.db.mssql import test_connection as mssql_test_connection
 from app.main import app
 
 
@@ -11,7 +11,7 @@ def test_live_mssql_connection():
 
     Skips gracefully if database is unreachable in local/CI environment.
     """
-    is_connected = test_connection()
+    is_connected = mssql_test_connection()
     if not is_connected:
         pytest.skip("Live MSSQL instance is not reachable in this environment.")
     assert is_connected is True
@@ -20,7 +20,7 @@ def test_live_mssql_connection():
 @pytest.mark.integration
 def test_campaigns_against_real_mssql():
     """Live integration test calling campaign APIs against real MSSQL."""
-    is_connected = test_connection()
+    is_connected = mssql_test_connection()
     if not is_connected:
         pytest.skip("Live MSSQL instance is not reachable in this environment.")
 

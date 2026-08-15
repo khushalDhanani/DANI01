@@ -50,6 +50,11 @@ wheels/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
 *.sqlite
 *.sqlite3
 backend/dbinsights.db
