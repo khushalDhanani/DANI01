@@ -37,21 +37,21 @@ export const DayliteDashboardTab: React.FC = () => {
   const contactPct    = personMetrics?.contact_entity_percent ?? null;
 
   return (
-    <View className="gap-6">
-      {/* ── Hero Banner ────────────────────────────────────────── */}
-      <View className="bg-gradient-to-r from-blue-950/40 via-dark-card to-dark-card border border-blue-500/20 rounded-2xl p-6 shadow-sm">
-        <View className="flex-col md:flex-row md:items-center justify-between gap-4">
+    <View className="gap-4">
+      {/* ── Compact Hero Banner ──────────────────────────────── */}
+      <View className="bg-gradient-to-r from-blue-950/40 via-dark-card to-dark-card border border-blue-500/20 rounded-lg p-4 shadow-sm">
+        <View className="flex-col md:flex-row md:items-center justify-between gap-3">
           <View className="flex-1">
-            <View className="flex-row items-center gap-2 mb-1.5">
-              <Sparkles size={16} color={THEME_COLORS.primaryIcon} />
-              <Text className="text-xs uppercase font-bold text-blue-400 tracking-wider">
+            <View className="flex-row items-center gap-2 mb-1">
+              <Sparkles size={12} color={THEME_COLORS.primaryIcon} />
+              <Text className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
                 Daylite Intelligence Hub
               </Text>
             </View>
-            <Text className="text-2xl md:text-3xl font-black text-white tracking-tight">
+            <Text className="text-lg md:text-xl font-black text-white tracking-tight">
               Daylite CRM & Operations Dashboard
             </Text>
-            <Text className="text-xs md:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
+            <Text className="text-[11px] text-slate-400 mt-0.5 max-w-2xl">
               Unified domain analytics across master individuals, corporate affiliations, communication channels, and calendar operations.
             </Text>
           </View>
@@ -60,11 +60,11 @@ export const DayliteDashboardTab: React.FC = () => {
             onPress={() => router.push("/daylite/person" as Href)}
             accessibilityRole="button"
             accessibilityLabel="Open DL Person Analysis"
-            className="flex-row items-center gap-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 px-4 py-2.5 rounded-xl shadow-sm self-start md:self-auto transition-all"
+            className="flex-row items-center gap-1.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 px-3 py-2 rounded-lg shadow-sm self-start md:self-auto transition-all"
           >
-            <Users size={15} color={THEME_COLORS.onPrimary} />
-            <Text className="text-xs font-bold text-white">Open DL Person Analysis</Text>
-            <ArrowRight size={14} color={THEME_COLORS.onPrimary} />
+            <Users size={12} color={THEME_COLORS.onPrimary} />
+            <Text className="text-[11px] font-bold text-white">Open DL Person Analysis</Text>
+            <ArrowRight size={12} color={THEME_COLORS.onPrimary} />
           </Pressable>
         </View>
       </View>
@@ -79,7 +79,7 @@ export const DayliteDashboardTab: React.FC = () => {
             </Text>
             <Users size={16} color={THEME_COLORS.primaryIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">
+          <Text className="text-xl font-black text-white font-mono">
             {totalPersons.toLocaleString()}
           </Text>
           <View className="flex-row items-center gap-1.5 mt-1">
@@ -103,7 +103,7 @@ export const DayliteDashboardTab: React.FC = () => {
             </Text>
             <Eye size={16} color={THEME_COLORS.successIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">
+          <Text className="text-xl font-black text-white font-mono">
             {visitorCount != null ? visitorCount.toLocaleString() : "…"}
           </Text>
           <View className="flex-row items-center gap-1.5 mt-1">
@@ -127,7 +127,7 @@ export const DayliteDashboardTab: React.FC = () => {
             </Text>
             <UserCheck size={16} color={THEME_COLORS.accentIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">
+          <Text className="text-xl font-black text-white font-mono">
             {contactCount != null ? contactCount.toLocaleString() : "…"}
           </Text>
           <View className="flex-row items-center gap-1.5 mt-1">
@@ -146,7 +146,7 @@ export const DayliteDashboardTab: React.FC = () => {
             </Text>
             <Building2 size={16} color={THEME_COLORS.accentIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">6,429</Text>
+          <Text className="text-xl font-black text-white font-mono">6,429</Text>
           <Text className="text-[11px] text-slate-500 mt-1 font-mono">
             dbo.DLCompanyMst
           </Text>
@@ -160,7 +160,7 @@ export const DayliteDashboardTab: React.FC = () => {
             </Text>
             <Calendar size={16} color={THEME_COLORS.successIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">159,984</Text>
+          <Text className="text-xl font-black text-white font-mono">159,984</Text>
           <Text className="text-[11px] text-slate-500 mt-1 font-mono">
             dbo.DLEvent
           </Text>
@@ -174,7 +174,7 @@ export const DayliteDashboardTab: React.FC = () => {
             </Text>
             <Database size={16} color={THEME_COLORS.warningIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">
+          <Text className="text-xl font-black text-white font-mono">
             {isLoadingTables ? "..." : totalDLTables}
           </Text>
           <Text className="text-[11px] text-slate-500 mt-1">
@@ -184,7 +184,7 @@ export const DayliteDashboardTab: React.FC = () => {
       </View>
 
       {/* ── Person & Contact Domain Health Snapshot ───────── */}
-      <View className="bg-dark-card border border-dark-border rounded-xl p-5 shadow-sm">
+      <View className="bg-dark-card border border-dark-border rounded-xl p-3 shadow-sm">
         <View className="flex-row items-center justify-between mb-4 pb-3 border-b border-dark-border">
           <View>
             <Text className="text-sm font-bold text-white uppercase tracking-wider">

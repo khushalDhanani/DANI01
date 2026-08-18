@@ -162,7 +162,7 @@ export const PersonDetailView: React.FC<PersonDetailViewProps> = ({ personId }) 
 
             <View className="flex-1">
               <View className="flex-row items-center gap-2 flex-wrap mb-0.5">
-                <Text className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                <Text className="text-xl sm:text-xl font-black text-white tracking-tight">
                   {fullName}
                 </Text>
                 <View className="bg-blue-950/80 border border-blue-800/80 px-2 py-0.5 rounded">

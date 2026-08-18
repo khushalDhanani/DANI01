@@ -70,7 +70,7 @@ export const ContactQualityCard: React.FC<ContactQualityCardProps> = ({
 
       <View className="flex-row items-baseline justify-between gap-2 mt-1">
         <Text
-          className={`text-xl sm:text-2xl font-black font-mono ${
+          className={`text-xl sm:text-xl font-black font-mono ${
             safeCount > 0 && severity === "CRITICAL"
               ? "text-rose-400"
               : safeCount > 0 && severity === "WARNING"

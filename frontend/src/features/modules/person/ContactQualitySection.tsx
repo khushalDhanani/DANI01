@@ -410,7 +410,7 @@ export const ContactQualitySection: React.FC = () => {
       </View>
 
       {/* ── KPI Grid (Grouped by Severity) ───────────────────── */}
-      <View className="flex-col gap-6 mt-2">
+      <View className="flex-col gap-4 mt-2">
         
         {/* CRITICAL SECTION */}
         {criticalCards.length > 0 && (

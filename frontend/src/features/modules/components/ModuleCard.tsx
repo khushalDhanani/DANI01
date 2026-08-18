@@ -23,7 +23,7 @@ export const ModuleCard: React.FC<ModuleCardProps> = ({ module }) => {
       onPress={handleOpen}
       accessibilityRole="button"
       accessibilityLabel={`Open ${module.name} module`}
-      className="bg-dark-card border border-dark-border hover:border-slate-700 active:border-blue-500/60 rounded-xl p-5 mb-4 shadow-sm transition-all"
+      className="bg-dark-card border border-dark-border hover:border-slate-700 active:border-blue-500/60 rounded-xl p-3 mb-4 shadow-sm transition-all"
     >
       {/* Header */}
       <View className="flex-row items-start justify-between gap-3 mb-2.5">

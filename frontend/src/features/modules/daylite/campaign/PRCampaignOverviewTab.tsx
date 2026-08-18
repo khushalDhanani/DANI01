@@ -39,7 +39,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
 
   if (!campaign) {
     return (
-      <View className="bg-dark-card border border-dark-border rounded-xl p-8 items-center justify-center gap-2">
+      <View className="bg-dark-card border border-dark-border rounded-xl p-4 items-center justify-center gap-2">
         <AlertCircle size={32} color={THEME_COLORS.warningIcon} />
         <Text className="text-sm font-bold text-white">No Campaign Selected</Text>
         <Text className="text-xs text-slate-400 text-center">
@@ -56,7 +56,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
   const rejectedPct = (campaign.RejectedCount / total) * 100;
 
   return (
-    <View className="gap-6">
+    <View className="gap-4">
       {/* ── Key Scale Indicators Grid ─────────────────────────── */}
       <View className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         {/* Total Target Recipients */}
@@ -67,7 +67,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
             </Text>
             <UserCheck size={16} color={THEME_COLORS.primaryIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">
+          <Text className="text-xl font-black text-white font-mono">
             {campaign.TotalTransactions.toLocaleString()}
           </Text>
           <Text className="text-[10px] text-slate-500 mt-1 font-mono">
@@ -83,7 +83,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
             </Text>
             <CheckCircle2 size={16} color={THEME_COLORS.successIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">
+          <Text className="text-xl font-black text-white font-mono">
             {campaign.ApprovedCount.toLocaleString()}
           </Text>
           <Text className="text-[10px] text-emerald-400/80 mt-1 font-medium">
@@ -99,7 +99,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
             </Text>
             <PackageCheck size={16} color={THEME_COLORS.accentIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">
+          <Text className="text-xl font-black text-white font-mono">
             {campaign.DeliveredCount.toLocaleString()}
           </Text>
           <Text className="text-[10px] text-violet-400/80 mt-1 font-medium">
@@ -115,7 +115,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
             </Text>
             <Clock size={16} color={THEME_COLORS.warningIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">
+          <Text className="text-xl font-black text-white font-mono">
             {campaign.PendingReviewCount.toLocaleString()}
           </Text>
           <Text className="text-[10px] text-amber-400/80 mt-1 font-medium">
@@ -131,7 +131,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
             </Text>
             <XCircle size={16} color={THEME_COLORS.dangerIcon} />
           </View>
-          <Text className="text-2xl font-black text-white font-mono">
+          <Text className="text-xl font-black text-white font-mono">
             {campaign.RejectedCount.toLocaleString()}
           </Text>
           <Text className="text-[10px] text-rose-400/80 mt-1 font-medium">
@@ -141,7 +141,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
       </View>
 
       {/* ── Campaign Progress Breakdown ───────────────────────── */}
-      <View className="bg-dark-card border border-dark-border rounded-xl p-5 shadow-sm">
+      <View className="bg-dark-card border border-dark-border rounded-xl p-3 shadow-sm">
         <View className="flex-row items-center justify-between mb-4 pb-3 border-b border-dark-border">
           <View>
             <Text className="text-xs font-bold text-white uppercase tracking-wider">
@@ -192,9 +192,9 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
       </View>
 
       {/* ── Key Campaign Dates & Item Configurations Grid ─────── */}
-      <View className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <View className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Timeline Key Dates */}
-        <View className="bg-dark-card border border-dark-border rounded-xl p-5 shadow-sm gap-3.5">
+        <View className="bg-dark-card border border-dark-border rounded-xl p-3 shadow-sm gap-3.5">
           <View className="flex-row items-center gap-2 pb-3 border-b border-dark-border">
             <Calendar size={15} color={THEME_COLORS.primaryIcon} />
             <Text className="text-xs font-bold text-white uppercase tracking-wider">
@@ -241,7 +241,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
         </View>
 
         {/* Configured Gift Items per PR Grade */}
-        <View className="bg-dark-card border border-dark-border rounded-xl p-5 shadow-sm gap-3.5">
+        <View className="bg-dark-card border border-dark-border rounded-xl p-3 shadow-sm gap-3.5">
           <View className="flex-row items-center justify-between pb-3 border-b border-dark-border">
             <View className="flex-row items-center gap-2">
               <Gift size={15} color={THEME_COLORS.accentIcon} />

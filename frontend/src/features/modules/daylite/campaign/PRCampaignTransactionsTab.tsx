@@ -232,7 +232,7 @@ export const PRCampaignTransactionsTab: React.FC<PRCampaignTransactionsTabProps>
           <LoadingSkeleton height={85} borderRadius={10} />
         </View>
       ) : isError ? (
-        <View className="bg-dark-card border border-rose-900/50 rounded-xl p-6 items-center justify-center gap-2">
+        <View className="bg-dark-card border border-rose-900/50 rounded-xl p-4 items-center justify-center gap-2">
           <AlertCircle size={28} color={THEME_COLORS.dangerIcon} />
           <Text className="text-sm font-bold text-rose-300">Failed to load PR Transactions</Text>
           <Pressable
@@ -243,7 +243,7 @@ export const PRCampaignTransactionsTab: React.FC<PRCampaignTransactionsTabProps>
           </Pressable>
         </View>
       ) : items.length === 0 ? (
-        <View className="bg-dark-card border border-dark-border rounded-xl p-8 items-center justify-center gap-2">
+        <View className="bg-dark-card border border-dark-border rounded-xl p-4 items-center justify-center gap-2">
           <User size={32} color={THEME_COLORS.textMuted} />
           <Text className="text-sm font-bold text-white">No PR Transactions Found</Text>
           <Text className="text-xs text-slate-400 text-center">

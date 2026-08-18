@@ -44,10 +44,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         pathname.startsWith("/modules/PERSON")
       );
     }
-    if (href === "/daylite/person") {
+    if (href === "/modules/employee") {
       return (
-        pathname === "/daylite/person" ||
-        pathname.startsWith("/daylite/person/")
+        pathname === "/modules/employee" ||
+        pathname.startsWith("/modules/employee/") ||
+        pathname === "/modules/EMPLOYEE" ||
+        pathname.startsWith("/modules/EMPLOYEE/")
+      );
+    }
+    if (href === "/modules/organization") {
+      return (
+        pathname === "/modules/organization" ||
+        pathname.startsWith("/modules/organization/") ||
+        pathname === "/modules/ORGANIZATION" ||
+        pathname.startsWith("/modules/ORGANIZATION/")
+      );
+    }
+    if (href === "/modules/contact") {
+      return (
+        pathname === "/modules/contact" ||
+        pathname.startsWith("/modules/contact/") ||
+        pathname === "/modules/CONTACT" ||
+        pathname.startsWith("/modules/CONTACT/")
       );
     }
     return pathname === href || pathname.startsWith(`${href}/`);

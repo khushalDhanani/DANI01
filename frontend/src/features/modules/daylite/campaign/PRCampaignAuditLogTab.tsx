@@ -54,7 +54,7 @@ export const PRCampaignAuditLogTab: React.FC<PRCampaignAuditLogTabProps> = ({
           <LoadingSkeleton height={75} borderRadius={10} />
         </View>
       ) : isError ? (
-        <View className="bg-dark-card border border-rose-900/50 rounded-xl p-6 items-center justify-center gap-2">
+        <View className="bg-dark-card border border-rose-900/50 rounded-xl p-4 items-center justify-center gap-2">
           <AlertCircle size={28} color={THEME_COLORS.dangerIcon} />
           <Text className="text-sm font-bold text-rose-300">Failed to load Audit Logs</Text>
           <Pressable
@@ -65,7 +65,7 @@ export const PRCampaignAuditLogTab: React.FC<PRCampaignAuditLogTabProps> = ({
           </Pressable>
         </View>
       ) : items.length === 0 ? (
-        <View className="bg-dark-card border border-dark-border rounded-xl p-8 items-center justify-center gap-2">
+        <View className="bg-dark-card border border-dark-border rounded-xl p-4 items-center justify-center gap-2">
           <Clock size={32} color={THEME_COLORS.textMuted} />
           <Text className="text-sm font-bold text-white">No Audit Logs Found</Text>
           <Text className="text-xs text-slate-400 text-center">

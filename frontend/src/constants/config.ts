@@ -55,4 +55,87 @@ export const QUERY_KEYS = {
     RUN_TABLE_DETAIL: (runId: string, schema: string, table: string) =>
       ["analysisRuns", "tableDetail", runId, schema, table] as const,
   },
+  EMPLOYEE: {
+    OVERVIEW: (compId?: number) => ["employee", "overview", compId] as const,
+
+    STRUCTURE: ["employee", "structure"] as const,
+    QUALITY: ["employee", "quality"] as const,
+    QUALITY_ISSUES: (issue: string, search?: string, limit?: number, offset?: number) =>
+      ["employee", "qualityIssues", issue, search, limit, offset] as const,
+    RECORDS: (params?: unknown) => ["employee", "records", params] as const,
+    DETAIL: (empId: number) => ["employee", "detail", empId] as const,
+  },
+  ORGANIZATION: {
+    OVERVIEW: ["organization", "overview"] as const,
+    HIERARCHY: ["organization", "hierarchy"] as const,
+    UNITS: (unitType?: string, search?: string, compId?: number, limit?: number, offset?: number) =>
+      ["organization", "units", unitType, search, compId, limit, offset] as const,
+    REPORTING: ["organization", "reporting"] as const,
+    QUALITY: ["organization", "quality"] as const,
+    QUALITY_ISSUES: (issue: string, search?: string, limit?: number, offset?: number) =>
+      ["organization", "qualityIssues", issue, search, limit, offset] as const,
+  },
+  CONTACT: {
+    OVERVIEW: ["contact", "overview"] as const,
+    DIRECTORY: (emailFilter?: string, phoneFilter?: string, search?: string, limit?: number, offset?: number) =>
+      ["contact", "directory", emailFilter, phoneFilter, search, limit, offset] as const,
+    QUALITY: ["contact", "quality"] as const,
+    QUALITY_ISSUES: (issue: string, search?: string, limit?: number, offset?: number) =>
+      ["contact", "qualityIssues", issue, search, limit, offset] as const,
+  },
+  SECURITY: {
+    OVERVIEW: ["security", "overview"] as const,
+    USERS: (roleId?: number, statusFilter?: string, search?: string, limit?: number, offset?: number) =>
+      ["security", "users", roleId, statusFilter, search, limit, offset] as const,
+    ROLES: ["security", "roles"] as const,
+    ROLE_PERMISSIONS: (roleId: number) => ["security", "rolePermissions", roleId] as const,
+    QUALITY: ["security", "quality"] as const,
+    QUALITY_ISSUES: (issue: string, search?: string, limit?: number, offset?: number) =>
+      ["security", "qualityIssues", issue, search, limit, offset] as const,
+  },
+  ATTENDANCE: {
+    OVERVIEW: (deptId?: number, compId?: number) => ["attendance", "overview", deptId, compId] as const,
+    ORG_HIERARCHY: ["attendance", "orgHierarchy"] as const,
+    DEPARTMENT_DETAIL: (deptId: number) => ["attendance", "department", deptId] as const,
+    EMPLOYEE_LIFETIME_ANALYTICS: (empId: number) => ["attendance", "employeeAnalytics", empId] as const,
+    DIRECTORY: (statusFilter?: string, search?: string, limit?: number, offset?: number, deptId?: number, compId?: number, empId?: number) =>
+      ["attendance", "directory", statusFilter, search, limit, offset, deptId, compId, empId] as const,
+
+    LEAVE_OVERVIEW: ["attendance", "leaveOverview"] as const,
+    LEAVE_APPLICATIONS: (statusFilter?: string, search?: string, limit?: number, offset?: number) =>
+      ["attendance", "leaveApplications", statusFilter, search, limit, offset] as const,
+    LEAVE_BALANCES: (yearMonth?: string, search?: string, limit?: number, offset?: number) =>
+      ["attendance", "leaveBalances", yearMonth, search, limit, offset] as const,
+    QUALITY: ["attendance", "quality"] as const,
+    QUALITY_ISSUES: (issue: string, search?: string, limit?: number, offset?: number) =>
+      ["attendance", "qualityIssues", issue, search, limit, offset] as const,
+  },
+  PAYROLL: {
+    OVERVIEW: (compId?: number) => ["payroll", "overview", compId] as const,
+
+    DIRECTORY: (statusFilter?: string, search?: string, limit?: number, offset?: number, deptId?: number, compId?: number, month?: string, empId?: number) =>
+      ["payroll", "directory", statusFilter, search, limit, offset, deptId, compId, month, empId] as const,
+    QUALITY: ["payroll", "quality"] as const,
+    QUALITY_ISSUES: (issue: string, search?: string, limit?: number, offset?: number) =>
+      ["payroll", "qualityIssues", issue, search, limit, offset] as const,
+    EMPLOYEE_HISTORY: (empId: number) => ["payroll", "employeeHistory", empId] as const,
+  },
+  CROSS_DOMAIN_DQ: {
+    OVERVIEW: (compId?: number) => ["crossDomainDQ", "overview", compId] as const,
+    ISSUES: (ruleCode?: string, category?: string, search?: string, limit?: number, offset?: number, compId?: number) =>
+      ["crossDomainDQ", "issues", ruleCode, category, search, limit, offset, compId] as const,
+  },
+  PROCEDURE_LOGIC: {
+    OVERVIEW: ["procedureLogic", "overview"] as const,
+    OBJECTS: (objectType?: string, module?: string, search?: string, limit?: number, offset?: number) =>
+      ["procedureLogic", "objects", objectType, module, search, limit, offset] as const,
+    INCONSISTENCIES: (severity?: string, ruleCode?: string, search?: string, limit?: number, offset?: number) =>
+      ["procedureLogic", "inconsistencies", severity, ruleCode, search, limit, offset] as const,
+    OBJECT_DETAIL: (objectId: number) => ["procedureLogic", "objectDetail", objectId] as const,
+  },
 };
+
+
+
+
+

@@ -39,7 +39,7 @@ export const ModuleTablesList: React.FC<ModuleTablesListProps> = ({
   }, [validation]);
 
   return (
-    <View className="bg-dark-card border border-dark-border rounded-xl p-5 shadow-sm">
+    <View className="bg-dark-card border border-dark-border rounded-xl p-3 shadow-sm">
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4 pb-3 border-b border-dark-border">
         <View>

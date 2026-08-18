@@ -47,7 +47,7 @@ export const PersonMetricsView: React.FC<PersonMetricsViewProps> = ({
 
   if (!metrics || total === 0) {
     return (
-      <View className="bg-dark-card border border-dark-border rounded-lg p-6 items-center text-center">
+      <View className="bg-dark-card border border-dark-border rounded-lg p-4 items-center text-center">
         <Users size={28} color={THEME_COLORS.textMuted} />
         <Text className="text-sm font-bold text-white mt-2">No Person Data Available</Text>
         <Text className="text-xs text-slate-400 mt-0.5 max-w-sm">

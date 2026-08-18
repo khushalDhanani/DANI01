@@ -45,7 +45,7 @@ export const PersonOverview: React.FC<PersonOverviewProps> = ({
                 Master Person Directory
               </Text>
             </View>
-            <Text className="text-2xl md:text-3xl font-black text-white tracking-tight font-mono">
+            <Text className="text-xl md:text-xl font-black text-white tracking-tight font-mono">
               {total.toLocaleString()}
             </Text>
             <Text className="text-[11px] text-slate-400 mt-0.5">

@@ -31,7 +31,7 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
       <View className="flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <View className="flex-1">
           <View className="flex-row items-center gap-2 flex-wrap mb-1">
-            <Text className="text-xl md:text-2xl font-black text-white tracking-tight">
+            <Text className="text-xl md:text-xl font-black text-white tracking-tight">
               Daylite — Person Insights
             </Text>
             <View className="bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
