@@ -645,12 +645,22 @@ def test_get_employee_lifetime_attendance_analytics(mock_exec):
                 "leave_covered_absence_days": 2,
             }
         ],
-        # q_leaves
+        # q_bal
         [
             {
-                "leave_type": "Privilege Leave",
+                "PL": 4.0,
+                "CL": 0.0,
+                "SL": 0.0,
+                "CO": 0.0,
+            }
+        ],
+        # q_req
+        [
+            {
+                "leave_code": "PL",
                 "request_count": 2,
                 "total_days_taken": 4.0,
+                "last_availed_date": "2026-04-11",
             }
         ],
     ]
@@ -667,7 +677,61 @@ def test_get_employee_lifetime_attendance_analytics(mock_exec):
     assert resp.absconding_risk_level == "MEDIUM"  # 5/90 = 5.6% -> MEDIUM (3-8%)
     assert resp.leave_days == 2  # leave_covered_cnt from unauthorized query
     assert resp.weekly_offs == 10
-    assert len(resp.leaves_breakdown) == 1
-    assert resp.leaves_breakdown[0].leave_type == "Privilege Leave"
+    assert len(resp.leaves_breakdown) == 4
+    assert resp.leaves_breakdown[0].leave_type == "Privilege/Paid Leave"
     assert len(resp.risk_signals) > 0
 
+
+@patch("app.modules.attendance.service.execute_readonly_query")
+def test_get_attendance_directory_noise_filtering_and_status_derivation(mock_exec):
+    mock_exec.side_effect = [
+        [{"total": 2}],
+        [
+            {
+                "AttID": 1001,
+                "AttEmpID": 1847,
+                "EmpCode": "EMP1847",
+                "emp_name": "Test User",
+                "att_date": "2026-07-17",
+                "AttSalType": "SAL",
+                "in_time": "09:00:00",
+                "out_time": "18:00:00",
+                "off_in_time": None,
+                "off_out_time": None,
+                "ShiftCode": "G1",
+                "ShiftDescription": "General Shift",
+                "late_mins": 0,
+                "early_mins": 0,
+                "ot_mins": 0,
+                "emp_status": "ACTIVE",
+            },
+            {
+                "AttID": 1002,
+                "AttEmpID": 1847,
+                "EmpCode": "EMP1847",
+                "emp_name": "Test User",
+                "att_date": "2026-07-16",
+                "AttSalType": "SAL",
+                "in_time": "09:20:00",
+                "out_time": "17:40:00",
+                "off_in_time": None,
+                "off_out_time": None,
+                "ShiftCode": "G1",
+                "ShiftDescription": "General Shift",
+                "late_mins": 20,
+                "early_mins": 20,
+                "ot_mins": 0,
+                "emp_status": "ACTIVE",
+            },
+        ],
+    ]
+
+    service = AttendanceService()
+    res = service.get_attendance_directory(emp_id=1847)
+    assert res.total == 2
+    assert len(res.items) == 2
+    assert res.items[0].status_label == "Present"
+    assert res.items[1].status_label == "Late & Early Exit"
+    # Ensure noise reduction clause was included in SQL query
+    sql_args = mock_exec.call_args_list[0][0][0]
+    assert "NOT (s.ShiftCode IN ('WO', 'PH')" in sql_args

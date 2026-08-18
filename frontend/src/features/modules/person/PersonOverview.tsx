@@ -1,11 +1,11 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { Building2, CheckCircle2, Mail, MapPin, Phone, Users, UserX } from "lucide-react-native";
-import type { PersonModuleMetricsResponse } from "@/types/modules.types";
+import type { PersonMetricsResponseLite } from "@/types/modules.types";
 import { THEME_COLORS } from "@/constants/theme";
 
 interface PersonOverviewProps {
-  metricsResponse?: PersonModuleMetricsResponse;
+  metricsResponse?: PersonMetricsResponseLite;
   isLoading?: boolean;
 }
 

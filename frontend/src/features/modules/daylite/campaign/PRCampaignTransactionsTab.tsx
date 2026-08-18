@@ -4,8 +4,6 @@ import { useRouter } from "expo-router";
 import type { Href } from "expo-router";
 import {
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   ExternalLink,
   Search,
   User,
@@ -13,6 +11,8 @@ import {
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { THEME_COLORS } from "@/constants/theme";
 import { usePRTransactions } from "@/hooks/useCampaigns";
+import { PaginationBar } from "./PaginationBar";
+import { formatDateTime } from "@/utils/formatters";
 
 interface PRCampaignTransactionsTabProps {
   campId?: number;
@@ -344,7 +344,7 @@ export const PRCampaignTransactionsTab: React.FC<PRCampaignTransactionsTabProps>
                   <View>
                     <Text className="text-[10px] uppercase font-bold text-slate-400">Gift Order Date</Text>
                     <Text className="text-xs font-mono text-slate-300">
-                      {t.GiftOrderedDt ? new Date(t.GiftOrderedDt).toLocaleString() : "Not Ordered"}
+                      {t.GiftOrderedDt ? formatDateTime(t.GiftOrderedDt) : "Not Ordered"}
                     </Text>
                   </View>
                 </View>
@@ -355,39 +355,14 @@ export const PRCampaignTransactionsTab: React.FC<PRCampaignTransactionsTabProps>
       )}
 
       {/* ── Pagination Controls Bar ────────────────────────────── */}
-      {totalPages > 1 && (
-        <View className="flex-row items-center justify-between bg-dark-card border border-dark-border rounded-xl p-3 shadow-sm mt-2">
-          <Pressable
-            disabled={page <= 1}
-            onPress={() => setPage((p) => Math.max(1, p - 1))}
-            className={`flex-row items-center gap-1 px-3 py-1.5 rounded-lg border transition-all ${
-              page <= 1
-                ? "bg-slate-900 border-slate-800 opacity-50"
-                : "bg-slate-800 hover:bg-slate-700 border-slate-700"
-            }`}
-          >
-            <ChevronLeft size={14} color={THEME_COLORS.textMuted} />
-            <Text className="text-xs font-bold text-slate-300">Previous</Text>
-          </Pressable>
-
-          <Text className="text-xs font-mono text-slate-400">
-            Showing records {offset + 1} – {Math.min(offset + limit, total)} of {total}
-          </Text>
-
-          <Pressable
-            disabled={page >= totalPages}
-            onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className={`flex-row items-center gap-1 px-3 py-1.5 rounded-lg border transition-all ${
-              page >= totalPages
-                ? "bg-slate-900 border-slate-800 opacity-50"
-                : "bg-slate-800 hover:bg-slate-700 border-slate-700"
-            }`}
-          >
-            <Text className="text-xs font-bold text-slate-300">Next</Text>
-            <ChevronRight size={14} color={THEME_COLORS.textMuted} />
-          </Pressable>
-        </View>
-      )}
+      <PaginationBar
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        limit={limit}
+        label="records"
+        onPageChange={setPage}
+      />
     </View>
   );
 };

@@ -15,6 +15,7 @@ import {
 } from "lucide-react-native";
 import { THEME_COLORS } from "@/constants/theme";
 import type { PersonListItem } from "@/types/modules.types";
+import { formatDate } from "@/utils/formatters";
 
 interface PersonListItemCardProps {
   person: PersonListItem;
@@ -265,7 +266,7 @@ export const PersonListItemCard: React.FC<PersonListItemCardProps> = ({
         </View>
 
         <Text className="text-[9px] text-slate-500 font-mono">
-          {person.PersonEntDt ? new Date(person.PersonEntDt).toLocaleDateString() : ""}
+          {person.PersonEntDt ? formatDate(person.PersonEntDt) : ""}
         </Text>
       </View>
     </Pressable>

@@ -231,9 +231,7 @@ class PayrollService:
                     "ABS(ISNULL(s.NetPay, 0) - (ISNULL(s.TotalEarned, 0) - ISNULL(s.TotalDeduction, 0))) > 1.0"
                 )
             elif sf == "NEGATIVE":
-                where_clauses.append(
-                    "(s.NetPay < 0 OR s.TotalEarned < 0 OR s.TotalDeduction < 0)"
-                )
+                where_clauses.append("(s.NetPay < 0 OR s.TotalEarned < 0 OR s.TotalDeduction < 0)")
             elif sf == "ACTIVE":
                 where_clauses.append("e.EmpIsActive = 1 AND ISNULL(e.EmpIsDeleted, 0) = 0")
 
@@ -441,7 +439,9 @@ class PayrollService:
             LEFT JOIN dbo.EmployeeMst e ON e.EmpID = s.EarnedSalEmpID
             WHERE e.EmpID IS NULL
             """
-            detail_expr = "'Payroll header linked to non-existent EmpID ' + CAST(s.EarnedSalEmpID AS varchar)"
+            detail_expr = (
+                "'Payroll header linked to non-existent EmpID ' + CAST(s.EarnedSalEmpID AS varchar)"
+            )
             sev = IssueSeverity.CRITICAL
         elif code == "NEGATIVE_SALARY":
             base_sql = """
@@ -491,7 +491,9 @@ class PayrollService:
             for r in r_rows
         ]
 
-        return PayrollQualityIssuesListResponse(total=total, limit=limit, offset=offset, items=items)
+        return PayrollQualityIssuesListResponse(
+            total=total, limit=limit, offset=offset, items=items
+        )
 
     def export_payroll_quality_issues(self, issue_code: str = "CORRUPTED_NET_PAY") -> str:
         data = self.get_payroll_quality_issues(issue_code=issue_code, limit=5000, offset=0)

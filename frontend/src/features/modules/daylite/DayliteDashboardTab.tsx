@@ -19,14 +19,42 @@ import { THEME_COLORS } from "@/constants/theme";
 
 export const DayliteDashboardTab: React.FC = () => {
   const router = useRouter();
-  const { data: personMetricsRes } = usePersonMetrics();
+  const { data: personMetrics } = usePersonMetrics((d) => {
+    const m = d.metrics;
+    return {
+      total_persons: m?.total_persons,
+      active_persons: m?.active_persons,
+      active_percent: m?.active_percent,
+      visitor_count: m?.visitor_count,
+      visitor_percent: m?.visitor_percent,
+      contact_entity_count: m?.contact_entity_count,
+      contact_entity_percent: m?.contact_entity_percent,
+      contact_coverage_percent: m?.contact_coverage_percent,
+      persons_with_contact: m?.persons_with_contact,
+      email_coverage_percent: m?.email_coverage_percent,
+      persons_with_email: m?.persons_with_email,
+      phone_coverage_percent: m?.phone_coverage_percent,
+      persons_with_phone: m?.persons_with_phone,
+      address_coverage_percent: m?.address_coverage_percent,
+      persons_with_address: m?.persons_with_address,
+      company_link_coverage_percent: m?.company_link_coverage_percent,
+      persons_with_company_link: m?.persons_with_company_link,
+      relationship_coverage_percent: m?.relationship_coverage_percent,
+      persons_with_relationship: m?.persons_with_relationship,
+    };
+  });
   const { data: dlTablesRes, isLoading: isLoadingTables } = useDatabaseTables({
     search: "DL",
     limit: 200,
   });
 
-  const personMetrics = personMetricsRes?.metrics;
   const totalDLTables = dlTablesRes?.total ?? 68;
+
+  const dlTables = dlTablesRes?.items ?? [];
+  const companyTable = dlTables.find((t) => t.table === "DLCompanyMst");
+  const eventTable = dlTables.find((t) => t.table === "DLEvent");
+  const companyCount = companyTable?.estimated_rows ?? null;
+  const eventCount = eventTable?.estimated_rows ?? null;
 
   const totalPersons  = personMetrics?.total_persons      ?? 29758;
   const activePersons = personMetrics?.active_persons      ?? 28496;
@@ -146,7 +174,9 @@ export const DayliteDashboardTab: React.FC = () => {
             </Text>
             <Building2 size={16} color={THEME_COLORS.accentIcon} />
           </View>
-          <Text className="text-xl font-black text-white font-mono">6,429</Text>
+          <Text className="text-xl font-black text-white font-mono">
+            {isLoadingTables ? "..." : companyCount != null ? companyCount.toLocaleString() : "—"}
+          </Text>
           <Text className="text-[11px] text-slate-500 mt-1 font-mono">
             dbo.DLCompanyMst
           </Text>
@@ -160,7 +190,9 @@ export const DayliteDashboardTab: React.FC = () => {
             </Text>
             <Calendar size={16} color={THEME_COLORS.successIcon} />
           </View>
-          <Text className="text-xl font-black text-white font-mono">159,984</Text>
+          <Text className="text-xl font-black text-white font-mono">
+            {isLoadingTables ? "..." : eventCount != null ? eventCount.toLocaleString() : "—"}
+          </Text>
           <Text className="text-[11px] text-slate-500 mt-1 font-mono">
             dbo.DLEvent
           </Text>

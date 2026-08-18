@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  UserCheck,
   Users,
 } from "lucide-react-native";
 
@@ -131,13 +132,6 @@ export const ENTERPRISE_NAV_GROUP: NavGroup = {
       badge: "LIVE",
     },
     {
-      label: "Attendance & Leave",
-      href: "/modules/attendance",
-      icon: Calendar,
-      description: "Punches, Shifts, Overtime, Leave Applications & Balances",
-      badge: "LIVE",
-    },
-    {
       label: "Payroll & Salary",
       href: "/modules/payroll",
       icon: Banknote,
@@ -161,9 +155,21 @@ export const ENTERPRISE_NAV_GROUP: NavGroup = {
   ],
 };
 
-
-
-
+export const EMPLOYEE_ANALYTICS_NAV_GROUP: NavGroup = {
+  id: "employee_analytics",
+  label: "Employee Analytics",
+  icon: UserCheck,
+  href: "/modules/attendance",
+  defaultExpanded: true,
+  children: [
+    {
+      label: "Attendance & Leave",
+      href: "/modules/attendance",
+      icon: Calendar,
+      description: "Punches, Shifts, Overtime, Leave Applications & Balances",
+    },
+  ],
+};
 
 export const NAV_SECTIONS: NavSection[] = [
   {
@@ -174,7 +180,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     id: "enterprise",
     title: "Enterprise Modules",
-    groups: [ENTERPRISE_NAV_GROUP, DAYLITE_NAV_GROUP],
+    groups: [ENTERPRISE_NAV_GROUP, EMPLOYEE_ANALYTICS_NAV_GROUP, DAYLITE_NAV_GROUP],
   },
 ];
 
@@ -182,5 +188,6 @@ export const NAV_SECTIONS: NavSection[] = [
 export const NAV_ITEMS: NavItem[] = [
   ...PLATFORM_NAV_ITEMS,
   ...ENTERPRISE_NAV_GROUP.children,
+  ...EMPLOYEE_ANALYTICS_NAV_GROUP.children,
   ...DAYLITE_NAV_GROUP.children,
 ];

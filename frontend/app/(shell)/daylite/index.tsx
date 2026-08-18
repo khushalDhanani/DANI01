@@ -13,9 +13,20 @@ import {
   useModuleValidation,
   usePersonMetrics,
 } from "@/hooks/useModules";
+import type {
+  PersonModuleMetricsResponse,
+  PersonMetricsResponseLite,
+} from "@/types/modules.types";
 import { THEME_COLORS } from "@/constants/theme";
 
 type ModuleTab = "metrics" | "overview";
+
+const selectPersonMetricsLite = (
+  res: PersonModuleMetricsResponse,
+): PersonMetricsResponseLite => ({
+  metrics: res.metrics,
+  duration_ms: res.duration_ms,
+});
 
 export default function DayliteDashboardScreen() {
   const [activeTab, setActiveTab] = useState<ModuleTab>("metrics");
@@ -41,7 +52,7 @@ export default function DayliteDashboardScreen() {
     error: errorMetrics,
     refetch: refetchMetrics,
     isRefetching,
-  } = usePersonMetrics();
+  } = usePersonMetrics(selectPersonMetricsLite);
 
   const handleRetryAll = () => {
     refetchDef();

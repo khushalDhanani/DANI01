@@ -63,12 +63,17 @@ export function useModuleValidation(moduleCode?: string) {
 
 /**
  * Hook to fetch domain aggregate metrics for the PERSON module.
+ * Pass an optional `select` to project down to only the fields a consumer needs,
+ * avoiding unnecessary re-renders when unrelated metrics change.
  */
-export function usePersonMetrics() {
-  return useQuery<PersonModuleMetricsResponse, Error>({
+export function usePersonMetrics<T = PersonModuleMetricsResponse>(
+  select?: (data: PersonModuleMetricsResponse) => T,
+) {
+  return useQuery<PersonModuleMetricsResponse, Error, T>({
     queryKey: ["module", "PERSON", "metrics"],
     queryFn: getPersonMetrics,
     staleTime: 1000 * 60 * 5,
+    ...(select ? { select } : {}),
   });
 }
 

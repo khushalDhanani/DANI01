@@ -95,8 +95,8 @@ class ProcedureLogicService:
 
     def _clean_definition(self, definition: str) -> str:
         # Strip comments (-- and /* ... */)
-        clean = re.sub(r'/\*.*?\*/', '', definition, flags=re.DOTALL)
-        clean = re.sub(r'--.*$', '', clean, flags=re.MULTILINE)
+        clean = re.sub(r"/\*.*?\*/", "", definition, flags=re.DOTALL)
+        clean = re.sub(r"--.*$", "", clean, flags=re.MULTILINE)
         return clean
 
     def _analyze_single_object(self, r: dict[str, Any]) -> dict[str, Any]:
@@ -106,25 +106,41 @@ class ProcedureLogicService:
         clean_def = self._clean_definition(raw_def)
 
         emp_tables = [
-            "EmployeeMst", "EmployeeOfficialDet", "EmployeeReportingDet",
-            "SecurityUserMst", "PayAttendance", "PayPunchLog",
-            "LeaveRequest", "PayEarnedSalary", "OrgDepartmentMst", "OrgDesignationMst",
-            "OrgCompanyMst", "OrgLocationMst", "EmployeeFamilyDet", "EmployeeContactDet"
+            "EmployeeMst",
+            "EmployeeOfficialDet",
+            "EmployeeReportingDet",
+            "SecurityUserMst",
+            "PayAttendance",
+            "PayPunchLog",
+            "LeaveRequest",
+            "PayEarnedSalary",
+            "OrgDepartmentMst",
+            "OrgDesignationMst",
+            "OrgCompanyMst",
+            "OrgLocationMst",
+            "EmployeeFamilyDet",
+            "EmployeeContactDet",
         ]
 
-        used_tables = [t for t in emp_tables if re.search(r'\b' + re.escape(t) + r'\b', clean_def, re.IGNORECASE)]
+        used_tables = [
+            t
+            for t in emp_tables
+            if re.search(r"\b" + re.escape(t) + r"\b", clean_def, re.IGNORECASE)
+        ]
 
         dml_ops = ["SELECT"]
-        if re.search(r'\bINSERT\s+INTO\b', clean_def, re.IGNORECASE):
+        if re.search(r"\bINSERT\s+INTO\b", clean_def, re.IGNORECASE):
             dml_ops.append("INSERT")
-        if re.search(r'\bUPDATE\b\s+[\w\.\[\]]+\s+\bSET\b', clean_def, re.IGNORECASE):
+        if re.search(r"\bUPDATE\b\s+[\w\.\[\]]+\s+\bSET\b", clean_def, re.IGNORECASE):
             dml_ops.append("UPDATE")
-        if re.search(r'\bDELETE\s+(FROM\b)?', clean_def, re.IGNORECASE):
+        if re.search(r"\bDELETE\s+(FROM\b)?", clean_def, re.IGNORECASE):
             dml_ops.append("DELETE")
-        if re.search(r'\bMERGE\s+INTO\b', clean_def, re.IGNORECASE):
+        if re.search(r"\bMERGE\s+INTO\b", clean_def, re.IGNORECASE):
             dml_ops.append("MERGE")
 
-        joins_cnt = len(re.findall(r'\b(INNER|LEFT|RIGHT|FULL|CROSS)\s+JOIN\b', clean_def, re.IGNORECASE))
+        joins_cnt = len(
+            re.findall(r"\b(INNER|LEFT|RIGHT|FULL|CROSS)\s+JOIN\b", clean_def, re.IGNORECASE)
+        )
 
         # Module classification
         related_module = "EMPLOYEE"
@@ -136,10 +152,12 @@ class ProcedureLogicService:
             related_module = "PAYROLL"
         elif any(t in used_tables for t in ["SecurityUserMst"]):
             related_module = "SECURITY"
-        elif any(t in used_tables for t in ["OrgDepartmentMst", "OrgDesignationMst", "OrgCompanyMst"]):
+        elif any(
+            t in used_tables for t in ["OrgDepartmentMst", "OrgDesignationMst", "OrgCompanyMst"]
+        ):
             related_module = "ORGANIZATION"
 
-        snippet_preview = clean_def[:220].replace('\n', ' ').strip()
+        snippet_preview = clean_def[:220].replace("\n", " ").strip()
 
         return {
             "object_id": r["object_id"],
@@ -160,8 +178,13 @@ class ProcedureLogicService:
     def get_procedure_logic_overview(self) -> ProcedureLogicOverviewResponse:
         raw_objects = self._fetch_all_sql_objects()
         emp_tables = [
-            "EmployeeMst", "EmployeeOfficialDet", "EmployeeReportingDet",
-            "SecurityUserMst", "PayAttendance", "LeaveRequest", "PayEarnedSalary"
+            "EmployeeMst",
+            "EmployeeOfficialDet",
+            "EmployeeReportingDet",
+            "SecurityUserMst",
+            "PayAttendance",
+            "LeaveRequest",
+            "PayEarnedSalary",
         ]
 
         analyzed_list = []
@@ -245,7 +268,9 @@ class ProcedureLogicService:
             return "PayEarnedSalary" in clean
         return False
 
-    def _detect_inconsistencies(self, analyzed_objects: list[dict[str, Any]]) -> list[LogicInconsistencyItem]:
+    def _detect_inconsistencies(
+        self, analyzed_objects: list[dict[str, Any]]
+    ) -> list[LogicInconsistencyItem]:
         inconsistencies: list[LogicInconsistencyItem] = []
 
         # 1. ACTIVE_EMPLOYEE Predicate Variants
@@ -254,9 +279,9 @@ class ProcedureLogicService:
 
         for o in active_emp_objs:
             clean = o["clean_def"]
-            lines = [l.strip() for l in clean.split('\n') if "EmpIsActive" in l]
+            lines = [l.strip() for l in clean.split("\n") if "EmpIsActive" in l]
             snip = " ".join(lines[:2])
-            norm = re.sub(r'\s+', ' ', snip).upper()
+            norm = re.sub(r"\s+", " ", snip).upper()
             if norm not in variant_groups:
                 variant_groups[norm] = []
             variant_groups[norm].append(o["object_name"])
@@ -269,7 +294,9 @@ class ProcedureLogicService:
             if "EMPRESIGNDATE" not in pred and "EMPISDELETED" not in pred:
                 sev = "CRITICAL"
                 diff = "Predicate checks ONLY EmpIsActive=1, omitting soft-deleted flag (EmpIsDeleted=0) and historical resignation date (EmpResignDate > GETDATE())."
-                risk = "High risk of reporting terminated/resigned staff in active headcount metrics."
+                risk = (
+                    "High risk of reporting terminated/resigned staff in active headcount metrics."
+                )
             elif "EMPRESIGNDATE" not in pred:
                 sev = "WARNING"
                 diff = "Predicate checks EmpIsActive=1 AND EmpIsDeleted=0, but omits resignation date comparison (EmpResignDate > GETDATE())."
@@ -298,7 +325,9 @@ class ProcedureLogicService:
 
         # 2. OFFICIAL_ASSIGNMENT Active Flags Conflict
         off_objs = [o for o in analyzed_objects if "EmployeeOfficialDet" in o["clean_def"]]
-        missing_off_flags = [o["object_name"] for o in off_objs if "EmpOfficeDetIsActive" not in o["clean_def"]]
+        missing_off_flags = [
+            o["object_name"] for o in off_objs if "EmpOfficeDetIsActive" not in o["clean_def"]
+        ]
         if missing_off_flags:
             inconsistencies.append(
                 LogicInconsistencyItem(
@@ -318,7 +347,9 @@ class ProcedureLogicService:
 
         # 3. REPORTING_LINE Active Flags Conflict
         rep_objs = [o for o in analyzed_objects if "EmployeeReportingDet" in o["clean_def"]]
-        missing_rep_flags = [o["object_name"] for o in rep_objs if "ReportingDetIsActive" not in o["clean_def"]]
+        missing_rep_flags = [
+            o["object_name"] for o in rep_objs if "ReportingDetIsActive" not in o["clean_def"]
+        ]
         if missing_rep_flags:
             inconsistencies.append(
                 LogicInconsistencyItem(
@@ -338,7 +369,9 @@ class ProcedureLogicService:
 
         # 4. SECURITY_LOGIN Active Employee Check
         sec_objs = [o for o in analyzed_objects if "SecurityUserMst" in o["clean_def"]]
-        missing_sec_emp = [o["object_name"] for o in sec_objs if "EmpIsActive" not in o["clean_def"]]
+        missing_sec_emp = [
+            o["object_name"] for o in sec_objs if "EmpIsActive" not in o["clean_def"]
+        ]
         if missing_sec_emp:
             inconsistencies.append(
                 LogicInconsistencyItem(
@@ -512,33 +545,37 @@ class ProcedureLogicService:
 
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow([
-            "Inconsistency ID",
-            "Business Rule Code",
-            "Business Rule Name",
-            "Severity",
-            "Confidence",
-            "Affected Objects Count",
-            "Sample Objects",
-            "Predicate Used",
-            "Difference Analysis",
-            "Business Risk",
-            "Canonical Recommendation",
-        ])
+        writer.writerow(
+            [
+                "Inconsistency ID",
+                "Business Rule Code",
+                "Business Rule Name",
+                "Severity",
+                "Confidence",
+                "Affected Objects Count",
+                "Sample Objects",
+                "Predicate Used",
+                "Difference Analysis",
+                "Business Risk",
+                "Canonical Recommendation",
+            ]
+        )
 
         for item in incons_resp.items:
-            writer.writerow([
-                item.inconsistency_id,
-                item.rule_code,
-                item.rule_name,
-                item.severity,
-                item.confidence,
-                item.affected_objects_count,
-                "; ".join(item.sample_objects),
-                item.predicate_used,
-                item.difference_analysis,
-                item.business_risk,
-                item.canonical_recommendation,
-            ])
+            writer.writerow(
+                [
+                    item.inconsistency_id,
+                    item.rule_code,
+                    item.rule_name,
+                    item.severity,
+                    item.confidence,
+                    item.affected_objects_count,
+                    "; ".join(item.sample_objects),
+                    item.predicate_used,
+                    item.difference_analysis,
+                    item.business_risk,
+                    item.canonical_recommendation,
+                ]
+            )
 
         return output.getvalue().encode("utf-8")

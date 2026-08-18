@@ -41,11 +41,9 @@ class EmployeeService:
         """
         params: dict[str, Any] = {}
         comp_clause = ""
-        comp_where = ""
         if comp_id:
             params["comp_id"] = comp_id
             comp_clause = " AND CompID = :comp_id"
-            comp_where = " AND e.CompID = :comp_id"
 
         # Status counts query
         status_sql = f"""

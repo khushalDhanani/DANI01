@@ -61,8 +61,8 @@ describe("AttendanceDirectoryTab", () => {
     });
 
     await render(<AttendanceDirectoryTab />);
-    expect(screen.getByText("Jane Smith")).toBeTruthy();
+    expect(screen.getByText(/Jane Smith/)).toBeTruthy();
     expect(screen.getByText("#101")).toBeTruthy();
-    expect(screen.getByText("2026-08-15")).toBeTruthy();
+    expect(screen.getByText("15-08-2026")).toBeTruthy();
   });
 });

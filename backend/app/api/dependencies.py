@@ -189,7 +189,3 @@ from app.modules.procedure_logic.procedure_logic_service import ProcedureLogicSe
 
 def get_procedure_logic_service() -> ProcedureLogicService:
     return ProcedureLogicService()
-
-
-
-

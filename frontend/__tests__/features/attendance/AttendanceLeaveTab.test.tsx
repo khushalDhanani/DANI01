@@ -73,7 +73,7 @@ describe("AttendanceLeaveTab", () => {
 
     await render(<AttendanceLeaveTab />);
     expect(screen.getByText("Total Applications")).toBeTruthy();
-    expect(screen.getByText("Jane Smith")).toBeTruthy();
+    expect(screen.getByText(/Jane Smith/)).toBeTruthy();
     expect(screen.getByText("Privilege Leave")).toBeTruthy();
   });
 });

@@ -17,6 +17,7 @@ import { CoverageBar } from "../../components/CoverageBar";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { THEME_COLORS } from "@/constants/theme";
 import type { PRCampaignDetail } from "@/types/campaign.types";
+import { formatDate } from "@/utils/formatters";
 
 interface PRCampaignOverviewTabProps {
   campaign: PRCampaignDetail | undefined;
@@ -206,35 +207,35 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
             <View className="flex-row items-center justify-between p-2.5 rounded-lg bg-dark-bg/60 border border-dark-border/60">
               <Text className="text-xs font-medium text-slate-300">Campaign Start Date</Text>
               <Text className="text-xs font-mono font-bold text-white">
-                {campaign.CampStartDate ? new Date(campaign.CampStartDate).toLocaleDateString() : "—"}
+                {campaign.CampStartDate ? formatDate(campaign.CampStartDate) : "—"}
               </Text>
             </View>
 
             <View className="flex-row items-center justify-between p-2.5 rounded-lg bg-dark-bg/60 border border-dark-border/60">
               <Text className="text-xs font-medium text-slate-300">Review Cut-Off Date</Text>
               <Text className="text-xs font-mono font-bold text-amber-400">
-                {campaign.CampReviewCutOfDate ? new Date(campaign.CampReviewCutOfDate).toLocaleDateString() : "—"}
+                {campaign.CampReviewCutOfDate ? formatDate(campaign.CampReviewCutOfDate) : "—"}
               </Text>
             </View>
 
             <View className="flex-row items-center justify-between p-2.5 rounded-lg bg-dark-bg/60 border border-dark-border/60">
               <Text className="text-xs font-medium text-slate-300">Delivery Reminder Date</Text>
               <Text className="text-xs font-mono font-bold text-blue-400">
-                {campaign.CampDelReminderDate ? new Date(campaign.CampDelReminderDate).toLocaleDateString() : "—"}
+                {campaign.CampDelReminderDate ? formatDate(campaign.CampDelReminderDate) : "—"}
               </Text>
             </View>
 
             <View className="flex-row items-center justify-between p-2.5 rounded-lg bg-dark-bg/60 border border-dark-border/60">
               <Text className="text-xs font-medium text-slate-300">Transaction Cut-Off Date</Text>
               <Text className="text-xs font-mono font-bold text-purple-400">
-                {campaign.TransCutOffDate ? new Date(campaign.TransCutOffDate).toLocaleDateString() : "—"}
+                {campaign.TransCutOffDate ? formatDate(campaign.TransCutOffDate) : "—"}
               </Text>
             </View>
 
             <View className="flex-row items-center justify-between p-2.5 rounded-lg bg-dark-bg/60 border border-dark-border/60">
               <Text className="text-xs font-medium text-slate-300">Campaign Close Date</Text>
               <Text className="text-xs font-mono font-bold text-emerald-400">
-                {campaign.CampCloseDate ? new Date(campaign.CampCloseDate).toLocaleDateString() : "—"}
+                {campaign.CampCloseDate ? formatDate(campaign.CampCloseDate) : "—"}
               </Text>
             </View>
           </View>
@@ -308,7 +309,7 @@ export const PRCampaignOverviewTab: React.FC<PRCampaignOverviewTabProps> = ({
                     {ev.EventSubject || `Daylite Event #${ev.DLEventID}`} (Location #{ev.LocID || "—"})
                   </Text>
                   <Text className="text-[10px] font-mono text-slate-400">
-                    {ev.EventFromDate ? new Date(ev.EventFromDate).toLocaleDateString() : "—"}
+                    {ev.EventFromDate ? formatDate(ev.EventFromDate) : "—"}
                   </Text>
                 </View>
               ))}

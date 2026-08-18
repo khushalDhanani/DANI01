@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Lock } from "lucide-react-native";
 import { THEME_COLORS } from "@/constants/theme";
+import { formatDate, formatDateTime } from "@/utils/formatters";
 
 interface MaskedValueProps {
   value: unknown;
@@ -49,9 +50,21 @@ export const MaskedValue: React.FC<MaskedValueProps> = ({
     );
   }
 
+  const strVal = String(value);
+  if (/^\d{4}-\d{2}-\d{2}(T|\s|$)/.test(strVal)) {
+    const formatted = strVal.includes("T") || strVal.includes(":")
+      ? formatDateTime(strVal)
+      : formatDate(strVal);
+    return (
+      <Text className="text-xs font-mono text-slate-200" numberOfLines={1}>
+        {formatted}
+      </Text>
+    );
+  }
+
   return (
     <Text className="text-xs font-mono text-slate-200" numberOfLines={1}>
-      {String(value)}
+      {strVal}
     </Text>
   );
 };

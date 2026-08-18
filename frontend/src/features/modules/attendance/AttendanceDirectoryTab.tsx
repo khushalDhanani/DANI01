@@ -20,16 +20,17 @@ import {
 import { downloadAttendanceDirectoryExport } from "@/api/attendance.api";
 import { THEME_COLORS } from "@/constants/theme";
 import { useAttendanceDirectory } from "@/hooks/useAttendance";
+import { formatDate } from "@/utils/formatters";
 
 const STATUS_FILTERS = [
   { id: "", label: "All Logs" },
   { id: "PRESENT", label: "Present" },
   { id: "ABSENT", label: "Absent" },
-  { id: "UNAUTHORIZED_ABSENT", label: "Unexcused Absence" },
   { id: "LATE", label: "Late Coming" },
   { id: "EARLY", label: "Early Exit" },
   { id: "OT", label: "Overtime" },
   { id: "LEAVE", label: "On Leave" },
+  { id: "WO", label: "Weekly Off" },
 ];
 
 
@@ -87,11 +88,11 @@ export function AttendanceDirectoryTab({ deptId, compId, empId }: AttendanceDire
   const totalPages = dirData ? Math.ceil(dirData.total / pageSize) : 0;
 
   return (
-    <View className="gap-4 w-full">
+    <View className="gap-2.5 w-full">
       {/* Search & Export Toolbar */}
-      <View className="flex-col md:flex-row items-stretch md:items-center justify-between gap-3 w-full">
+      <View className="flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 w-full">
         {/* Search Bar */}
-        <View className="flex-1 flex-row items-center bg-dark-card border border-dark-border rounded-xl px-3 py-2">
+        <View className="flex-1 flex-row items-center bg-dark-card border border-dark-border rounded-xl px-3 py-1.5">
           <Search size={16} color={THEME_COLORS.textMuted} />
           <TextInput
             className="flex-1 ml-2 text-sm text-white placeholder:text-slate-500 font-sans outline-none"
@@ -128,16 +129,14 @@ export function AttendanceDirectoryTab({ deptId, compId, empId }: AttendanceDire
               <Pressable
                 key={f.id}
                 onPress={() => handleFilterChange(f.id)}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold ${
-                  isSelected
+                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold ${isSelected
                     ? "bg-purple-600/30 border-purple-500 text-purple-300"
                     : "bg-dark-card border-dark-border text-slate-400 hover:border-slate-700"
-                }`}
+                  }`}
               >
                 <Text
-                  className={`text-xs font-semibold ${
-                    isSelected ? "text-purple-300 font-bold" : "text-slate-400"
-                  }`}
+                  className={`text-xs font-semibold ${isSelected ? "text-purple-300 font-bold" : "text-slate-400"
+                    }`}
                 >
                   {f.label}
                 </Text>
@@ -161,173 +160,176 @@ export function AttendanceDirectoryTab({ deptId, compId, empId }: AttendanceDire
             <Text className="text-xs text-slate-500 mt-1">Try adjusting your filters or search keyword.</Text>
           </View>
         ) : (
-          <View className="w-full divide-y divide-dark-border">
-            {/* Header */}
-            <View className="flex-row items-center px-4 py-3 bg-slate-900/60 border-b border-dark-border">
-              <Text className="w-16 text-[11px] font-bold uppercase tracking-wider text-slate-400">ID</Text>
-              <Text className="flex-1 min-w-[180px] text-[11px] font-bold uppercase tracking-wider text-slate-400">Employee Identity</Text>
-              <Text className="w-32 text-[11px] font-bold uppercase tracking-wider text-slate-400">Att Date</Text>
-              <Text className="w-36 text-[11px] font-bold uppercase tracking-wider text-slate-400">Status</Text>
-              <Text className="w-40 text-[11px] font-bold uppercase tracking-wider text-slate-400">Actual Punch</Text>
-              <Text className="w-32 text-[11px] font-bold uppercase tracking-wider text-slate-400">Shift</Text>
-              <Text className="w-36 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">Grace & OT Mins</Text>
-            </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={true}
+            className="w-full"
+            contentContainerStyle={{ minWidth: "100%", flexGrow: 1 }}
+          >
+            <View className="min-w-[1050px] w-full divide-y divide-dark-border">
+              {/* Header */}
+              <View className="flex-row items-center px-3 py-2 bg-slate-900/80 border-b border-dark-border">
+                <Text className="w-16 text-[10px] font-bold uppercase tracking-wider text-slate-400">ID</Text>
+                <Text className="flex-1 min-w-[200px] pr-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Employee Identity</Text>
+                <Text className="w-32 pr-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Att Date</Text>
+                <Text className="w-44 pr-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Status</Text>
+                <Text className="w-40 pr-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Actual Punch</Text>
+                <Text className="w-24 pr-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Shift</Text>
+                <Text className="w-32 text-[10px] font-bold uppercase tracking-wider text-slate-400 text-right">Grace & OT Mins</Text>
+              </View>
 
-            {/* Rows */}
-            {dirData.items.map((row) => {
-              const isPresent = row.status_label === "Present";
-              const isAbsent = row.status_label === "Absent";
-              return (
-                <View
-                  key={row.att_id}
-                  className="flex-row items-center px-4 py-3.5 hover:bg-dark-bg/40 transition-colors"
-                >
-                  {/* ID */}
-                  <Text className="w-16 text-xs font-mono text-slate-400">#{row.att_id}</Text>
-
-                  {/* Employee Identity */}
-                  <Pressable
-                    onPress={() =>
-                      router.push({
-                        pathname: "/modules/attendance/employee/[empId]",
-                        params: { empId: String(row.emp_id) },
-                      })
-                    }
-                    className="flex-1 min-w-[180px] pr-3 flex-row items-center gap-1.5 group"
+              {/* Rows */}
+              {dirData.items.map((row) => {
+                const isPresent = row.status_label === "Present";
+                return (
+                  <View
+                    key={row.att_id}
+                    className="flex-row items-center px-3 py-2 hover:bg-dark-bg/40 transition-colors"
                   >
-                    <View className="flex-1">
-                      <Text className="text-xs font-bold text-white group-hover:text-purple-400 underline transition-colors" numberOfLines={1}>
-                        {row.emp_name}
-                      </Text>
-                      <Text className="text-[10px] text-slate-500 font-mono">Code: {row.emp_code || "N/A"}</Text>
-                    </View>
-                    <ExternalLink size={12} color="#c084fc" />
-                  </Pressable>
+                    {/* ID */}
+                    <Text className="w-16 text-xs font-mono text-slate-400">#{row.att_id}</Text>
 
-
-                  {/* Att Date */}
-                  <View className="w-32 pr-2">
-                    <View className="flex-row items-center gap-1">
-                      <Calendar size={12} color="#94a3b8" />
-                      <Text className="text-xs font-mono text-slate-300">{row.att_date}</Text>
-                    </View>
-                  </View>
-
-                  {/* Status Badge */}
-                  <View className="w-36 pr-2 flex-row items-center">
-                    <View
-                      className={`px-2.5 py-1 rounded-full border flex-row items-center gap-1.5 self-start ${
-                        isPresent
-                          ? "bg-emerald-950/90 border-emerald-700/60"
-                          : isAbsent
-                          ? "bg-rose-950/90 border-rose-700/60"
-                          : "bg-purple-950/90 border-purple-700/60"
-                      }`}
+                    {/* Employee Identity */}
+                    <Pressable
+                      onPress={() =>
+                        router.push({
+                          pathname: "/modules/attendance/employee/[empId]",
+                          params: { empId: String(row.emp_id) },
+                        })
+                      }
+                      className="flex-1 min-w-[200px] pr-3 flex-row items-center gap-1.5 group"
                     >
-                      <View
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          isPresent
-                            ? "bg-emerald-400"
-                            : isAbsent
-                            ? "bg-rose-400"
-                            : "bg-purple-400"
-                        }`}
-                      />
-                      <Text
-                        className={`text-[10px] font-bold ${
-                          isPresent
-                            ? "text-emerald-300"
-                            : isAbsent
-                            ? "text-rose-300"
-                            : "text-purple-300"
-                        }`}
-                        numberOfLines={1}
-                      >
-                        {row.status_label}
-                        <Text className="opacity-70 text-[9px] font-mono"> ({row.att_sal_type})</Text>
+                      <View className="flex-1">
+                        <Text className="text-xs font-bold text-white group-hover:text-purple-400 underline transition-colors" numberOfLines={1}>
+                          {row.emp_name} - {row.emp_code || "N/A"}
+                        </Text>
+                      </View>
+                      <ExternalLink size={12} color="#c084fc" />
+                    </Pressable>
+
+
+                    {/* Att Date */}
+                    <View className="w-32 pr-2">
+                      <View className="flex-row items-center gap-1">
+                        <Calendar size={12} color="#94a3b8" />
+                        <Text className="text-xs font-mono text-slate-300">{formatDate(row.att_date)}</Text>
+                      </View>
+                    </View>
+
+                    {/* Status Badge */}
+                    <View className="w-44 pr-2 flex-row items-center">
+                      {(() => {
+                        const lbl = row.status_label || "";
+                        const isPres = lbl === "Present";
+                        const isWarning = lbl.includes("Late") || lbl.includes("Early");
+                        const isDanger = lbl.includes("Absent");
+                        const badgeBg = isPres
+                          ? "bg-emerald-950/90 border-emerald-700/60"
+                          : isWarning
+                            ? "bg-amber-950/90 border-amber-700/60"
+                            : isDanger
+                              ? "bg-rose-950/90 border-rose-700/60"
+                              : "bg-purple-950/90 border-purple-700/60";
+                        const dotBg = isPres
+                          ? "bg-emerald-400"
+                          : isWarning
+                            ? "bg-amber-400"
+                            : isDanger
+                              ? "bg-rose-400"
+                              : "bg-purple-400";
+                        const textFg = isPres
+                          ? "text-emerald-300"
+                          : isWarning
+                            ? "text-amber-300"
+                            : isDanger
+                              ? "text-rose-300"
+                              : "text-purple-300";
+
+                        return (
+                          <View className={`px-2.5 py-1 rounded-full border flex-row items-center gap-1.5 shrink-0 ${badgeBg}`}>
+                            <View className={`w-1.5 h-1.5 rounded-full ${dotBg}`} />
+                            <Text className={`text-[10px] font-bold ${textFg}`} numberOfLines={1}>
+                              {row.status_label}
+                            </Text>
+                          </View>
+                        );
+                      })()}
+                    </View>
+
+
+                    {/* Actual Punch */}
+                    <View className="w-40 pr-2">
+                      {row.in_time && row.out_time ? (
+                        <Text className="text-xs font-mono text-slate-300 font-medium">
+                          {row.in_time.substring(0, 5)} – {row.out_time.substring(0, 5)}
+                        </Text>
+                      ) : row.in_time && !row.out_time ? (
+                        <View className="flex-row items-center gap-1">
+                          <Text className="text-xs font-mono text-slate-300">
+                            {row.in_time.substring(0, 5)} –
+                          </Text>
+                          <View className="px-1.5 py-0.2 rounded bg-amber-950 border border-amber-800/80">
+                            <Text className="text-[9px] font-mono font-bold text-amber-400">
+                              Missing Out
+                            </Text>
+                          </View>
+                        </View>
+                      ) : !row.in_time && row.out_time ? (
+                        <View className="flex-row items-center gap-1">
+                          <View className="px-1.5 py-0.2 rounded bg-amber-950 border border-amber-800/80">
+                            <Text className="text-[9px] font-mono font-bold text-amber-400">
+                              Missing In
+                            </Text>
+                          </View>
+                          <Text className="text-xs font-mono text-slate-300">
+                            – {row.out_time.substring(0, 5)}
+                          </Text>
+                        </View>
+                      ) : isPresent ? (
+                        <View className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">
+                          <Text className="text-[10px] font-mono text-slate-400">
+                            No Biometric Log
+                          </Text>
+                        </View>
+                      ) : (
+                        <Text className="text-xs font-mono text-slate-500">--:-- – --:--</Text>
+                      )}
+                    </View>
+
+
+                    {/* Shift Code */}
+                    <View className="w-24 pr-2">
+                      <Text className="text-xs font-mono text-purple-300 font-semibold">
+                        {row.shift_code || "DEFAULT"}
                       </Text>
                     </View>
-                  </View>
 
-
-                  {/* Actual Punch */}
-                  <View className="w-40 pr-2">
-                    {row.in_time && row.out_time ? (
-                      <Text className="text-xs font-mono text-slate-300 font-medium">
-                        {row.in_time.substring(0, 5)} – {row.out_time.substring(0, 5)}
-                      </Text>
-                    ) : row.in_time && !row.out_time ? (
-                      <View className="flex-row items-center gap-1">
-                        <Text className="text-xs font-mono text-slate-300">
-                          {row.in_time.substring(0, 5)} –
+                    {/* Grace & OT */}
+                    <View className="w-32 items-end flex-col gap-0.5">
+                      {row.ot_mins > 0 && (
+                        <Text className="text-[10px] font-mono font-bold text-amber-400">
+                          + {row.ot_mins}m OT
                         </Text>
-                        <View className="px-1.5 py-0.2 rounded bg-amber-950 border border-amber-800/80">
-                          <Text className="text-[9px] font-mono font-bold text-amber-400">
-                            Missing Out
-                          </Text>
-                        </View>
-                      </View>
-                    ) : !row.in_time && row.out_time ? (
-                      <View className="flex-row items-center gap-1">
-                        <View className="px-1.5 py-0.2 rounded bg-amber-950 border border-amber-800/80">
-                          <Text className="text-[9px] font-mono font-bold text-amber-400">
-                            Missing In
-                          </Text>
-                        </View>
-                        <Text className="text-xs font-mono text-slate-300">
-                          – {row.out_time.substring(0, 5)}
+                      )}
+                      {row.late_mins > 0 && (
+                        <Text className="text-[10px] font-mono text-rose-400">
+                          {row.late_mins}m Late
                         </Text>
-                      </View>
-                    ) : isPresent || row.att_sal_type === "SAL" ? (
-                      <View className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">
-                        <Text className="text-[10px] font-mono text-slate-400">
-                          No Biometric Log
+                      )}
+                      {row.early_mins > 0 && (
+                        <Text className="text-[10px] font-mono text-amber-400">
+                          {row.early_mins}m Early
                         </Text>
-                      </View>
-                    ) : isAbsent ? (
-                      <View className="px-2 py-0.5 rounded bg-rose-950/40 border border-rose-900/40">
-                        <Text className="text-[10px] font-mono text-rose-400/80">
-                          Absent (No Punch)
-                        </Text>
-                      </View>
-                    ) : (
-                      <Text className="text-xs font-mono text-slate-500">--:-- – --:--</Text>
-                    )}
+                      )}
+                      {row.ot_mins === 0 && row.late_mins === 0 && row.early_mins === 0 && (
+                        <Text className="text-[10px] font-mono text-slate-500">Standard</Text>
+                      )}
+                    </View>
                   </View>
-
-
-                  {/* Shift Code */}
-                  <View className="w-32 pr-2">
-                    <Text className="text-xs font-mono text-purple-300 font-semibold">
-                      {row.shift_code || "DEFAULT"}
-                    </Text>
-                  </View>
-
-                  {/* Grace & OT */}
-                  <View className="w-36 items-end flex-col gap-0.5">
-                    {row.ot_mins > 0 && (
-                      <Text className="text-[10px] font-mono font-bold text-amber-400">
-                        + {row.ot_mins}m OT
-                      </Text>
-                    )}
-                    {row.late_mins > 0 && (
-                      <Text className="text-[10px] font-mono text-rose-400">
-                        {row.late_mins}m Late
-                      </Text>
-                    )}
-                    {row.early_mins > 0 && (
-                      <Text className="text-[10px] font-mono text-amber-400">
-                        {row.early_mins}m Early
-                      </Text>
-                    )}
-                    {row.ot_mins === 0 && row.late_mins === 0 && row.early_mins === 0 && (
-                      <Text className="text-[10px] font-mono text-slate-500">Standard</Text>
-                    )}
-                  </View>
-                </View>
-              );
-            })}
-          </View>
+                );
+              })}
+            </View>
+          </ScrollView>
         )}
 
         {/* Pagination Controls */}
@@ -342,9 +344,8 @@ export function AttendanceDirectoryTab({ deptId, compId, empId }: AttendanceDire
 
             <View className="flex-row items-center gap-2">
               <Pressable
-                className={`p-1.5 rounded-lg border border-dark-border ${
-                  page === 0 ? "opacity-30" : "bg-dark-card hover:border-slate-600"
-                }`}
+                className={`p-1.5 rounded-lg border border-dark-border ${page === 0 ? "opacity-30" : "bg-dark-card hover:border-slate-600"
+                  }`}
                 onPress={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
               >
@@ -354,9 +355,8 @@ export function AttendanceDirectoryTab({ deptId, compId, empId }: AttendanceDire
                 {page + 1} / {Math.max(1, totalPages)}
               </Text>
               <Pressable
-                className={`p-1.5 rounded-lg border border-dark-border ${
-                  page + 1 >= totalPages ? "opacity-30" : "bg-dark-card hover:border-slate-600"
-                }`}
+                className={`p-1.5 rounded-lg border border-dark-border ${page + 1 >= totalPages ? "opacity-30" : "bg-dark-card hover:border-slate-600"
+                  }`}
                 onPress={() => setPage((p) => p + 1)}
                 disabled={page + 1 >= totalPages}
               >

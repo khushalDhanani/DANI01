@@ -171,9 +171,13 @@ class AttendanceService:
         if status_filter:
             sf = status_filter.upper()
             if sf == "PRESENT":
-                where_clauses.append("a.AttSalType IN ('P', 'PRESENT')")
+                where_clauses.append(
+                    "(a.AttActInTime IS NOT NULL OR a.AttActOutTime IS NOT NULL OR a.AttSalType IN ('P', 'PRESENT'))"
+                )
             elif sf == "ABSENT":
-                where_clauses.append("a.AttSalType IN ('A', 'ABSENT')")
+                where_clauses.append(
+                    "(a.AttActInTime IS NULL AND a.AttActOutTime IS NULL AND (s.ShiftCode IS NULL OR s.ShiftCode NOT IN ('WO', 'PH')))"
+                )
             elif sf == "LATE":
                 where_clauses.append("a.AttLateComeMins > 0")
             elif sf == "EARLY":
@@ -181,7 +185,19 @@ class AttendanceService:
             elif sf == "OT":
                 where_clauses.append("a.AttActOTMins > 0")
             elif sf == "LEAVE":
-                where_clauses.append("a.AttSalType IN ('PL', 'CL', 'SL', 'CO', 'ML', 'LWP')")
+                where_clauses.append(
+                    "(a.AttSalType IN ('PL', 'CL', 'SL', 'CO', 'ML', 'LWP') OR a.AttLeaveLabelID IS NOT NULL)"
+                )
+            elif sf in ("WO", "WEEKLY_OFF"):
+                where_clauses.append("s.ShiftCode = 'WO'")
+            elif sf in ("PH", "HOLIDAY"):
+                where_clauses.append("s.ShiftCode = 'PH'")
+
+        # Noise reduction: Unless explicitly searching for off-days, filter out unpunched Weekly Off / Public Holiday noise rows
+        if not status_filter or status_filter.upper() not in ("WO", "WEEKLY_OFF", "PH", "HOLIDAY"):
+            where_clauses.append(
+                "NOT (s.ShiftCode IN ('WO', 'PH') AND a.AttActInTime IS NULL AND a.AttActOutTime IS NULL)"
+            )
 
         if search:
             where_clauses.append(
@@ -235,18 +251,35 @@ class AttendanceService:
         rows = execute_readonly_query(q_items, params)
         items: list[AttendanceLogItem] = []
         for r in rows:
-            st = (r["AttSalType"] or "A").upper()
-            status_label = (
-                "Present"
-                if st in ("P", "PRESENT")
-                else "Absent"
-                if st in ("A", "ABSENT")
-                else "Leave"
-                if st in ("PL", "CL", "SL", "CO")
-                else "Weekly Off"
-                if st == "WO"
-                else r["AttSalType"] or "Unknown"
-            )
+            in_t = r["in_time"]
+            out_t = r["out_time"]
+            shift = (r["ShiftCode"] or "").strip().upper()
+            sal_t = (r["AttSalType"] or "").strip().upper()
+            late = r["late_mins"] or 0
+            early = r["early_mins"] or 0
+            ot = r["ot_mins"] or 0
+
+            if in_t is not None or out_t is not None:
+                if late > 0 and early > 0:
+                    status_label = "Late & Early Exit"
+                elif late > 0:
+                    status_label = "Late Coming"
+                elif early > 0:
+                    status_label = "Early Exit"
+                elif ot > 0:
+                    status_label = "Overtime"
+                else:
+                    status_label = "Present"
+            elif shift == "WO":
+                status_label = "Weekly Off"
+            elif shift == "PH":
+                status_label = "Public Holiday"
+            elif sal_t in ("PL", "CL", "SL", "CO", "ML", "LWP"):
+                status_label = "Leave"
+            elif sal_t in ("A", "ABSENT"):
+                status_label = "Absent"
+            else:
+                status_label = "Absent / Unpunched"
 
             items.append(
                 AttendanceLogItem(
@@ -1416,31 +1449,75 @@ class AttendanceService:
             absconding_risk = "MEDIUM"
 
         # 4. Leaves Breakdown by Type
-        q_leaves = """
+        # Combines monthly payroll leave balance ledger (dbo.PayMonthlyLeaveBalance) with formal online requests (dbo.LeaveRequest)
+        q_bal = """
         SELECT
-            COALESCE(lt.LeaveTypeDesc, 'General Leave') as leave_type,
+            SUM(COALESCE(AvailedPL, 0)) as PL,
+            SUM(COALESCE(AvailedCL, 0)) as CL,
+            SUM(COALESCE(AvailedSL, 0)) as SL,
+            SUM(COALESCE(AvailedCO, 0)) as CO
+        FROM dbo.PayMonthlyLeaveBalance
+        WHERE EmpID = :emp_id;
+        """
+        bal_rows = execute_readonly_query(q_bal, {"emp_id": emp_id})
+        bal = bal_rows[0] if bal_rows else {"PL": 0, "CL": 0, "SL": 0, "CO": 0}
+
+        q_req = """
+        SELECT
+            COALESCE(lt.LeaveTypeShortName, 'PL') as leave_code,
             COUNT(lr.LeaveRequestID) as request_count,
-            SUM(COALESCE(lr.LeaveDays, 0)) as total_days_taken
+            SUM(COALESCE(lr.LeaveDays, 0)) as total_days_taken,
+            CONVERT(VARCHAR(10), MAX(lr.LeaveRequestToDate), 120) as last_availed_date
         FROM dbo.LeaveRequest lr
         LEFT JOIN dbo.LeaveTypeMst lt ON lt.LeaveTypeID = lr.LeaveTypeID
         WHERE lr.LeaveRequestByEmpID = :emp_id AND lr.LeaveStatusID = 13
-        GROUP BY lt.LeaveTypeDesc
-        ORDER BY total_days_taken DESC;
+        GROUP BY lt.LeaveTypeShortName;
         """
-        leave_rows = execute_readonly_query(q_leaves, {"emp_id": emp_id})
-        leaves_breakdown = [
-            EmployeeLifetimeLeaveTypeBreakdown(
-                leave_type=lr["leave_type"],
-                request_count=lr["request_count"] or 0,
-                total_days_taken=float(lr["total_days_taken"] or 0.0),
-            )
-            for lr in leave_rows
+        req_rows = execute_readonly_query(q_req, {"emp_id": emp_id})
+        req_map = {(r["leave_code"] or "PL").strip(): r for r in req_rows}
+
+        cat_definitions = [
+            ("PL", "Privilege/Paid Leave"),
+            ("CL", "Casual Leave"),
+            ("SL", "Sick/Medical Leave"),
+            ("CO", "Comp Off/Special"),
         ]
+
+        tot_bal_days = sum(float(bal.get(c[0]) or 0) for c in cat_definitions)
+        tot_req_days = sum(float(r.get("total_days_taken") or 0) for r in req_rows)
+        grand_total_leave_denom = max(tot_bal_days, tot_req_days, 1.0)
+
+        leaves_breakdown = []
+        for code, desc in cat_definitions:
+            bal_days = float(bal.get(code) or 0.0)
+            req_item = req_map.get(code, {})
+            req_days = float(req_item.get("total_days_taken") or 0.0)
+            final_days = max(bal_days, req_days)
+
+            req_cnt = int(req_item.get("request_count") or (1 if final_days > 0 else 0))
+            last_date = req_item.get("last_availed_date")
+
+            avg_days = round(final_days / max(req_cnt, 1), 1) if req_cnt > 0 else 0.0
+            share_pct = round((final_days / grand_total_leave_denom) * 100.0, 1)
+
+            leaves_breakdown.append(
+                EmployeeLifetimeLeaveTypeBreakdown(
+                    leave_type=desc,
+                    leave_code=code if code != "CO" else "CO/ML",
+                    request_count=req_cnt,
+                    total_days_taken=final_days,
+                    avg_days_per_request=avg_days,
+                    share_pct=share_pct,
+                    last_availed_date=last_date,
+                )
+            )
 
         # 5. Generate Data Quality & HR Risk Signals
         risk_signals = []
         if unauth_cnt > 0:
-            risk_signals.append(f"Unauthorized Absences without Leave Application ({unauth_cnt} days)")
+            risk_signals.append(
+                f"Unauthorized Absences without Leave Application ({unauth_cnt} days)"
+            )
         if late_cnt > 20:
             risk_signals.append(f"High Late Arrival Frequency ({late_cnt} instances)")
         if absent_cnt > 10:
@@ -1489,4 +1566,3 @@ class AttendanceService:
             leaves_breakdown=leaves_breakdown,
             risk_signals=risk_signals,
         )
-

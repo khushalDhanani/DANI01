@@ -51,6 +51,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { THEME_COLORS } from "@/constants/theme";
 import type { ContactQualityIssueItem } from "@/types/modules.types";
+import { formatDate, formatDateTime } from "@/utils/formatters";
 
 type QualityDimension = "ALL" | "CONTACTS" | "ADDRESSES" | "INTEGRITY" | "GOVERNANCE";
 
@@ -567,7 +568,7 @@ export const ContactQualityIssuesView: React.FC = () => {
                 {data?.calculated_at && (
                   <View className="bg-slate-900 border border-slate-700/60 px-2 py-0.5 rounded flex-row items-center gap-1">
                     <Text className="text-[10px] font-mono text-slate-400">
-                      Snapshot: {new Date(data.calculated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      Snapshot: {formatDateTime(data.calculated_at)}
                     </Text>
                   </View>
                 )}
@@ -833,27 +834,53 @@ export const ContactQualityIssuesView: React.FC = () => {
                     <View className="w-32 items-center"><View className="bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded"><Text className="text-[10px] font-mono font-bold text-amber-300">{group.AffectedRecordsCount} Records</Text></View></View>
                     <View className="w-20 items-end flex-row justify-end items-center gap-1"><Text className="text-[11px] font-semibold text-blue-400">{isExpanded ? "Hide" : "Expand"}</Text>{isExpanded ? <ChevronUp size={12} color={THEME_COLORS.primaryIcon} /> : <ChevronDown size={12} color={THEME_COLORS.primaryIcon} />}</View>
                   </Pressable>
-                  {isExpanded && group.Members && group.Members.length > 0 ? (
-                    <View className="bg-slate-950/70 border-t border-slate-800/80 px-6 py-2 gap-1.5">
-                      <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Participating Records ({group.Members.length}):</Text>
-                      {group.Members.map((member, mIdx) => (
-                        <Pressable key={`${member.PersonID}-${member.ContactID || mIdx}`} onPress={() => router.push(`/daylite/person/${member.PersonID}` as Href)} className="flex-row items-center justify-between bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 p-2.5 rounded-lg transition-colors cursor-pointer group">
-                          <View className="flex-row items-center gap-2.5 flex-1">
-                            <View className="w-6 h-6 rounded-full bg-blue-600/20 border border-blue-500/30 items-center justify-center"><User size={11} color={THEME_COLORS.primaryIcon} /></View>
-                            <View><Text className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">{member.PersonName}</Text><Text className="text-[10px] font-mono text-blue-400 font-semibold">Person #{member.PersonID} {member.LabelName ? `• ${member.LabelName}` : ""}</Text></View>
-                          </View>
-                          <View className="flex-row items-center gap-2">
-                            {member.IsPrimary ? <View className="bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 rounded"><Text className="text-[9px] font-bold text-emerald-300">PRIMARY</Text></View> : null}
-                            <View className="flex-row items-center gap-0.5"><Text className="text-[11px] font-semibold text-blue-400 group-hover:underline">Inspect</Text><ChevronRight size={11} color={THEME_COLORS.primaryIcon} /></View>
-                          </View>
-                        </Pressable>
-                      ))}
+                  {isExpanded ? (
+                    <View className="bg-slate-950/70 border-t border-slate-800/80 px-6 py-2.5 gap-1.5">
+                      <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Participating Records ({group.Members?.length || 0}):
+                      </Text>
+                      {group.Members && group.Members.length > 0 ? (
+                        group.Members.map((member, mIdx) => (
+                          <Pressable
+                            key={`${member.PersonID}-${member.ContactID || mIdx}`}
+                            onPress={() => router.push(`/daylite/person/${member.PersonID}` as Href)}
+                            className="flex-row items-center justify-between bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 p-2.5 rounded-lg transition-colors cursor-pointer group"
+                          >
+                            <View className="flex-row items-center gap-2.5 flex-1">
+                              <View className="w-6 h-6 rounded-full bg-blue-600/20 border border-blue-500/30 items-center justify-center">
+                                <User size={11} color={THEME_COLORS.primaryIcon} />
+                              </View>
+                              <View className="flex-1">
+                                <Text className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">
+                                  {member.PersonName}
+                                </Text>
+                                <Text className="text-[10px] font-mono text-blue-400 font-semibold">
+                                  Person #{member.PersonID} {member.LabelName ? `• ${member.LabelName}` : ""}{member.CurrentValue ? ` • Value: ${member.CurrentValue}` : ""}
+                                </Text>
+                              </View>
+                            </View>
+                            <View className="flex-row items-center gap-2">
+                              {member.IsPrimary ? (
+                                <View className="bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 rounded">
+                                  <Text className="text-[9px] font-bold text-emerald-300">PRIMARY</Text>
+                                </View>
+                              ) : null}
+                              <View className="flex-row items-center gap-0.5">
+                                <Text className="text-[11px] font-semibold text-blue-400 group-hover:underline">Inspect</Text>
+                                <ChevronRight size={11} color={THEME_COLORS.primaryIcon} />
+                              </View>
+                            </View>
+                          </Pressable>
+                        ))
+                      ) : (
+                        <Text className="text-xs text-slate-400 py-1 font-mono">No detailed member records in cluster.</Text>
+                      )}
                     </View>
                   ) : null}
                 </View>
               );
             }}
-            keyExtractor={(item) => item.GroupKey}
+            keyExtractor={(item, index) => item.GroupKey ? `${item.GroupKey}-${index}` : `group-${index}`}
             ListFooterComponent={<View className="p-3 border-t border-dark-border/60"><PaginationControls page={page} limit={limit} total={data?.total ?? 0} onPageChange={setPage} isFetching={isFetching} /></View>}
             contentContainerStyle={{ paddingBottom: 16 }}
           />
@@ -861,8 +888,8 @@ export const ContactQualityIssuesView: React.FC = () => {
       ) : (
         <View className="bg-dark-card border border-dark-border rounded-xl overflow-hidden shadow-sm flex-1">
           <View className="flex-row items-center bg-slate-900/90 border-b border-dark-border px-4 py-3 gap-3">
-            <View className="w-[200px]"><Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Person Record</Text></View>
-            <View className="w-[180px]"><Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Offending Value</Text></View>
+            <View className="w-[190px]"><Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Person Record</Text></View>
+            <View className="w-[300px]"><Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Offending Value</Text></View>
             <View className="flex-1 min-w-[200px]"><Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Issue & Context</Text></View>
             <View className="w-24 items-center"><Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Severity</Text></View>
             <View className="w-20 items-end"><Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Action</Text></View>
@@ -882,13 +909,22 @@ export const ContactQualityIssuesView: React.FC = () => {
                   accessibilityRole="button"
                   className={`flex-row items-center px-4 py-3 border-b border-dark-border/40 hover:bg-slate-800/60 active:bg-slate-900/90 transition-colors gap-3 cursor-pointer group ${isEven ? "bg-dark-card" : "bg-slate-900/20"}`}
                 >
-                  <View className="w-[200px] flex-row items-center gap-2.5">
+                  <View className="w-[190px] flex-row items-center gap-2.5">
                     <View className="w-7 h-7 rounded-full bg-blue-600/20 border border-blue-500/30 items-center justify-center"><User size={13} color={THEME_COLORS.primaryIcon} /></View>
                     <View className="flex-1"><Text className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors" numberOfLines={1}>{item.PersonName}</Text><Text className="text-[10px] font-mono text-blue-400 font-semibold">#{item.PersonID}</Text></View>
                   </View>
-                  <View className="w-[180px] flex-row items-center gap-2">
+                  <View className="w-[300px] flex-row items-center gap-2">
                     {item.ContactType === "EMAIL" ? <Mail size={12} color={THEME_COLORS.primaryIcon} /> : item.ContactType === "PHONE" ? <Phone size={12} color={THEME_COLORS.successIcon} /> : item.ContactType === "ADDRESS" ? <MapPinOff size={12} color={THEME_COLORS.warningIcon} /> : item.ContactType === "PROFILE" ? <CalendarX size={12} color={THEME_COLORS.dangerIcon} /> : item.ContactType === "COMPANY" ? <Building2 size={12} color={THEME_COLORS.companyIcon} /> : item.ContactType === "CUSTOM_FIELD" ? <Sliders size={12} color={THEME_COLORS.dangerIcon} /> : item.ContactType === "EMPLOYMENT" ? <FileWarning size={12} color={THEME_COLORS.warningIcon} /> : <Globe size={12} color={THEME_COLORS.warningIcon} />}
-                    <View className="flex-1"><Text className="text-xs font-mono font-bold text-white" numberOfLines={1}>{item.CurrentValue || item.MaskedValue || "—"}</Text>{item.LabelName ? <Text className="text-[10px] text-slate-400" numberOfLines={1}>{item.LabelName}</Text> : null}</View>
+                    <View className="flex-1">
+                      {(() => {
+                        const rawVal = item.CurrentValue || item.MaskedValue || "—";
+                        const displayVal = /^\d{4}-\d{2}-\d{2}(T|\s|$)/.test(rawVal)
+                          ? (rawVal.includes("T") || rawVal.includes(":") ? formatDateTime(rawVal) : formatDate(rawVal))
+                          : rawVal;
+                        return <Text className="text-xs font-mono font-bold text-white" numberOfLines={1}>{displayVal}</Text>;
+                      })()}
+                      {item.LabelName ? <Text className="text-[10px] text-slate-400" numberOfLines={1}>{item.LabelName}</Text> : null}
+                    </View>
                   </View>
                   <View className="flex-1 min-w-[200px]"><Text className="text-xs text-slate-300" numberOfLines={2}>{item.IssueDescription}</Text></View>
                   <View className="w-24 items-center"><View className={`px-2 py-0.5 rounded border ${severityStyles}`}><Text className={`text-[9px] font-bold ${severityStyles.split(" ").pop()}`}>{item.Severity}</Text></View></View>

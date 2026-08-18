@@ -56,15 +56,15 @@ export function AttendanceModuleScreen() {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-dark-bg p-3 md:p-4" showsVerticalScrollIndicator={false}>
+    <ScrollView className="flex-1 bg-dark-bg p-2.5 md:p-3.5" showsVerticalScrollIndicator={false}>
       {/* ── Compact Header Banner ──────────────────────────── */}
-      <View className="flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-        <View className="flex-1 flex-row items-center gap-3">
+      <View className="flex-col md:flex-row md:items-center justify-between gap-2 mb-2.5">
+        <View className="flex-1 flex-row items-center gap-2.5">
           <View className="bg-purple-950/80 border border-purple-800/60 px-2 py-0.5 rounded">
             <Text className="text-[10px] font-mono font-bold text-purple-400">ATTENDANCE</Text>
           </View>
           <View>
-            <Text className="text-lg md:text-xl font-black text-white leading-tight">
+            <Text className="text-base md:text-lg font-black text-white leading-tight">
               Attendance & Leave Analysis
             </Text>
             <Text className="text-[11px] text-slate-400" numberOfLines={1}>
@@ -85,14 +85,14 @@ export function AttendanceModuleScreen() {
                 <TouchableOpacity
                   key={c.code}
                   onPress={() => setSelectedCompId(c.id)}
-                  className={`px-2.5 py-1 rounded-md transition-all ${
+                  className={`px-2 py-0.5 rounded-md transition-all ${
                     isSelected
                       ? "bg-purple-600 border border-purple-400"
                       : "border-transparent"
                   }`}
                 >
                   <Text
-                    className={`text-[11px] font-bold font-mono ${
+                    className={`text-[10px] font-bold font-mono ${
                       isSelected ? "text-white" : "text-slate-400"
                     }`}
                   >
@@ -105,25 +105,25 @@ export function AttendanceModuleScreen() {
 
           <TouchableOpacity
             onPress={handleRefreshAll}
-            className="bg-dark-card border border-dark-border px-2.5 py-1.5 rounded-lg flex-row items-center gap-1.5 active:bg-slate-800"
+            className="bg-dark-card border border-dark-border px-2.5 py-1 rounded-lg flex-row items-center gap-1.5 active:bg-slate-800"
           >
-            <RefreshCw size={12} color="#a855f7" />
-            <Text className="text-[11px] font-bold text-slate-300">Sync</Text>
+            <RefreshCw size={11} color="#a855f7" />
+            <Text className="text-[10px] font-bold text-slate-300">Sync</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* ── Navigation Tab Bar ──────────────────────────────── */}
-      <View className="flex-row flex-wrap items-center gap-1.5 border-b border-dark-border pb-2 mb-3">
+      <View className="flex-row flex-wrap items-center gap-1 border-b border-dark-border pb-1.5 mb-2.5">
         {tabs.map((t) => {
           const isActive = activeTab === t.key;
           return (
             <TouchableOpacity
               key={t.key}
               onPress={() => setActiveTab(t.key)}
-              className={`flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
+              className={`flex-row items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-all ${
                 isActive
-                  ? "bg-purple-600 border-purple-400 shadow-sm"
+                  ? "bg-purple-600 border-purple-400 shadow-xs"
                   : "bg-dark-card border-dark-border hover:border-slate-600"
               }`}
             >

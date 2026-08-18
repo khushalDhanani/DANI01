@@ -14,10 +14,10 @@ import {
 import { Text, View } from "react-native";
 import { ContactQualitySection } from "./ContactQualitySection";
 import { THEME_COLORS } from "@/constants/theme";
-import type { PersonModuleMetricsResponse } from "@/types/modules.types";
+import type { PersonMetricsResponseLite } from "@/types/modules.types";
 
 interface PersonMetricsViewProps {
-  metricsResponse?: PersonModuleMetricsResponse;
+  metricsResponse?: PersonMetricsResponseLite;
   isLoading?: boolean;
 }
 

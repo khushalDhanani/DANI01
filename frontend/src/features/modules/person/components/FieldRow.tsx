@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { formatDate, formatDateTime } from "@/utils/formatters";
 
 interface FieldRowProps {
   label: string;
@@ -48,21 +49,15 @@ export const FieldRow: React.FC<FieldRowProps> = ({
     }
 
     if (type === "date") {
-      try {
-        const d = new Date(String(value));
-        const formatted = d.toLocaleString();
-        return (
-          <Text className="text-xs font-mono text-slate-300" numberOfLines={1}>
-            {formatted}
-          </Text>
-        );
-      } catch {
-        return (
-          <Text className="text-xs font-mono text-slate-300" numberOfLines={1}>
-            {String(value)}
-          </Text>
-        );
-      }
+      const strVal = String(value);
+      const formatted = strVal.includes("T") || strVal.includes(":")
+        ? formatDateTime(strVal)
+        : formatDate(strVal);
+      return (
+        <Text className="text-xs font-mono text-slate-300" numberOfLines={1}>
+          {formatted}
+        </Text>
+      );
     }
 
     if (type === "badge") {

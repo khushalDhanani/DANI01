@@ -72,9 +72,9 @@ export function AttendanceOverviewTab({ deptId, compId }: AttendanceOverviewTabP
   );
 
   return (
-    <View className="gap-4 w-full">
+    <View className="gap-2.5 w-full">
       {/* ── Organizational Filter Banner ── */}
-      <View className="bg-dark-card border border-dark-border p-4 rounded-xl flex-row flex-wrap items-center justify-between gap-4">
+      <View className="bg-dark-card border border-dark-border p-3 rounded-xl flex-row flex-wrap items-center justify-between gap-3">
         <View className="flex-row items-center gap-3">
           <View className="p-2 rounded-xl bg-purple-950/80 border border-purple-800/60">
             <Building2 size={18} color="#c084fc" />

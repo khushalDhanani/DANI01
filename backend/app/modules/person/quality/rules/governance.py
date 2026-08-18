@@ -176,7 +176,7 @@ GOVERNANCE_RULES: list[QualityRule] = [
         target_entity="EXTRA_FIELD",
         predicate_sql=EXTRA_FIELD_ORPHAN_ID_WHERE_SQL,
         contact_type="CUSTOM_FIELD",
-        value_expr_sql="e.ExtraFieldValue",
+        value_expr_sql="e.PersonExtraFieldValue",
         label_expr_sql="'Field ID ' + CAST(e.ExtraFieldID AS VARCHAR(20))",
     ),
     QualityRule(
@@ -192,7 +192,7 @@ GOVERNANCE_RULES: list[QualityRule] = [
         target_entity="EXTRA_FIELD",
         predicate_sql=EXTRA_FIELD_DUPLICATE_ENTRIES_WHERE_SQL,
         contact_type="CUSTOM_FIELD",
-        value_expr_sql="e.ExtraFieldValue",
+        value_expr_sql="e.PersonExtraFieldValue",
         label_expr_sql="'Field ID ' + CAST(e.ExtraFieldID AS VARCHAR(20))",
         group_key_sql="CAST(e.ExtraFieldID AS VARCHAR(20))",
         group_label_sql="'Field ID ' + CAST(e.ExtraFieldID AS VARCHAR(20))",

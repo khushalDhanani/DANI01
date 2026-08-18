@@ -13,6 +13,14 @@ from app.modules.person.quality.models import (
 )
 from app.modules.person.quality.rules import ALL_RULES
 
+_DIMENSION_DISPLAY_MAP: dict[str, str] = {
+    "CONTACTS": "1. Contact & Communications",
+    "ADDRESSES": "2. Address & Locations",
+    "PROFILE": "3. Profile & Chronology",
+    "EMPLOYMENT": "4. Employment & Lifecycle",
+    "GOVERNANCE": "5. Governance, Linkages & Sync",
+}
+
 
 def export_summary_report(
     summary: ContactQualitySummaryResponse,
@@ -42,20 +50,12 @@ def export_summary_report(
         "Description",
     ]
 
-    dimension_display_map = {
-        "CONTACTS": "1. Contact & Communications",
-        "ADDRESSES": "2. Address & Locations",
-        "PROFILE": "3. Profile & Chronology",
-        "EMPLOYMENT": "4. Employment & Lifecycle",
-        "GOVERNANCE": "5. Governance, Linkages & Sync",
-    }
-
     rows: list[list[Any]] = []
     for rule in ALL_RULES:
         val = getattr(summary, rule.summary_field, 0)
         rows.append(
             [
-                dimension_display_map.get(rule.dimension, rule.dimension),
+                _DIMENSION_DISPLAY_MAP.get(rule.dimension, rule.dimension),
                 rule.title,
                 rule.code.value,
                 rule.severity,

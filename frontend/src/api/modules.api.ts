@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import { apiClient } from "./client";
+import { formatDate } from "@/utils/formatters";
 import type {
   ContactQualityIssueParams,
   ContactQualityIssuesResponse,
@@ -153,7 +154,7 @@ export async function exportContactQualityIssues(
 
   const contentDisposition =
     response.headers["content-disposition"] || response.headers["Content-Disposition"];
-  const dateStr = new Date().toISOString().split("T")[0];
+  const dateStr = formatDate(new Date());
   const defaultFilename = `daylite_${issue.toLowerCase()}_${dateStr}.${format}`;
 
   triggerBrowserDownload(response.data as Blob, defaultFilename, contentDisposition);
@@ -172,7 +173,7 @@ export async function exportContactQualitySummary(
 
   const contentDisposition =
     response.headers["content-disposition"] || response.headers["Content-Disposition"];
-  const dateStr = new Date().toISOString().split("T")[0];
+  const dateStr = formatDate(new Date());
   const defaultFilename = `daylite_quality_summary_${dateStr}.${format}`;
 
   triggerBrowserDownload(response.data as Blob, defaultFilename, contentDisposition);

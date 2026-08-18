@@ -459,7 +459,6 @@ async def get_employee_records(
     )
 
 
-
 @router.get(
     "/EMPLOYEE/records/export",
     summary="Export EMPLOYEE roster records",
@@ -1261,7 +1260,6 @@ async def get_payroll_overview(
     return payroll_service.get_payroll_overview(comp_id=comp_id)
 
 
-
 @router.get(
     "/PAYROLL/directory",
     response_model=PayrollRegisterListResponse,
@@ -1400,7 +1398,9 @@ async def get_cross_domain_issues(
     cd_service: Annotated[CrossDomainQualityService, Depends(get_cross_domain_service)],
     rule_code: str | None = Query(default=None, description="Rule code filter"),
     category: str | None = Query(default=None, description="Category filter"),
-    search: str | None = Query(default=None, description="Search term across employee, detail, or table"),
+    search: str | None = Query(
+        default=None, description="Search term across employee, detail, or table"
+    ),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     comp_id: int | None = Query(default=None, description="Company ID filter"),
@@ -1467,7 +1467,9 @@ async def get_procedure_logic_overview(
 )
 async def get_sql_objects_catalog(
     pl_service: Annotated[ProcedureLogicService, Depends(get_procedure_logic_service)],
-    object_type: str | None = Query(default=None, description="Object type filter e.g. PROCEDURE, FUNCTION, VIEW, TRIGGER"),
+    object_type: str | None = Query(
+        default=None, description="Object type filter e.g. PROCEDURE, FUNCTION, VIEW, TRIGGER"
+    ),
     module: str | None = Query(default=None, description="Workforce module filter"),
     search: str | None = Query(default=None, description="Search term across object name or table"),
     limit: int = Query(default=25, ge=1, le=100),
@@ -1490,7 +1492,9 @@ async def get_sql_objects_catalog(
 )
 async def get_logic_inconsistencies(
     pl_service: Annotated[ProcedureLogicService, Depends(get_procedure_logic_service)],
-    severity: str | None = Query(default=None, description="Severity filter: CRITICAL, WARNING, INFO"),
+    severity: str | None = Query(
+        default=None, description="Severity filter: CRITICAL, WARNING, INFO"
+    ),
     rule_code: str | None = Query(default=None, description="Rule concept code filter"),
     search: str | None = Query(default=None, description="Search term"),
     limit: int = Query(default=25, ge=1, le=100),
@@ -1549,6 +1553,3 @@ async def export_logic_inconsistencies(
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )
-
-
-

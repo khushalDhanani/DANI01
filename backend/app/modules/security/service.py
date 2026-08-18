@@ -885,7 +885,7 @@ class SecurityService:
                 ISNULL(u.UserName, 'User ' + CAST(u.UserID AS VARCHAR)) AS entity_name,
                 'Active user linked to EmpID ' + CAST(e.EmpID AS VARCHAR) + ' (Code: ' + ISNULL(e.EmpCode, '') + ') - ' + RTRIM(LTRIM(ISNULL(e.EmpFirstName, '') + ' ' + ISNULL(e.EmpLastName, ''))) + ' who is Inactive/Resigned' AS issue_detail,
                 r.RoleDesc AS account_role,
-                CASE 
+                CASE
                     WHEN e.EmpIsDeleted = 1 THEN 'Deleted Employee'
                     WHEN e.EmpResignDate IS NOT NULL AND e.EmpResignDate <= GETDATE() THEN 'Resigned ' + CONVERT(VARCHAR(10), e.EmpResignDate, 120)
                     WHEN e.EmpIsActive = 0 THEN 'Inactive Employee'

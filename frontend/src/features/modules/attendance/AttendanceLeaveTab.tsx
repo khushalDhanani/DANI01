@@ -19,6 +19,7 @@ import {
 } from "lucide-react-native";
 import { downloadLeaveApplicationsExport } from "@/api/attendance.api";
 import { THEME_COLORS } from "@/constants/theme";
+import { formatDate } from "@/utils/formatters";
 import {
   useLeaveApplications,
   useLeaveBalances,
@@ -240,91 +241,94 @@ export function AttendanceLeaveTab({ deptId, compId }: AttendanceLeaveTabProps =
               <Text className="text-sm font-semibold text-slate-400 mt-2">No leave applications found.</Text>
             </View>
           ) : (
-            <View className="w-full divide-y divide-dark-border">
-              {/* Applications Header */}
-              <View className="flex-row items-center px-4 py-3 bg-slate-900/60 border-b border-dark-border">
-                <Text className="w-16 text-[11px] font-bold uppercase tracking-wider text-slate-400">ID</Text>
-                <Text className="flex-1 min-w-[180px] text-[11px] font-bold uppercase tracking-wider text-slate-400">Applicant Identity</Text>
-                <Text className="w-36 text-[11px] font-bold uppercase tracking-wider text-slate-400">Leave Type</Text>
-                <Text className="w-48 text-[11px] font-bold uppercase tracking-wider text-slate-400">Duration Period</Text>
-                <Text className="w-32 text-[11px] font-bold uppercase tracking-wider text-slate-400">Status</Text>
-                <Text className="flex-1 min-w-[200px] text-[11px] font-bold uppercase tracking-wider text-slate-400">Reason / Remarks</Text>
-              </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={true}
+              className="w-full"
+              contentContainerStyle={{ minWidth: "100%" }}
+            >
+              <View className="min-w-[950px] w-full divide-y divide-dark-border">
+                {/* Applications Header */}
+                <View className="flex-row items-center px-3 py-2 bg-slate-900/80 border-b border-dark-border">
+                  <Text className="w-16 text-[10px] font-bold uppercase tracking-wider text-slate-400">ID</Text>
+                  <Text className="flex-1 min-w-[180px] pr-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Applicant Identity</Text>
+                  <Text className="w-36 pr-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Leave Type</Text>
+                  <Text className="w-48 pr-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Duration Period</Text>
+                  <Text className="w-32 pr-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Status</Text>
+                  <Text className="flex-1 min-w-[200px] text-[10px] font-bold uppercase tracking-wider text-slate-400">Reason / Remarks</Text>
+                </View>
 
-              {/* Applications Rows */}
-              {appsData.items.map((row) => {
-                const isApproved = row.status_desc === "Approved";
-                const isPending = row.status_desc === "Pending";
-                const isRejected = row.status_desc === "Rejected";
-                return (
-                  <View key={row.leave_request_id} className="flex-row items-center px-4 py-3.5 hover:bg-dark-bg/40 transition-colors">
-                    <Text className="w-16 text-xs font-mono text-slate-400">#{row.leave_request_id}</Text>
+                {/* Applications Rows */}
+                {appsData.items.map((row) => {
+                  const isApproved = row.status_desc === "Approved";
+                  const isPending = row.status_desc === "Pending";
+                  const isRejected = row.status_desc === "Rejected";
+                  return (
+                    <View key={row.leave_request_id} className="flex-row items-center px-3 py-2 hover:bg-dark-bg/40 transition-colors">
+                      <Text className="w-16 text-xs font-mono text-slate-400">#{row.leave_request_id}</Text>
 
-                    <View className="flex-1 min-w-[180px] pr-3">
-                      <Text className="text-xs font-bold text-white" numberOfLines={1}>{row.emp_name}</Text>
-                      <Text className="text-[10px] text-slate-500 font-mono">Code: {row.emp_code || "N/A"}</Text>
-                    </View>
+                      <View className="flex-1 min-w-[180px] pr-3">
+                        <Text className="text-xs font-bold text-white" numberOfLines={1}>{row.emp_name} - {row.emp_code || "N/A"}</Text>
+                      </View>
 
-                    <View className="w-36 pr-2">
-                      <Text className="text-xs font-semibold text-purple-300" numberOfLines={1}>{row.leave_type_desc}</Text>
-                      <Text className="text-[10px] text-slate-500 font-mono">{row.leave_days} Day(s)</Text>
-                    </View>
+                      <View className="w-36 pr-2">
+                        <Text className="text-xs font-semibold text-purple-300" numberOfLines={1}>{row.leave_type_desc}</Text>
+                        <Text className="text-[10px] text-slate-500 font-mono">{row.leave_days} Day(s)</Text>
+                      </View>
 
-                    <View className="w-48 pr-2">
-                      <Text className="text-xs font-mono text-slate-300">{row.from_date} to {row.to_date}</Text>
-                      <Text className="text-[10px] text-slate-500 font-mono">Applied: {row.request_date}</Text>
-                    </View>
+                      <View className="w-48 pr-2">
+                        <Text className="text-xs font-mono text-slate-300">{formatDate(row.from_date)} to {formatDate(row.to_date)}</Text>
+                        <Text className="text-[10px] text-slate-500 font-mono">Applied: {formatDate(row.request_date)}</Text>
+                      </View>
 
-                    <View className="w-32 pr-2 flex-row items-center">
-                      <View
-                        className={`px-2.5 py-1 rounded-full border flex-row items-center gap-1.5 self-start ${
-                          isApproved
-                            ? "bg-emerald-950/90 border-emerald-700/60"
-                            : isPending
-                            ? "bg-amber-950/90 border-amber-700/60"
-                            : isRejected
-                            ? "bg-rose-950/90 border-rose-700/60"
-                            : "bg-slate-900 border-slate-700"
-                        }`}
-                      >
+                      <View className="w-32 pr-2 flex-row items-center">
                         <View
-                          className={`w-1.5 h-1.5 rounded-full ${
+                          className={`px-2.5 py-1 rounded-full border flex-row items-center gap-1.5 self-start ${
                             isApproved
-                              ? "bg-emerald-400"
+                              ? "bg-emerald-950/90 border-emerald-700/60"
                               : isPending
-                              ? "bg-amber-400"
+                              ? "bg-amber-950/90 border-amber-700/60"
                               : isRejected
-                              ? "bg-rose-400"
-                              : "bg-slate-400"
+                              ? "bg-rose-950/90 border-rose-700/60"
+                              : "bg-purple-950/90 border-purple-700/60"
                           }`}
-                        />
-                        <Text
-                          className={`text-[10px] font-bold ${
-                            isApproved
-                              ? "text-emerald-300"
-                              : isPending
-                              ? "text-amber-300"
-                              : isRejected
-                              ? "text-rose-300"
-                              : "text-slate-300"
-                          }`}
-                          numberOfLines={1}
                         >
-                          {row.status_desc}
-                        </Text>
+                          <View
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isApproved
+                                ? "bg-emerald-400"
+                                : isPending
+                                ? "bg-amber-400"
+                                : isRejected
+                                ? "bg-rose-400"
+                                : "bg-purple-400"
+                            }`}
+                          />
+                          <Text
+                            className={`text-[10px] font-bold ${
+                              isApproved
+                                ? "text-emerald-300"
+                                : isPending
+                                ? "text-amber-300"
+                                : isRejected
+                                ? "text-rose-300"
+                                : "text-purple-300"
+                            }`}
+                            numberOfLines={1}
+                          >
+                            {row.status_desc}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View className="flex-1 min-w-[200px]">
+                        <Text className="text-xs text-slate-300" numberOfLines={1}>{row.reason || "No reason provided"}</Text>
                       </View>
                     </View>
-
-
-                    <View className="flex-1 min-w-[200px]">
-                      <Text className="text-xs text-slate-300 italic" numberOfLines={1}>
-                        {row.reason || "No reason provided"}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
           )
         ) : (
           isLoadingBal ? (

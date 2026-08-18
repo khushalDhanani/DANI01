@@ -22,18 +22,46 @@ export function formatDurationMs(ms: number | undefined | null): string {
   return ms.toFixed(1) + "ms";
 }
 
-export function formatDateTime(dateStr: string | undefined | null): string {
-  if (!dateStr) return "-";
+/**
+ * Formats a date value as DD-MM-YYYY (e.g. "18-08-2026").
+ * Accepts string, Date, number, or null/undefined.
+ */
+export function formatDate(dateInput: string | Date | number | undefined | null): string {
+  if (!dateInput) return "-";
   try {
-    const d = new Date(dateStr);
-    return d.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    const d = typeof dateInput === "object" ? dateInput : new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
   } catch {
-    return dateStr;
+    return String(dateInput);
+  }
+}
+
+/**
+ * Formats a date/timestamp as DD-MM-YYYY HH:mm or DD-MM-YYYY HH:mm:ss.
+ */
+export function formatDateTime(
+  dateInput: string | Date | number | undefined | null,
+  includeSeconds: boolean = false
+): string {
+  if (!dateInput) return "-";
+  try {
+    const d = typeof dateInput === "object" ? dateInput : new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    if (includeSeconds) {
+      const seconds = String(d.getSeconds()).padStart(2, "0");
+      return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+    }
+    return `${day}-${month}-${year} ${hours}:${minutes}`;
+  } catch {
+    return String(dateInput);
   }
 }

@@ -26,6 +26,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { THEME_COLORS } from "@/constants/theme";
 import { FieldRow } from "./components/FieldRow";
+import { formatDateTime } from "@/utils/formatters";
 
 interface PersonDetailViewProps {
   personId: number;
@@ -823,7 +824,7 @@ export const PersonDetailView: React.FC<PersonDetailViewProps> = ({ personId }) 
                           Transferred to: <Text className="text-emerald-400">{h.NewOwnerName || `Person #${h.NewPersonID}`}</Text>
                         </Text>
                         <Text className="text-[10px] font-mono text-slate-400">
-                          {h.EntDt ? new Date(h.EntDt).toLocaleString() : "—"}
+                          {h.EntDt ? formatDateTime(h.EntDt) : "—"}
                         </Text>
                       </View>
                       <View className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-dark-border/40">

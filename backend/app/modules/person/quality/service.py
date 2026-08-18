@@ -92,6 +92,24 @@ MAX_PAGE_SIZE = 100
 MAX_EXPORT_ROWS = 50000
 EXPORT_BATCH_SIZE = 1000
 
+# Cached reference to the legacy module to avoid per-call import overhead
+# while preserving mockability (attribute lookup each call).
+_legacy_cqs_module = None
+
+
+def _get_legacy_execute_query():
+    global _legacy_cqs_module
+    if _legacy_cqs_module is None:
+        try:
+            from app.modules.person import contact_quality_service as _mod
+
+            _legacy_cqs_module = _mod
+        except Exception:
+            _legacy_cqs_module = None
+    if _legacy_cqs_module is not None:
+        return _legacy_cqs_module.execute_readonly_query
+    return execute_readonly_query
+
 
 # =====================================================================
 # Backward Compatibility Query Builders
@@ -127,9 +145,8 @@ def _build_group_queries(
 
 def _execute_query(query: str, params: dict | None = None) -> list[dict[str, Any]]:
     try:
-        from app.modules.person import contact_quality_service
-
-        return contact_quality_service.execute_readonly_query(query, params=params)
+        fn = _get_legacy_execute_query()
+        return fn(query, params=params)
     except Exception:
         return execute_readonly_query(query, params=params)
 
@@ -289,12 +306,15 @@ class ContactQualityService:
 
         items: list[ContactQualityIssueItem] = []
         for r in raw_items:
+            pid = r.get("PersonID")
+            if pid is None:
+                continue
             raw_val = r.get("CurrentValue")
             val_str = str(raw_val) if raw_val is not None else None
             items.append(
                 ContactQualityIssueItem(
-                    person_id=int(r["PersonID"]),
-                    person_name=str(r.get("PersonName") or f"Person #{r['PersonID']}"),
+                    person_id=int(pid),
+                    person_name=str(r.get("PersonName") or f"Person #{pid}"),
                     contact_id=int(r["ContactID"]) if r.get("ContactID") is not None else None,
                     contact_type=str(r.get("ContactType") or rule.contact_type),
                     label_name=str(r["LabelName"]) if r.get("LabelName") else None,
@@ -351,7 +371,11 @@ class ContactQualityService:
 
         members_by_group: dict[str, list[ContactQualityGroupMember]] = {k: [] for k in group_keys}
         for m in raw_members:
-            gk = str(m.get("GroupKey") or m.get("CurrentValue") or "")
+            gk = (
+                str(m["GroupKey"])
+                if m.get("GroupKey") is not None
+                else str(m.get("CurrentValue") or "")
+            )
             if gk not in members_by_group and len(group_keys) == 1:
                 gk = group_keys[0]
 
@@ -401,6 +425,7 @@ class ContactQualityService:
         """
         Paginated UI endpoint that strictly enforces MAX_PAGE_SIZE = 100.
         Returns groups when count_unit is DUPLICATE_GROUP, and flat items otherwise.
+        Count and data fetch run in parallel for lower latency.
         """
         rule = get_quality_rule(issue)
         if not rule:
@@ -410,28 +435,17 @@ class ContactQualityService:
         page_limit = max(1, min(MAX_PAGE_SIZE, limit))
         page_offset = max(0, offset)
 
-        total_count = await self._get_issue_count(rule, search=search)
-        if total_count == 0:
-            return ContactQualityIssuesResponse(
-                issue=norm_issue,
-                count_unit=rule.count_unit,
-                unit_label_singular=rule.unit_label_singular,
-                unit_label_plural=rule.unit_label_plural,
-                total=0,
-                limit=page_limit,
-                offset=page_offset,
-                items=[],
-                groups=[],
-            )
-
         if rule.count_unit == IssueCountUnit.DUPLICATE_GROUP:
-            groups = await self._fetch_issue_groups(
-                rule,
-                search=search,
-                sort_by=sort_by,
-                sort_order=sort_order,
-                limit=page_limit,
-                offset=page_offset,
+            total_count, groups = await asyncio.gather(
+                self._get_issue_count(rule, search=search),
+                self._fetch_issue_groups(
+                    rule,
+                    search=search,
+                    sort_by=sort_by,
+                    sort_order=sort_order,
+                    limit=page_limit,
+                    offset=page_offset,
+                ),
             )
             return ContactQualityIssuesResponse(
                 issue=norm_issue,
@@ -445,13 +459,16 @@ class ContactQualityService:
                 groups=groups,
             )
         else:
-            items = await self._fetch_issue_rows(
-                rule,
-                search=search,
-                sort_by=sort_by,
-                sort_order=sort_order,
-                limit=page_limit,
-                offset=page_offset,
+            total_count, items = await asyncio.gather(
+                self._get_issue_count(rule, search=search),
+                self._fetch_issue_rows(
+                    rule,
+                    search=search,
+                    sort_by=sort_by,
+                    sort_order=sort_order,
+                    limit=page_limit,
+                    offset=page_offset,
+                ),
             )
             return ContactQualityIssuesResponse(
                 issue=norm_issue,

@@ -14,6 +14,7 @@ import {
 } from "lucide-react-native";
 import { THEME_COLORS } from "@/constants/theme";
 import { useEmployeeRecordDetail } from "@/hooks/useEmployee";
+import { formatDate } from "@/utils/formatters";
 
 interface EmployeeDetailModalProps {
   empId: number | null;
@@ -280,7 +281,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({
                         {hist.dept_name} • {hist.loc_name} • Grade: {hist.grade_desc || "N/A"}
                       </Text>
                       <Text className="text-[10px] font-mono text-slate-400 mt-1">
-                        Effective From: {hist.applicable_from || hist.joining_date || "N/A"}
+                        Effective From: {formatDate(hist.applicable_from || hist.joining_date) || "N/A"}
                       </Text>
                     </View>
                   ))}
@@ -307,7 +308,7 @@ export const EmployeeDetailModal: React.FC<EmployeeDetailModalProps> = ({
                           </View>
                           {fam.phone ? <Text className="text-[10px] font-mono text-slate-400 mt-0.5">{fam.phone}</Text> : null}
                         </View>
-                        {fam.birth_date ? <Text className="text-[10px] text-slate-400">DOB: {fam.birth_date}</Text> : null}
+                        {fam.birth_date ? <Text className="text-[10px] text-slate-400">DOB: {formatDate(fam.birth_date)}</Text> : null}
                       </View>
                     ))
                   )}

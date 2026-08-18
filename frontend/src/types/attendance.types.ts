@@ -227,8 +227,12 @@ export interface DepartmentDetailResponse {
 
 export interface EmployeeLifetimeLeaveTypeBreakdown {
   leave_type: string;
+  leave_code?: string;
   request_count: number;
   total_days_taken: number;
+  avg_days_per_request?: number;
+  share_pct?: number;
+  last_availed_date?: string;
 }
 
 export interface EmployeeLifetimeAttendanceResponse {

@@ -64,6 +64,31 @@ from app.modules.person.quality.rules import (
     SYNC_ZIMBRA_MISSING_ID_WHERE_SQL,
     UNVERIFIED_CONTACT_WHERE_SQL,
 )
+from app.modules.person.quality.rules.base import PersonQualityRule
+from app.modules.person.quality.rules.completeness import (
+    PersonMissingAddressRule,
+    PersonMissingCompanyLinkRule,
+    PersonMissingContactRule,
+    PersonMissingEmailRule,
+    PersonMissingPhoneRule,
+)
+from app.modules.person.quality.rules.consistency import (
+    PersonCreatedAfterUpdatedRule,
+    PersonSelfRelationshipRule,
+)
+from app.modules.person.quality.rules.integrity import (
+    PersonOrphanAddressRule,
+    PersonOrphanCompanyLinkRule,
+    PersonOrphanContactRule,
+    PersonOrphanRelationshipRule,
+)
+from app.modules.person.quality.rules.validity import (
+    PersonInvalidEmailRule,
+    PersonInvalidLatitudeRule,
+    PersonInvalidLongitudeRule,
+    PersonInvalidPhoneRule,
+    PersonInvalidUrlRule,
+)
 
 # Central SSoT Registry
 QUALITY_RULES_REGISTRY: dict[ContactQualityIssueType, QualityRule] = {
@@ -98,33 +123,6 @@ def get_quality_rule(issue: str | ContactQualityIssueType) -> QualityRule | None
 
 def get_all_quality_rules() -> list[QualityRule]:
     return list(QUALITY_RULES_REGISTRY.values())
-
-
-from app.modules.person.quality.rules.base import PersonQualityRule
-from app.modules.person.quality.rules.completeness import (
-    PersonMissingAddressRule,
-    PersonMissingCompanyLinkRule,
-    PersonMissingContactRule,
-    PersonMissingEmailRule,
-    PersonMissingPhoneRule,
-)
-from app.modules.person.quality.rules.consistency import (
-    PersonCreatedAfterUpdatedRule,
-    PersonSelfRelationshipRule,
-)
-from app.modules.person.quality.rules.integrity import (
-    PersonOrphanAddressRule,
-    PersonOrphanCompanyLinkRule,
-    PersonOrphanContactRule,
-    PersonOrphanRelationshipRule,
-)
-from app.modules.person.quality.rules.validity import (
-    PersonInvalidEmailRule,
-    PersonInvalidLatitudeRule,
-    PersonInvalidLongitudeRule,
-    PersonInvalidPhoneRule,
-    PersonInvalidUrlRule,
-)
 
 
 class PersonQualityRuleRegistry:

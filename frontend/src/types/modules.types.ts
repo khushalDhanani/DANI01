@@ -192,6 +192,12 @@ export interface PersonModuleMetricsResponse {
   calculated_at: string;
 }
 
+/** Narrow projection of PersonModuleMetricsResponse used by overview/metrics sub-views. */
+export type PersonMetricsResponseLite = Pick<
+  PersonModuleMetricsResponse,
+  "metrics" | "duration_ms"
+>;
+
 // ── Person List & Complete Record Detail Interfaces ───────────────
 
 export interface PersonListItem {

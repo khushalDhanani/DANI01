@@ -211,10 +211,8 @@ class QualityRule:
 
     @property
     def where_clause_sql(self) -> str:
-        if (
-            self.target_entity in ("ADDRESS", "COMPANY_LINK", "EXTRA_FIELD")
-            or self.target_entity == "PERSON"
-            and self.requires_active_person
+        if self.target_entity in ("ADDRESS", "COMPANY_LINK", "EXTRA_FIELD") or (
+            self.target_entity == "PERSON" and self.requires_active_person
         ):
             return f"{ACTIVE_PERSON_WHERE_SQL} AND {self.predicate_sql}"
         return self.predicate_sql

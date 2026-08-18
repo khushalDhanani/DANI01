@@ -146,37 +146,7 @@ def compile_summary_query() -> str:
         rule_subqueries.append(subq)
 
         # Build high-performance UNION subquery for Critical and Warning persons CTEs
-        if rule.target_entity == "CONTACT":
-            if rule.code == ContactQualityIssueType.DUPLICATE_EMAIL_CROSS:
-                defect_select = "SELECT c.PersonID FROM ClassifiedContacts c JOIN DuplicateEmailsCross dup ON c.NormalizedEmail = dup.NormalizedEmail WHERE c.ContactCategory = 'EMAIL'"
-            elif rule.code == ContactQualityIssueType.DUPLICATE_PHONE_CROSS:
-                defect_select = "SELECT c.PersonID FROM ClassifiedContacts c JOIN DuplicatePhonesCross dup ON c.NormalizedPhone = dup.NormalizedPhone WHERE c.ContactCategory = 'PHONE'"
-            else:
-                defect_select = f"SELECT c.PersonID FROM ClassifiedContacts c WHERE {pred}"
-        elif rule.target_entity == "ADDRESS":
-            defect_select = f"SELECT a.PersonID FROM dbo.DLPersonAddressDet a JOIN dbo.DLPersonMst p ON a.PersonID = p.PersonID WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}"
-        elif rule.target_entity == "COMPANY_LINK":
-            defect_select = f"SELECT l.PersonID FROM dbo.DLPersonCompanyLinkDet l JOIN dbo.DLPersonMst p ON l.PersonID = p.PersonID WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}"
-        elif rule.target_entity == "EXTRA_FIELD":
-            defect_select = f"SELECT e.PersonID FROM dbo.DLPersonExtraFieldValueDet e JOIN dbo.DLPersonMst p ON e.PersonID = p.PersonID WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}"
-        else:  # PERSON
-            if (
-                "NOT EXISTS (SELECT 1 FROM ClassifiedContacts c WHERE c.PersonID = p.PersonID AND c.ContactCategory = 'EMAIL'"
-                in pred
-            ):
-                defect_select = f"SELECT p.PersonID FROM dbo.DLPersonMst p WHERE {ACTIVE_PERSON_WHERE_SQL} AND p.PersonID NOT IN (SELECT PersonID FROM ClassifiedContacts WHERE ContactCategory = 'EMAIL' AND TypeValue IS NOT NULL AND LTRIM(RTRIM(TypeValue)) <> '')"
-            elif (
-                "NOT EXISTS (SELECT 1 FROM ClassifiedContacts c WHERE c.PersonID = p.PersonID AND c.ContactCategory = 'PHONE'"
-                in pred
-            ):
-                defect_select = f"SELECT p.PersonID FROM dbo.DLPersonMst p WHERE {ACTIVE_PERSON_WHERE_SQL} AND p.PersonID NOT IN (SELECT PersonID FROM ClassifiedContacts WHERE ContactCategory = 'PHONE' AND TypeValue IS NOT NULL AND LTRIM(RTRIM(TypeValue)) <> '')"
-            else:
-                active_clause = (
-                    f"WHERE {ACTIVE_PERSON_WHERE_SQL} AND {pred}"
-                    if rule.requires_active_person
-                    else f"WHERE {pred}"
-                )
-                defect_select = f"SELECT p.PersonID FROM dbo.DLPersonMst p {active_clause}"
+        defect_select = _build_defect_select(rule)
 
         if rule.severity == "CRITICAL":
             crit_clauses.append(defect_select)
@@ -778,7 +748,7 @@ def compile_group_queries(
             {PERSON_NAME_SQL} AS PersonName,
             a.PersonAddID AS ContactID,
             'ADDRESS' AS ContactType,
-            a.AddressTypeName AS LabelName,
+            ISNULL(NULLIF(LTRIM(RTRIM(a.CityName)), ''), 'Address') AS LabelName,
             a.Street AS CurrentValue,
             '{rule.code.value}' AS IssueCode,
             '{rule.description}' AS IssueDescription,
@@ -873,7 +843,7 @@ def compile_group_queries(
             e.PersonExtraFieldValueID AS ContactID,
             'CUSTOM_FIELD' AS ContactType,
             'Field ID ' + CAST(e.ExtraFieldID AS VARCHAR(20)) AS LabelName,
-            e.ExtraFieldValue AS CurrentValue,
+            e.PersonExtraFieldValue AS CurrentValue,
             '{rule.code.value}' AS IssueCode,
             '{rule.description}' AS IssueDescription,
             '{rule.severity}' AS Severity,

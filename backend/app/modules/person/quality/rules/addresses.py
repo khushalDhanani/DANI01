@@ -68,7 +68,7 @@ ADDRESS_RULES: list[QualityRule] = [
         predicate_sql=ADDR_MISSING_POSTAL_CODE_WHERE_SQL,
         contact_type="ADDRESS",
         value_expr_sql="a.Street",
-        label_expr_sql="a.AddressTypeName",
+        label_expr_sql="ISNULL(NULLIF(LTRIM(RTRIM(a.CityName)), ''), 'Address')",
     ),
     QualityRule(
         code=ContactQualityIssueType.INVALID_PIN_CODE_FORMAT,
@@ -84,7 +84,7 @@ ADDRESS_RULES: list[QualityRule] = [
         predicate_sql=ADDR_INVALID_PIN_FORMAT_WHERE_SQL,
         contact_type="ADDRESS",
         value_expr_sql="a.PostalCode",
-        label_expr_sql="a.AddressTypeName",
+        label_expr_sql="ISNULL(NULLIF(LTRIM(RTRIM(a.CityName)), ''), 'Address')",
     ),
     QualityRule(
         code=ContactQualityIssueType.STREET_WITHOUT_CITY,
@@ -100,7 +100,7 @@ ADDRESS_RULES: list[QualityRule] = [
         predicate_sql=ADDR_STREET_WITHOUT_CITY_WHERE_SQL,
         contact_type="ADDRESS",
         value_expr_sql="a.Street",
-        label_expr_sql="a.AddressTypeName",
+        label_expr_sql="ISNULL(NULLIF(LTRIM(RTRIM(a.CityName)), ''), 'Address')",
     ),
     QualityRule(
         code=ContactQualityIssueType.CITY_WITHOUT_STATE,
@@ -116,7 +116,7 @@ ADDRESS_RULES: list[QualityRule] = [
         predicate_sql=ADDR_CITY_WITHOUT_STATE_WHERE_SQL,
         contact_type="ADDRESS",
         value_expr_sql="a.CityName",
-        label_expr_sql="a.AddressTypeName",
+        label_expr_sql="ISNULL(NULLIF(LTRIM(RTRIM(a.CityName)), ''), 'Address')",
     ),
     QualityRule(
         code=ContactQualityIssueType.MISSING_GEOCODES,
@@ -132,7 +132,7 @@ ADDRESS_RULES: list[QualityRule] = [
         predicate_sql=ADDR_MISSING_GEOCODES_WHERE_SQL,
         contact_type="ADDRESS",
         value_expr_sql="ISNULL(a.Street, a.CityName)",
-        label_expr_sql="a.AddressTypeName",
+        label_expr_sql="ISNULL(NULLIF(LTRIM(RTRIM(a.CityName)), ''), 'Address')",
     ),
     QualityRule(
         code=ContactQualityIssueType.DUPLICATE_ADDRESSES_SAME_PERSON,
@@ -148,9 +148,9 @@ ADDRESS_RULES: list[QualityRule] = [
         predicate_sql=ADDR_DUPLICATE_SAME_PERSON_WHERE_SQL,
         contact_type="ADDRESS",
         value_expr_sql="a.Street",
-        label_expr_sql="a.AddressTypeName",
-        group_key_sql="LOWER(LTRIM(RTRIM(a.Street)))",
-        group_label_sql="a.Street",
+        label_expr_sql="ISNULL(NULLIF(LTRIM(RTRIM(a.CityName)), ''), 'Address')",
+        group_key_sql="CAST(a.PersonID AS VARCHAR(20)) + '_' + ISNULL(NULLIF(LOWER(LTRIM(RTRIM(a.Street))), ''), 'BLANK')",
+        group_label_sql="ISNULL(NULLIF(LTRIM(RTRIM(a.Street)), ''), 'Blank Street Address')",
         group_persons_count_sql="1",
         group_records_count_sql="COUNT_BIG(1)",
     ),

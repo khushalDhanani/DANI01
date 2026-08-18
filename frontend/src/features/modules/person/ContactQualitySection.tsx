@@ -131,8 +131,6 @@ export const ContactQualitySection: React.FC = () => {
     summary.sync_zimbra_missing_id
   );
 
-  const personsWithCritical = summary.persons_with_critical_issues ?? 0;
-  const personsWithWarnings = summary.persons_with_warning_issues ?? 0;
   const totalCleanPersons = summary.total_clean_persons ?? Math.max(0, summary.total_persons_evaluated - (summary.persons_with_any_issue || 0));
   const healthScore = summary.health_score_pct ?? 100.0;
 
@@ -150,7 +148,7 @@ export const ContactQualitySection: React.FC = () => {
     { title: "Invalid URLs", count: summary.invalid_urls, issueCode: "INVALID_URL", description: "URLs missing http/https/www scheme", severity: "WARNING" as const, unitLabel: "Contact", icon: <Globe size={13} color={THEME_COLORS.warningIcon} />, category: "CONTACTS" },
     { title: "Multiple Primary", count: summary.persons_multiple_primary, issueCode: "MULTIPLE_PRIMARY", description: "Persons with conflicting primary contacts", severity: "CRITICAL" as const, unitLabel: "Person", icon: <Layers size={13} color={THEME_COLORS.dangerIcon} />, category: "CONTACTS" },
     { title: "Primary Inactive", count: summary.primary_contact_inactive, issueCode: "PRIMARY_INACTIVE", description: "Primary contact flagged inactive", severity: "CRITICAL" as const, unitLabel: "Contact", icon: <ShieldX size={13} color={THEME_COLORS.dangerIcon} />, category: "CONTACTS" },
-    
+
     // Addresses
     { title: "Missing Postal Code", count: summary.addr_missing_postal_code, issueCode: "MISSING_POSTAL_CODE", description: "Address records without a postal / PIN code", severity: "WARNING" as const, unitLabel: "Address", icon: <MapPinOff size={13} color={THEME_COLORS.warningIcon} />, category: "ADDRESSES" },
     { title: "Invalid PIN Format", count: summary.addr_invalid_pin_format, issueCode: "INVALID_PIN_CODE_FORMAT", description: "Postal code with non-numeric or bad length", severity: "CRITICAL" as const, unitLabel: "Address", icon: <MapPinOff size={13} color={THEME_COLORS.dangerIcon} />, category: "ADDRESSES" },
@@ -158,14 +156,14 @@ export const ContactQualitySection: React.FC = () => {
     { title: "City Without State", count: summary.addr_city_without_state, issueCode: "CITY_WITHOUT_STATE", description: "City address without state region specified", severity: "WARNING" as const, unitLabel: "Address", icon: <Compass size={13} color={THEME_COLORS.warningIcon} />, category: "ADDRESSES" },
     { title: "Missing Geocodes", count: summary.addr_missing_geocodes, issueCode: "MISSING_GEOCODES", description: "Addresses lacking Latitude/Longitude coordinates", severity: "INFO" as const, unitLabel: "Address", icon: <NavigationOff size={13} color={THEME_COLORS.imIcon} />, category: "ADDRESSES" },
     { title: "Duplicate Address", count: summary.addr_duplicate_same_person, issueCode: "DUPLICATE_ADDRESSES_SAME_PERSON", description: "Identical address entered twice for 1 Person", severity: "WARNING" as const, unitLabel: "Group", icon: <Copy size={13} color={THEME_COLORS.warningIcon} />, category: "ADDRESSES" },
-    
+
     // Integrity
     { title: "Anniversary Before Birth", count: summary.person_anniversary_before_birth, issueCode: "ANNIVERSARY_BEFORE_BIRTH", description: "Anniversary date earlier than birth date", severity: "CRITICAL" as const, unitLabel: "Person", icon: <CalendarX size={13} color={THEME_COLORS.dangerIcon} />, category: "INTEGRITY" },
     { title: "Invalid Birth Date", count: summary.person_invalid_birth_date, issueCode: "INVALID_BIRTH_DATE", description: "Birth date in the future or before 1900", severity: "CRITICAL" as const, unitLabel: "Person", icon: <CalendarOff size={13} color={THEME_COLORS.dangerIcon} />, category: "INTEGRITY" },
     { title: "Dummy/Ancient DOB", count: summary.person_birth_date_ancient, issueCode: "BIRTH_DATE_DEFAULT_OR_ANCIENT", description: "Birth date is dummy 1900-01-01 or age > 100", severity: "WARNING" as const, unitLabel: "Person", icon: <CalendarOff size={13} color={THEME_COLORS.warningIcon} />, category: "INTEGRITY" },
     { title: "Suspicious Test Names", count: summary.person_suspicious_dummy_names, issueCode: "SUSPICIOUS_DUMMY_NAMES", description: "Placeholder names (test, admin, dummy, etc.)", severity: "WARNING" as const, unitLabel: "Person", icon: <UserX size={13} color={THEME_COLORS.warningIcon} />, category: "INTEGRITY" },
     { title: "Missing Last Name", count: summary.person_missing_lastname_only, issueCode: "MISSING_LAST_NAME", description: "Person has first name but missing surname", severity: "WARNING" as const, unitLabel: "Person", icon: <FileWarning size={13} color={THEME_COLORS.warningIcon} />, category: "INTEGRITY" },
-    
+
     // Governance
     { title: "Active & Deleted Conflict", count: summary.status_active_and_deleted, issueCode: "STATUS_ACTIVE_AND_DELETED", description: "Record marked both Active and Deleted", severity: "CRITICAL" as const, unitLabel: "Person", icon: <ShieldAlert size={13} color={THEME_COLORS.dangerIcon} />, category: "GOVERNANCE" },
     { title: "Employee Missing Title", count: summary.active_emp_missing_title, issueCode: "ACTIVE_EMP_MISSING_TITLE", description: "Active employee has no job title designation", severity: "WARNING" as const, unitLabel: "Person", icon: <FileWarning size={13} color={THEME_COLORS.warningIcon} />, category: "GOVERNANCE" },
@@ -183,8 +181,12 @@ export const ContactQualitySection: React.FC = () => {
     { title: "Broken Zimbra Sync", count: summary.sync_zimbra_missing_id, issueCode: "SYNC_ZIMBRA_MISSING_ID", description: "Sync enabled but missing Zimbra ID", severity: "WARNING" as const, unitLabel: "Person", icon: <RefreshCw size={13} color={THEME_COLORS.warningIcon} />, category: "GOVERNANCE" }
   ];
 
-  const filteredCards = ALL_CARDS.filter(card => activeCategory === "ALL" || card.category === activeCategory);
-  
+  const filteredCards = ALL_CARDS.filter(
+    (card) =>
+      (activeCategory === "ALL" || card.category === activeCategory) &&
+      (card.count ?? 0) > 0
+  );
+
   const criticalCards = filteredCards.filter(c => c.severity === "CRITICAL");
   const warningCards = filteredCards.filter(c => c.severity === "WARNING");
   const infoCards = filteredCards.filter(c => c.severity === "INFO");
@@ -192,103 +194,47 @@ export const ContactQualitySection: React.FC = () => {
   return (
     <View className="bg-dark-card border border-dark-border rounded-xl p-4 gap-3.5 shadow-sm">
       {/* ── Section Header ────────────────────────────────────── */}
-      <View className="flex-row items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-dark-border">
-        <View className="flex-row items-center gap-2.5">
-          <View className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 items-center justify-center">
-            <ShieldCheck size={16} color={THEME_COLORS.primaryIcon} />
+      <View className="flex-row items-center justify-between flex-wrap gap-3 pb-3 border-b border-dark-border">
+        {/* Title & Core Health Indicator */}
+        <View className="flex-row items-center gap-3">
+          <View className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 items-center justify-center">
+            <ShieldCheck size={18} color={THEME_COLORS.primaryIcon} />
           </View>
           <View>
-            <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center gap-2 flex-wrap">
               <Text className="text-sm font-black text-white uppercase tracking-wider">
                 Data Quality & Integrity Analyzer
               </Text>
-            </View>
-            <View className="flex-row items-center gap-1.5 flex-wrap mt-1">
-              <View className="bg-emerald-950/80 border border-emerald-700/80 px-2 py-0.5 rounded flex-row items-center gap-1">
+              <View className="bg-emerald-950/80 border border-emerald-700/80 px-2 py-0.5 rounded-full flex-row items-center gap-1">
                 <CheckCircle2 size={10} color={THEME_COLORS.successIcon} />
                 <Text className="text-[10px] font-mono font-bold text-emerald-300">
                   {healthScore.toFixed(1)}% Clean ({totalCleanPersons.toLocaleString()})
                 </Text>
               </View>
-              <View className="bg-blue-950/80 border border-blue-800/80 px-2 py-0.5 rounded">
-                <Text className="text-[10px] font-mono font-bold text-blue-300">
-                  {(summary.total_persons_evaluated ?? 0).toLocaleString()} Active Evaluated
-                </Text>
-              </View>
-              {personsWithCritical > 0 ? (
-                <View className="bg-rose-950/70 border border-rose-800/70 px-2 py-0.5 rounded flex-row items-center gap-1">
-                  <AlertCircle size={10} color={THEME_COLORS.dangerIcon} />
-                  <Text className="text-[10px] font-mono font-bold text-rose-300">
-                    {personsWithCritical.toLocaleString()} Critical Persons
-                  </Text>
-                </View>
-              ) : null}
-              {personsWithWarnings > 0 ? (
-                <View className="bg-amber-950/70 border border-amber-800/70 px-2 py-0.5 rounded flex-row items-center gap-1">
-                  <AlertTriangle size={10} color={THEME_COLORS.warningIcon} />
-                  <Text className="text-[10px] font-mono font-bold text-amber-300">
-                    {personsWithWarnings.toLocaleString()} Warning Persons
-                  </Text>
-                </View>
-              ) : null}
-              <View className="bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">
-                <Text className="text-[10px] font-mono font-bold text-slate-300">
-                  {summary.related_tables_checked ?? 0} Tables Checked
-                </Text>
-              </View>
-              {summary.total_inactive_persons ? (
-                <View className="bg-slate-900/60 border border-slate-800/60 px-2 py-0.5 rounded">
-                  <Text className="text-[10px] font-mono font-medium text-slate-400">
-                    {summary.total_inactive_persons.toLocaleString()} Inactive Excluded
-                  </Text>
-                </View>
-              ) : null}
-              {summary.total_deleted_persons ? (
-                <View className="bg-slate-900/60 border border-slate-800/60 px-2 py-0.5 rounded">
-                  <Text className="text-[10px] font-mono font-medium text-slate-400">
-                    {summary.total_deleted_persons.toLocaleString()} Deleted Excluded
-                  </Text>
-                </View>
-              ) : null}
+            </View>
+            <View className="flex-row items-center gap-1.5 mt-0.5">
+              <Text className="text-[11px] text-slate-400 font-medium">
+                {(summary.total_persons_evaluated ?? 0).toLocaleString()} Active Evaluated
+              </Text>
+              <Text className="text-[11px] text-slate-600">•</Text>
+              <Text className="text-[11px] text-slate-400 font-medium">
+                {summary.related_tables_checked ?? 0} Tables Checked
+              </Text>
             </View>
           </View>
         </View>
 
-        {/* Severity Summary Pills & All Issues Action */}
-        <View className="flex-row items-center gap-2 flex-wrap">
-          {totalCriticalFindings > 0 ? (
-            <View className="flex-row items-center gap-1 bg-rose-950/60 border border-rose-800/60 px-2 py-0.5 rounded-full">
-              <AlertCircle size={11} color={THEME_COLORS.dangerIcon} />
-              <Text className="text-[10px] font-bold text-rose-300">
-                {totalCriticalFindings.toLocaleString()} Critical Findings
-              </Text>
-            </View>
-          ) : (
-            <View className="flex-row items-center gap-1 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full">
-              <CheckCircle2 size={11} color={THEME_COLORS.successIcon} />
-              <Text className="text-[10px] font-bold text-emerald-300">0 Critical Findings</Text>
-            </View>
-          )}
-
-          <View className="flex-row items-center gap-1 bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded-full">
-            <AlertTriangle size={11} color={THEME_COLORS.warningIcon} />
-            <Text className="text-[10px] font-bold text-amber-300">
-              {totalWarningFindings.toLocaleString()} Warning Findings
-            </Text>
-          </View>
-
-          {/* Export Report Actions */}
-          <View className="flex-row items-center gap-1.5">
+        {/* Clean Action Buttons */}
+        <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-1 bg-slate-900 border border-slate-800 p-0.5 rounded-lg">
             <Pressable
               onPress={() => handleExport("xlsx")}
               disabled={isExporting !== null}
-              className={`flex-row items-center gap-1 px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-                isExporting === "xlsx"
-                  ? "bg-emerald-950/80 border-emerald-700 text-emerald-300"
-                  : "bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border-slate-700 text-slate-300"
+              className={`flex-row items-center gap-1 px-2.5 py-1 rounded transition-all cursor-pointer ${
+                isExporting === "xlsx" ? "bg-emerald-950/80 text-emerald-300" : "hover:bg-slate-800"
               }`}
               accessibilityRole="button"
-              accessibilityLabel="Export Quality Suite as Excel .xlsx"
+              accessibilityLabel="Export Quality Suite as Excel"
             >
               {isExporting === "xlsx" ? (
                 <RefreshCw size={11} color={THEME_COLORS.successIcon} className="animate-spin" />
@@ -303,10 +249,8 @@ export const ContactQualitySection: React.FC = () => {
             <Pressable
               onPress={() => handleExport("csv")}
               disabled={isExporting !== null}
-              className={`flex-row items-center gap-1 px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-                isExporting === "csv"
-                  ? "bg-blue-950/80 border-blue-700 text-blue-300"
-                  : "bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border-slate-700 text-slate-300"
+              className={`flex-row items-center gap-1 px-2.5 py-1 rounded transition-all cursor-pointer ${
+                isExporting === "csv" ? "bg-blue-950/80 text-blue-300" : "hover:bg-slate-800"
               }`}
               accessibilityRole="button"
               accessibilityLabel="Export Quality Suite as CSV"
@@ -324,7 +268,7 @@ export const ContactQualitySection: React.FC = () => {
 
           <Pressable
             onPress={() => router.push("/daylite/quality" as Href)}
-            className="flex-row items-center gap-1 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+            className="flex-row items-center gap-1 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors cursor-pointer"
           >
             <Text className="text-xs font-semibold text-slate-300">Explore All Issues</Text>
             <ExternalLink size={11} color={THEME_COLORS.textMuted} />
@@ -341,77 +285,66 @@ export const ContactQualitySection: React.FC = () => {
         </View>
       ) : null}
 
-      {/* ── Filter Tabs ───────────────────────────────────────── */}
-      <View className="flex-row items-center gap-1 overflow-x-auto flex-nowrap pb-1">
-        <Pressable
-          onPress={() => setActiveCategory("ALL")}
-          className={`px-3 py-1 rounded-lg border text-xs font-semibold transition-all ${
-            activeCategory === "ALL"
-              ? "bg-blue-600 border-blue-500"
-              : "bg-slate-900/80 border-slate-800"
-          }`}
-        >
-          <Text className={`text-xs font-semibold ${activeCategory === "ALL" ? "text-white font-bold" : "text-slate-400"}`}>
-            All Dimensions
-          </Text>
-        </Pressable>
+      {/* ── Filter Tabs & Telemetry Summary Bar ──────────────── */}
+      <View className="flex-row items-center justify-between flex-wrap gap-2 pt-0.5">
+        <View className="flex-row items-center gap-1 overflow-x-auto flex-nowrap">
+          {(
+            [
+              { key: "ALL", label: "All Dimensions" },
+              { key: "CONTACTS", label: "Contacts & Duplicates" },
+              { key: "ADDRESSES", label: "Address & Locations" },
+              { key: "INTEGRITY", label: "Profile & Chronology" },
+              { key: "GOVERNANCE", label: "Governance & Links" },
+            ] as const
+          ).map((tab) => {
+            const isActive = activeCategory === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => setActiveCategory(tab.key)}
+                className={`px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-blue-600 border-blue-500 shadow-sm"
+                    : "bg-slate-900/60 border-slate-800/80 hover:bg-slate-800/80"
+                }`}
+              >
+                <Text
+                  className={`text-xs font-semibold ${
+                    isActive ? "text-white font-bold" : "text-slate-400"
+                  }`}
+                >
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
-        <Pressable
-          onPress={() => setActiveCategory("CONTACTS")}
-          className={`px-3 py-1 rounded-lg border text-xs font-semibold transition-all ${
-            activeCategory === "CONTACTS"
-              ? "bg-blue-600 border-blue-500"
-              : "bg-slate-900/80 border-slate-800"
-          }`}
-        >
-          <Text className={`text-xs font-semibold ${activeCategory === "CONTACTS" ? "text-white font-bold" : "text-slate-400"}`}>
-            Contacts & Duplicates
-          </Text>
-        </Pressable>
+        {/* Minimal Findings Summary Badges */}
+        <View className="flex-row items-center gap-2">
+          {totalCriticalFindings > 0 && (
+            <View className="flex-row items-center gap-1 bg-rose-950/40 border border-rose-800/50 px-2.5 py-1 rounded-full">
+              <AlertCircle size={10} color={THEME_COLORS.dangerIcon} />
+              <Text className="text-[10px] font-bold text-rose-300 font-mono">
+                {totalCriticalFindings.toLocaleString()} Critical
+              </Text>
+            </View>
+          )}
 
-        <Pressable
-          onPress={() => setActiveCategory("ADDRESSES")}
-          className={`px-3 py-1 rounded-lg border text-xs font-semibold transition-all ${
-            activeCategory === "ADDRESSES"
-              ? "bg-blue-600 border-blue-500"
-              : "bg-slate-900/80 border-slate-800"
-          }`}
-        >
-          <Text className={`text-xs font-semibold ${activeCategory === "ADDRESSES" ? "text-white font-bold" : "text-slate-400"}`}>
-            Address & Locations
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setActiveCategory("INTEGRITY")}
-          className={`px-3 py-1 rounded-lg border text-xs font-semibold transition-all ${
-            activeCategory === "INTEGRITY"
-              ? "bg-blue-600 border-blue-500"
-              : "bg-slate-900/80 border-slate-800"
-          }`}
-        >
-          <Text className={`text-xs font-semibold ${activeCategory === "INTEGRITY" ? "text-white font-bold" : "text-slate-400"}`}>
-            Profile & Chronology
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setActiveCategory("GOVERNANCE")}
-          className={`px-3 py-1 rounded-lg border text-xs font-semibold transition-all ${
-            activeCategory === "GOVERNANCE"
-              ? "bg-blue-600 border-blue-500"
-              : "bg-slate-900/80 border-slate-800"
-          }`}
-        >
-          <Text className={`text-xs font-semibold ${activeCategory === "GOVERNANCE" ? "text-white font-bold" : "text-slate-400"}`}>
-            Governance & Links
-          </Text>
-        </Pressable>
+          {totalWarningFindings > 0 && (
+            <View className="flex-row items-center gap-1 bg-amber-950/40 border border-amber-800/50 px-2.5 py-1 rounded-full">
+              <AlertTriangle size={10} color={THEME_COLORS.warningIcon} />
+              <Text className="text-[10px] font-bold text-amber-300 font-mono">
+                {totalWarningFindings.toLocaleString()} Warnings
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* ── KPI Grid (Grouped by Severity) ───────────────────── */}
       <View className="flex-col gap-4 mt-2">
-        
+
         {/* CRITICAL SECTION */}
         {criticalCards.length > 0 && (
           <View className="flex-col gap-3">
@@ -426,7 +359,7 @@ export const ContactQualitySection: React.FC = () => {
                 {totalCriticalFindings.toLocaleString()} Findings
               </Text>
             </View>
-            <View className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+            <View className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {criticalCards.map(c => (
                 <ContactQualityCard
                   key={c.issueCode}
@@ -434,7 +367,6 @@ export const ContactQualitySection: React.FC = () => {
                   count={c.count}
                   issueCode={c.issueCode}
                   description={c.description}
-                  severity={c.severity}
                   unitLabel={c.unitLabel}
                   icon={c.icon}
                 />
@@ -457,7 +389,7 @@ export const ContactQualitySection: React.FC = () => {
                 {totalWarningFindings.toLocaleString()} Findings
               </Text>
             </View>
-            <View className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+            <View className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {warningCards.map(c => (
                 <ContactQualityCard
                   key={c.issueCode}
@@ -465,7 +397,6 @@ export const ContactQualitySection: React.FC = () => {
                   count={c.count}
                   issueCode={c.issueCode}
                   description={c.description}
-                  severity={c.severity}
                   unitLabel={c.unitLabel}
                   icon={c.icon}
                 />
@@ -488,7 +419,7 @@ export const ContactQualitySection: React.FC = () => {
                 {summary.total_info_findings?.toLocaleString() || infoCards.reduce((acc, c) => acc + c.count, 0).toLocaleString()} Findings
               </Text>
             </View>
-            <View className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+            <View className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {infoCards.map(c => (
                 <ContactQualityCard
                   key={c.issueCode}
@@ -496,12 +427,21 @@ export const ContactQualitySection: React.FC = () => {
                   count={c.count}
                   issueCode={c.issueCode}
                   description={c.description}
-                  severity={c.severity}
                   unitLabel={c.unitLabel}
                   icon={c.icon}
                 />
               ))}
             </View>
+          </View>
+        )}
+
+        {filteredCards.length === 0 && (
+          <View className="p-6 items-center justify-center bg-dark-bg/40 border border-slate-800/80 rounded-xl my-2">
+            <CheckCircle2 size={24} color={THEME_COLORS.successIcon} />
+            <Text className="text-sm font-bold text-white mt-2">No Quality Findings</Text>
+            <Text className="text-xs text-slate-400 mt-0.5 text-center">
+              All evaluated rules in this category have 0 findings.
+            </Text>
           </View>
         )}
 

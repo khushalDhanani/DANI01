@@ -23,8 +23,11 @@ type PersonTab = "all" | "visitors" | "contacts";
 export default function DaylitePersonDirectoryScreen() {
   const [activeTab, setActiveTab] = useState<PersonTab>("all");
 
-  const { data: metricsRes } = usePersonMetrics();
-  const metrics = metricsRes?.metrics;
+  const { data: metrics } = usePersonMetrics((d) => ({
+    visitor_count: d.metrics?.visitor_count,
+    contact_entity_count: d.metrics?.contact_entity_count,
+    total_persons: d.metrics?.total_persons,
+  }));
 
   const visitorCount = metrics?.visitor_count;
   const contactCount = metrics?.contact_entity_count;

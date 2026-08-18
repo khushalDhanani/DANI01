@@ -15,21 +15,23 @@ def test_rule_definitions_count():
 def test_get_cross_domain_overview(mock_exec):
     # Mock execute_readonly_query returning 0 or sample counts
     mock_exec.side_effect = [
-        [{"cnt": 0, "emp_cnt": 0}], # DUP_EMP_CODE
-        [{"cnt": 0, "emp_cnt": 0}], # ACTIVE_DELETED_CONFLICT
-        [{"cnt": 3, "emp_cnt": 3}], [{"emp_id": 1}, {"emp_id": 2}, {"emp_id": 3}], # ACTIVE_PAST_RESIGNED
-        [{"cnt": 0, "emp_cnt": 0}], # MISSING_OFFICIAL_RECORD
-        [{"cnt": 0, "emp_cnt": 0}], # MISSING_ORG_ASSIGNMENT
-        [{"cnt": 0, "emp_cnt": 0}], # MISSING_MANAGER
-        [{"cnt": 0, "emp_cnt": 0}], # INVALID_MANAGER_FK
-        [{"cnt": 0, "emp_cnt": 0}], # SELF_REPORTING_EMPLOYEE
-        [{"cnt": 0, "emp_cnt": 0}], # CIRCULAR_MANAGER_HIERARCHY
-        [{"cnt": 0, "emp_cnt": 0}], # ACTIVE_USER_INACTIVE_EMP
-        [{"cnt": 0, "emp_cnt": 0}], # ORPHAN_USER_LOGIN
-        [{"cnt": 0, "emp_cnt": 0}], # MULTIPLE_ACTIVE_USERS
-        [{"cnt": 0, "emp_cnt": 0}], # ATTENDANCE_ORPHAN_EMP
-        [{"cnt": 0, "emp_cnt": 0}], # LEAVE_ORPHAN_EMP
-        [{"cnt": 21, "emp_cnt": 21}], [{"emp_id": 101}], # PAYROLL_CORRUPTED_NET_PAY
+        [{"cnt": 0, "emp_cnt": 0}],  # DUP_EMP_CODE
+        [{"cnt": 0, "emp_cnt": 0}],  # ACTIVE_DELETED_CONFLICT
+        [{"cnt": 3, "emp_cnt": 3}],
+        [{"emp_id": 1}, {"emp_id": 2}, {"emp_id": 3}],  # ACTIVE_PAST_RESIGNED
+        [{"cnt": 0, "emp_cnt": 0}],  # MISSING_OFFICIAL_RECORD
+        [{"cnt": 0, "emp_cnt": 0}],  # MISSING_ORG_ASSIGNMENT
+        [{"cnt": 0, "emp_cnt": 0}],  # MISSING_MANAGER
+        [{"cnt": 0, "emp_cnt": 0}],  # INVALID_MANAGER_FK
+        [{"cnt": 0, "emp_cnt": 0}],  # SELF_REPORTING_EMPLOYEE
+        [{"cnt": 0, "emp_cnt": 0}],  # CIRCULAR_MANAGER_HIERARCHY
+        [{"cnt": 0, "emp_cnt": 0}],  # ACTIVE_USER_INACTIVE_EMP
+        [{"cnt": 0, "emp_cnt": 0}],  # ORPHAN_USER_LOGIN
+        [{"cnt": 0, "emp_cnt": 0}],  # MULTIPLE_ACTIVE_USERS
+        [{"cnt": 0, "emp_cnt": 0}],  # ATTENDANCE_ORPHAN_EMP
+        [{"cnt": 0, "emp_cnt": 0}],  # LEAVE_ORPHAN_EMP
+        [{"cnt": 21, "emp_cnt": 21}],
+        [{"emp_id": 101}],  # PAYROLL_CORRUPTED_NET_PAY
     ]
 
     service = CrossDomainQualityService()

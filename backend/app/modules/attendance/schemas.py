@@ -229,8 +229,12 @@ class DepartmentDetailResponse(BaseModel):
 
 class EmployeeLifetimeLeaveTypeBreakdown(BaseModel):
     leave_type: str
+    leave_code: str | None = "PL"
     request_count: int
     total_days_taken: float
+    avg_days_per_request: float = 0.0
+    share_pct: float = 0.0
+    last_availed_date: str | None = None
 
 
 class EmployeeLifetimeAttendanceResponse(BaseModel):
@@ -268,4 +272,3 @@ class EmployeeLifetimeAttendanceResponse(BaseModel):
     leaves_breakdown: list[EmployeeLifetimeLeaveTypeBreakdown] = Field(default_factory=list)
     risk_signals: list[str] = Field(default_factory=list)
     generated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
-

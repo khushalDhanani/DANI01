@@ -7,7 +7,10 @@ class CrossDomainQualityRuleInfo(BaseModel):
     rule_code: str = Field(..., description="Unique rule code identifier")
     rule_name: str = Field(..., description="Human-readable rule title")
     severity: str = Field(..., description="Severity level: CRITICAL, WARNING, INFO")
-    category: str = Field(..., description="Rule category e.g. MASTER, ORG, HIERARCHY, SECURITY, ATTENDANCE, LEAVE, PAYROLL")
+    category: str = Field(
+        ...,
+        description="Rule category e.g. MASTER, ORG, HIERARCHY, SECURITY, ATTENDANCE, LEAVE, PAYROLL",
+    )
     description: str = Field(..., description="Technical description of the data rule")
     impact: str = Field(..., description="Business impact of rule violations")
     issue_count: int = Field(..., description="Total violation records flagged")
@@ -35,11 +38,21 @@ class CrossDomainOverviewResponse(BaseModel):
     critical_issues_count: int = Field(..., description="Critical severity issue count")
     warning_issues_count: int = Field(..., description="Warning severity issue count")
     info_issues_count: int = Field(..., description="Info severity issue count")
-    total_affected_employees: int = Field(..., description="Distinct active/inactive employees affected")
-    overall_health_score: float = Field(..., description="Data quality health score percentage (0 - 100%)")
-    rules: list[CrossDomainQualityRuleInfo] = Field(default_factory=list, description="Quality rule matrix")
-    categories: list[CrossDomainCategorySummary] = Field(default_factory=list, description="Category-wise summaries")
-    modules: list[CrossDomainModuleSummary] = Field(default_factory=list, description="Module/Table-wise summaries")
+    total_affected_employees: int = Field(
+        ..., description="Distinct active/inactive employees affected"
+    )
+    overall_health_score: float = Field(
+        ..., description="Data quality health score percentage (0 - 100%)"
+    )
+    rules: list[CrossDomainQualityRuleInfo] = Field(
+        default_factory=list, description="Quality rule matrix"
+    )
+    categories: list[CrossDomainCategorySummary] = Field(
+        default_factory=list, description="Category-wise summaries"
+    )
+    modules: list[CrossDomainModuleSummary] = Field(
+        default_factory=list, description="Module/Table-wise summaries"
+    )
 
 
 class CrossDomainIssueRecord(BaseModel):
@@ -52,11 +65,15 @@ class CrossDomainIssueRecord(BaseModel):
     severity: str = Field(..., description="Severity level: CRITICAL, WARNING, INFO")
     category: str = Field(..., description="Category code")
     issue_detail: str = Field(..., description="Descriptive evidence detailing the failure")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional contextual fields")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Additional contextual fields"
+    )
 
 
 class CrossDomainIssuesListResponse(BaseModel):
-    items: list[CrossDomainIssueRecord] = Field(default_factory=list, description="Paginated evidence records")
+    items: list[CrossDomainIssueRecord] = Field(
+        default_factory=list, description="Paginated evidence records"
+    )
     total: int = Field(..., description="Total evidence items matching filter")
     limit: int = Field(..., description="Page size limit")
     offset: int = Field(..., description="Page offset")

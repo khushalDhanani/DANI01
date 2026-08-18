@@ -160,7 +160,9 @@ class CrossDomainQualityService:
     Employee, Organization, Contact, Security, Manager Hierarchy, Attendance, Leave, and Payroll.
     """
 
-    def _get_rule_sql(self, rule_code: str, comp_id: int | None = None) -> tuple[str, dict[str, Any]]:
+    def _get_rule_sql(
+        self, rule_code: str, comp_id: int | None = None
+    ) -> tuple[str, dict[str, Any]]:
         params: dict[str, Any] = {}
         comp_clause = ""
         if comp_id:
@@ -486,7 +488,13 @@ class CrossDomainQualityService:
                 info_cnt += cnt
 
             if cat not in category_counts:
-                category_counts[cat] = {"total": 0, "critical": 0, "warning": 0, "info": 0, "rules": 0}
+                category_counts[cat] = {
+                    "total": 0,
+                    "critical": 0,
+                    "warning": 0,
+                    "info": 0,
+                    "rules": 0,
+                }
             category_counts[cat]["total"] += cnt
             category_counts[cat]["rules"] += 1
             if sev == "CRITICAL":
@@ -544,8 +552,12 @@ class CrossDomainQualityService:
         ]
 
         # Calculate health score: 100 - penalty normalized
-        failing_critical = sum(1 for r in rules_matrix if r.severity == "CRITICAL" and r.issue_count > 0)
-        failing_warning = sum(1 for r in rules_matrix if r.severity == "WARNING" and r.issue_count > 0)
+        failing_critical = sum(
+            1 for r in rules_matrix if r.severity == "CRITICAL" and r.issue_count > 0
+        )
+        failing_warning = sum(
+            1 for r in rules_matrix if r.severity == "WARNING" and r.issue_count > 0
+        )
         penalty = (failing_critical * 12.0) + (failing_warning * 4.0)
         health_score = max(0.0, min(100.0, round(100.0 - penalty, 1)))
 
@@ -570,7 +582,12 @@ class CrossDomainQualityService:
         offset: int = 0,
         comp_id: int | None = None,
     ) -> CrossDomainIssuesListResponse:
-        active_rules = [r for r in RULE_DEFINITIONS if (not rule_code or r["code"] == rule_code) and (not category or r["category"] == category)]
+        active_rules = [
+            r
+            for r in RULE_DEFINITIONS
+            if (not rule_code or r["code"] == rule_code)
+            and (not category or r["category"] == category)
+        ]
 
         queries: list[str] = []
         all_params: dict[str, Any] = {}
@@ -669,29 +686,33 @@ class CrossDomainQualityService:
 
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow([
-            "Record ID",
-            "Employee ID",
-            "Employee Code",
-            "Employee Name",
-            "Target Table",
-            "Rule Failed",
-            "Severity",
-            "Category",
-            "Issue Detail",
-        ])
+        writer.writerow(
+            [
+                "Record ID",
+                "Employee ID",
+                "Employee Code",
+                "Employee Name",
+                "Target Table",
+                "Rule Failed",
+                "Severity",
+                "Category",
+                "Issue Detail",
+            ]
+        )
 
         for item in issues_resp.items:
-            writer.writerow([
-                item.record_id,
-                item.emp_id or "",
-                item.emp_code or "",
-                item.emp_name or "",
-                item.table_name,
-                item.rule_failed,
-                item.severity,
-                item.category,
-                item.issue_detail,
-            ])
+            writer.writerow(
+                [
+                    item.record_id,
+                    item.emp_id or "",
+                    item.emp_code or "",
+                    item.emp_name or "",
+                    item.table_name,
+                    item.rule_failed,
+                    item.severity,
+                    item.category,
+                    item.issue_detail,
+                ]
+            )
 
         return output.getvalue().encode("utf-8")
