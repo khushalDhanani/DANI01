@@ -527,18 +527,18 @@ async def test_missing_email_consistency_and_person_name_formatting():
 
     # 1. Summary KPI endpoint
     with patch(
-        "app.modules.person.contact_quality_service.execute_readonly_query",
+        "app.modules.person.quality.service._execute_query",
         return_value=[mock_summary_row],
     ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            summary_res = await ac.get("/api/v1/modules/PERSON/contact-quality")
+            summary_res = await ac.get("/api/v1/modules/PERSON/contact-quality?force_refresh=true")
             assert summary_res.status_code == 200
             summary_count = summary_res.json()["persons_without_email"]
             assert summary_count == 3
 
     # 2. Issues drilldown endpoint
     with patch(
-        "app.modules.person.contact_quality_service.execute_readonly_query",
+        "app.modules.person.quality.service._execute_query",
         side_effect=[mock_count, mock_items],
     ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:

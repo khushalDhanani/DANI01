@@ -9,12 +9,13 @@ import {
   RefreshCw,
   ShieldCheck,
 } from "lucide-react-native";
+import { AttendanceDepartmentTab } from "./AttendanceDepartmentTab";
 import { AttendanceDirectoryTab } from "./AttendanceDirectoryTab";
 import { AttendanceLeaveTab } from "./AttendanceLeaveTab";
 import { AttendanceOverviewTab } from "./AttendanceOverviewTab";
 import { AttendanceQualityTab } from "./AttendanceQualityTab";
 
-type TabKey = "overview" | "directory" | "leave" | "quality";
+type TabKey = "overview" | "department" | "directory" | "leave" | "quality";
 
 const COMPANY_OPTIONS = [
   { id: undefined, label: "All Companies", code: "ALL" },
@@ -36,6 +37,11 @@ export function AttendanceModuleScreen() {
       key: "overview",
       label: "Attendance Overview",
       icon: <CalendarCheck size={14} color={activeTab === "overview" ? "#ffffff" : "#94a3b8"} />,
+    },
+    {
+      key: "department",
+      label: "Department Master",
+      icon: <Building2 size={14} color={activeTab === "department" ? "#ffffff" : "#94a3b8"} />,
     },
     {
       key: "directory",
@@ -153,6 +159,7 @@ export function AttendanceModuleScreen() {
 
       {/* ── Tab Content Views ───────────────────────────────── */}
       {activeTab === "overview" && <AttendanceOverviewTab compId={selectedCompId} />}
+      {activeTab === "department" && <AttendanceDepartmentTab compId={selectedCompId} />}
       {activeTab === "directory" && <AttendanceDirectoryTab compId={selectedCompId} />}
       {activeTab === "leave" && <AttendanceLeaveTab compId={selectedCompId} />}
       {activeTab === "quality" && <AttendanceQualityTab />}

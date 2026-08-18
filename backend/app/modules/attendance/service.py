@@ -1041,19 +1041,45 @@ class AttendanceService:
     def get_attendance_org_hierarchy(self) -> AttendanceOrgHierarchyResponse:
         # 1. Company Level
         q_comp = """
+        WITH ActiveEmps AS (
+            SELECT
+                e.EmpID,
+                ISNULL(e.CompID, 1) as CompID
+            FROM dbo.EmployeeMst e
+            WHERE e.EmpIsActive = 1
+              AND ISNULL(e.EmpIsDeleted, 0) = 0
+              AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+        ),
+        CompHeadcount AS (
+            SELECT CompID, COUNT(*) as headcount
+            FROM ActiveEmps
+            GROUP BY CompID
+        ),
+        CompAttendance AS (
+            SELECT
+                ISNULL(a.AttCompID, 1) as CompID,
+                COUNT(a.AttID) as total_attendance,
+                SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
+                SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
+            FROM dbo.PayAttendance a
+            INNER JOIN ActiveEmps ae ON ae.EmpID = a.AttEmpID
+            GROUP BY ISNULL(a.AttCompID, 1)
+        )
         SELECT
             c.CompID as id,
             ISNULL(c.CompName, 'Unassigned Company') as name,
             c.CompCode as code,
-            COUNT(DISTINCT a.AttEmpID) as headcount,
-            COUNT(a.AttID) as total_attendance,
-            SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
-            SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
-            SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
-        FROM dbo.PayAttendance a
-        LEFT JOIN dbo.OrgCompanyMst c ON c.CompID = a.AttCompID
-        GROUP BY c.CompID, c.CompName, c.CompCode
-        ORDER BY total_attendance DESC;
+            ISNULL(hc.headcount, 0) as headcount,
+            ISNULL(att.total_attendance, 0) as total_attendance,
+            ISNULL(att.present_count, 0) as present_count,
+            ISNULL(att.late_count, 0) as late_count,
+            ISNULL(att.total_ot_hours, 0.0) as total_ot_hours
+        FROM dbo.OrgCompanyMst c
+        LEFT JOIN CompHeadcount hc ON hc.CompID = c.CompID
+        LEFT JOIN CompAttendance att ON att.CompID = c.CompID
+        WHERE ISNULL(hc.headcount, 0) > 0 OR ISNULL(att.total_attendance, 0) > 0
+        ORDER BY headcount DESC, total_attendance DESC;
         """
         comp_rows = execute_readonly_query(q_comp)
         companies: list[OrgHierarchyAttendanceNode] = []
@@ -1082,21 +1108,57 @@ class AttendanceService:
 
         # 2. Location / Plant Level
         q_loc = """
+        WITH CurrentOfficial AS (
+            SELECT
+                o.EmpID,
+                o.LocID,
+                ROW_NUMBER() OVER (PARTITION BY o.EmpID ORDER BY o.ApplicableFrDate DESC, o.EmpOfficeDetID DESC) AS rn
+            FROM dbo.EmployeeOfficialDet o
+            WHERE o.EmpOfficeDetIsActive = 1 AND ISNULL(o.EmpOfficeDetIsDeleted, 0) = 0
+        ),
+        ActiveEmps AS (
+            SELECT
+                e.EmpID,
+                ISNULL(e.CompID, 1) as CompID,
+                ISNULL(co.LocID, 0) as LocID
+            FROM dbo.EmployeeMst e
+            LEFT JOIN CurrentOfficial co ON co.EmpID = e.EmpID AND co.rn = 1
+            WHERE e.EmpIsActive = 1
+              AND ISNULL(e.EmpIsDeleted, 0) = 0
+              AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+        ),
+        LocHeadcount AS (
+            SELECT CompID, LocID, COUNT(*) as headcount
+            FROM ActiveEmps
+            GROUP BY CompID, LocID
+        ),
+        LocAttendance AS (
+            SELECT
+                ISNULL(a.AttCompID, 1) as CompID,
+                ISNULL(a.AttBranchID, 0) as LocID,
+                COUNT(a.AttID) as total_attendance,
+                SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
+                SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
+            FROM dbo.PayAttendance a
+            INNER JOIN ActiveEmps ae ON ae.EmpID = a.AttEmpID
+            GROUP BY ISNULL(a.AttCompID, 1), ISNULL(a.AttBranchID, 0)
+        )
         SELECT
-            ISNULL(a.AttCompID, 1) as comp_id,
-            l.LocID as id,
+            ISNULL(l.LocID, 0) as id,
+            ISNULL(hc.CompID, att.CompID) as comp_id,
             ISNULL(l.LocName, 'Default Location') as name,
             l.ShortName as code,
-            COUNT(DISTINCT CASE WHEN e.EmpIsActive = 1 AND ISNULL(e.EmpIsDeleted, 0) = 0 THEN a.AttEmpID ELSE NULL END) as headcount,
-            COUNT(a.AttID) as total_attendance,
-            SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
-            SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
-            SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
-        FROM dbo.PayAttendance a
-        LEFT JOIN dbo.OrgLocationMst l ON l.LocID = a.AttBranchID
-        LEFT JOIN dbo.EmployeeMst e ON e.EmpID = a.AttEmpID
-        GROUP BY a.AttCompID, l.LocID, l.LocName, l.ShortName
-        ORDER BY total_attendance DESC;
+            ISNULL(hc.headcount, 0) as headcount,
+            ISNULL(att.total_attendance, 0) as total_attendance,
+            ISNULL(att.present_count, 0) as present_count,
+            ISNULL(att.late_count, 0) as late_count,
+            ISNULL(att.total_ot_hours, 0.0) as total_ot_hours
+        FROM dbo.OrgLocationMst l
+        LEFT JOIN LocHeadcount hc ON hc.LocID = l.LocID
+        LEFT JOIN LocAttendance att ON att.LocID = l.LocID AND att.CompID = hc.CompID
+        WHERE ISNULL(hc.headcount, 0) > 0 OR ISNULL(att.total_attendance, 0) > 0
+        ORDER BY headcount DESC, total_attendance DESC;
         """
         loc_rows = execute_readonly_query(q_loc)
         locations: list[OrgHierarchyAttendanceNode] = []
@@ -1126,22 +1188,56 @@ class AttendanceService:
             if cid in comp_dict:
                 comp_dict[cid].children.append(node)
 
-        # 3. Department Level Summary (Unique per DeptID)
+        # 3. Department Level Summary (Unique per DeptID - Active Employees Only via EmployeeOfficialDet)
         q_dept_summary = """
+        WITH CurrentOfficial AS (
+            SELECT
+                o.EmpID,
+                o.DeptID,
+                ROW_NUMBER() OVER (PARTITION BY o.EmpID ORDER BY o.ApplicableFrDate DESC, o.EmpOfficeDetID DESC) AS rn
+            FROM dbo.EmployeeOfficialDet o
+            WHERE o.EmpOfficeDetIsActive = 1 AND ISNULL(o.EmpOfficeDetIsDeleted, 0) = 0
+        ),
+        ActiveEmps AS (
+            SELECT
+                e.EmpID,
+                ISNULL(co.DeptID, 0) as DeptID
+            FROM dbo.EmployeeMst e
+            LEFT JOIN CurrentOfficial co ON co.EmpID = e.EmpID AND co.rn = 1
+            WHERE e.EmpIsActive = 1
+              AND ISNULL(e.EmpIsDeleted, 0) = 0
+              AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+        ),
+        DeptHeadcount AS (
+            SELECT DeptID, COUNT(*) as headcount
+            FROM ActiveEmps
+            GROUP BY DeptID
+        ),
+        DeptAttendance AS (
+            SELECT
+                a.AttDeptID as DeptID,
+                COUNT(a.AttID) as total_attendance,
+                SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
+                SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
+            FROM dbo.PayAttendance a
+            INNER JOIN ActiveEmps ae ON ae.EmpID = a.AttEmpID
+            GROUP BY a.AttDeptID
+        )
         SELECT
             d.DeptID as id,
             ISNULL(d.DeptName, 'Unassigned Dept') as name,
             CAST(d.CosecDeptId AS VARCHAR) as code,
-            COUNT(DISTINCT CASE WHEN e.EmpIsActive = 1 AND ISNULL(e.EmpIsDeleted, 0) = 0 THEN a.AttEmpID ELSE NULL END) as headcount,
-            COUNT(a.AttID) as total_attendance,
-            SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
-            SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
-            SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
-        FROM dbo.PayAttendance a
-        LEFT JOIN dbo.OrgDepartmentMst d ON d.DeptID = a.AttDeptID
-        LEFT JOIN dbo.EmployeeMst e ON e.EmpID = a.AttEmpID
-        GROUP BY d.DeptID, d.DeptName, d.CosecDeptId
-        ORDER BY total_attendance DESC;
+            ISNULL(hc.headcount, 0) as headcount,
+            ISNULL(att.total_attendance, 0) as total_attendance,
+            ISNULL(att.present_count, 0) as present_count,
+            ISNULL(att.late_count, 0) as late_count,
+            ISNULL(att.total_ot_hours, 0.0) as total_ot_hours
+        FROM dbo.OrgDepartmentMst d
+        LEFT JOIN DeptHeadcount hc ON hc.DeptID = d.DeptID
+        LEFT JOIN DeptAttendance att ON att.DeptID = d.DeptID
+        WHERE d.DeptIsActive = 1 AND ISNULL(d.DeptIsDeleted, 0) = 0 AND (ISNULL(hc.headcount, 0) > 0 OR ISNULL(att.total_attendance, 0) > 0)
+        ORDER BY headcount DESC, total_attendance DESC;
         """
         dept_rows = execute_readonly_query(q_dept_summary)
         departments: list[OrgHierarchyAttendanceNode] = []
@@ -1168,21 +1264,58 @@ class AttendanceService:
 
         # 4. Location-Level Department Children
         q_dept_loc = """
+        WITH CurrentOfficial AS (
+            SELECT
+                o.EmpID,
+                o.LocID,
+                o.DeptID,
+                ROW_NUMBER() OVER (PARTITION BY o.EmpID ORDER BY o.ApplicableFrDate DESC, o.EmpOfficeDetID DESC) AS rn
+            FROM dbo.EmployeeOfficialDet o
+            WHERE o.EmpOfficeDetIsActive = 1 AND ISNULL(o.EmpOfficeDetIsDeleted, 0) = 0
+        ),
+        ActiveEmps AS (
+            SELECT
+                e.EmpID,
+                ISNULL(co.LocID, 0) as LocID,
+                ISNULL(co.DeptID, 0) as DeptID
+            FROM dbo.EmployeeMst e
+            LEFT JOIN CurrentOfficial co ON co.EmpID = e.EmpID AND co.rn = 1
+            WHERE e.EmpIsActive = 1
+              AND ISNULL(e.EmpIsDeleted, 0) = 0
+              AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+        ),
+        DeptLocHeadcount AS (
+            SELECT LocID, DeptID, COUNT(*) as headcount
+            FROM ActiveEmps
+            GROUP BY LocID, DeptID
+        ),
+        DeptLocAttendance AS (
+            SELECT
+                ISNULL(a.AttBranchID, 0) as LocID,
+                a.AttDeptID as DeptID,
+                COUNT(a.AttID) as total_attendance,
+                SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
+                SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
+            FROM dbo.PayAttendance a
+            INNER JOIN ActiveEmps ae ON ae.EmpID = a.AttEmpID
+            GROUP BY ISNULL(a.AttBranchID, 0), a.AttDeptID
+        )
         SELECT
-            ISNULL(a.AttBranchID, 0) as loc_id,
+            ISNULL(hc.LocID, att.LocID) as loc_id,
             d.DeptID as id,
             ISNULL(d.DeptName, 'Unassigned Dept') as name,
             CAST(d.CosecDeptId AS VARCHAR) as code,
-            COUNT(DISTINCT CASE WHEN e.EmpIsActive = 1 AND ISNULL(e.EmpIsDeleted, 0) = 0 THEN a.AttEmpID ELSE NULL END) as headcount,
-            COUNT(a.AttID) as total_attendance,
-            SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
-            SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
-            SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
-        FROM dbo.PayAttendance a
-        LEFT JOIN dbo.OrgDepartmentMst d ON d.DeptID = a.AttDeptID
-        LEFT JOIN dbo.EmployeeMst e ON e.EmpID = a.AttEmpID
-        GROUP BY a.AttBranchID, d.DeptID, d.DeptName, d.CosecDeptId
-        ORDER BY total_attendance DESC;
+            ISNULL(hc.headcount, 0) as headcount,
+            ISNULL(att.total_attendance, 0) as total_attendance,
+            ISNULL(att.present_count, 0) as present_count,
+            ISNULL(att.late_count, 0) as late_count,
+            ISNULL(att.total_ot_hours, 0.0) as total_ot_hours
+        FROM dbo.OrgDepartmentMst d
+        LEFT JOIN DeptLocHeadcount hc ON hc.DeptID = d.DeptID
+        LEFT JOIN DeptLocAttendance att ON att.DeptID = d.DeptID AND att.LocID = hc.LocID
+        WHERE ISNULL(hc.headcount, 0) > 0 OR ISNULL(att.total_attendance, 0) > 0
+        ORDER BY headcount DESC, total_attendance DESC;
         """
         loc_dept_rows = execute_readonly_query(q_dept_loc)
         for r in loc_dept_rows:
@@ -1216,21 +1349,39 @@ class AttendanceService:
         )
 
     def get_department_attendance_detail(self, dept_id: int) -> DepartmentDetailResponse:
-        """Fetch summary KPIs and attendance/leave stats for a specific department."""
+        """Fetch summary KPIs and attendance/leave stats for a specific department (Active employees only)."""
         q_dept = """
+        WITH CurrentOfficial AS (
+            SELECT
+                o.EmpID,
+                o.DeptID,
+                ROW_NUMBER() OVER (PARTITION BY o.EmpID ORDER BY o.ApplicableFrDate DESC, o.EmpOfficeDetID DESC) AS rn
+            FROM dbo.EmployeeOfficialDet o
+            WHERE o.EmpOfficeDetIsActive = 1 AND ISNULL(o.EmpOfficeDetIsDeleted, 0) = 0
+        ),
+        ActiveEmps AS (
+            SELECT
+                e.EmpID,
+                ISNULL(co.DeptID, 0) as DeptID
+            FROM dbo.EmployeeMst e
+            LEFT JOIN CurrentOfficial co ON co.EmpID = e.EmpID AND co.rn = 1
+            WHERE e.EmpIsActive = 1
+              AND ISNULL(e.EmpIsDeleted, 0) = 0
+              AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+        )
         SELECT
             d.DeptID as id,
             ISNULL(d.DeptName, 'Unassigned Department') as name,
             CAST(d.CosecDeptId AS VARCHAR) as code,
-            COUNT(DISTINCT CASE WHEN e.EmpIsActive = 1 AND ISNULL(e.EmpIsDeleted, 0) = 0 THEN a.AttEmpID ELSE NULL END) as headcount,
+            (SELECT COUNT(*) FROM ActiveEmps WHERE DeptID = d.DeptID) as headcount,
             COUNT(a.AttID) as total_attendance,
             SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
             SUM(CASE WHEN a.AttSalType IN ('A', 'ABS') THEN 1 ELSE 0 END) as absent_count,
             SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
             SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
         FROM dbo.PayAttendance a
+        INNER JOIN ActiveEmps ae ON ae.EmpID = a.AttEmpID
         LEFT JOIN dbo.OrgDepartmentMst d ON d.DeptID = a.AttDeptID
-        LEFT JOIN dbo.EmployeeMst e ON e.EmpID = a.AttEmpID
         WHERE a.AttDeptID = :dept_id
         GROUP BY d.DeptID, d.DeptName, d.CosecDeptId;
         """
@@ -1271,7 +1422,8 @@ class AttendanceService:
         FROM dbo.LeaveRequest lr
         JOIN dbo.PayAttendance a ON a.AttEmpID = lr.LeaveRequestByEmpID
         JOIN dbo.EmployeeMst e ON e.EmpID = lr.LeaveRequestByEmpID
-        WHERE a.AttDeptID = :dept_id AND e.EmpIsActive = 1 AND ISNULL(e.EmpIsDeleted, 0) = 0;
+        WHERE a.AttDeptID = :dept_id
+          AND e.EmpIsActive = 1 AND ISNULL(e.EmpIsDeleted, 0) = 0 AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE());
         """
         leave_cnt_rows = execute_readonly_query(q_leaves_count, {"dept_id": dept_id})
         active_leaves = 0
@@ -1352,33 +1504,28 @@ class AttendanceService:
         # 2. Lifetime Attendance Totals
         # NOTE: This DB uses a single AttSalType='SAL' for all records.
         # We determine actual status from biometric punches and day-of-week:
-        #   - Has punch-in → Present
-        #   - No punch-in on Sunday/Saturday → Weekly Off
-        #   - No punch-in on weekday matching PayCompanyOffsDet → Paid Holiday
-        #   - No punch-in before EmpJoinDate → Pre-Joining (excluded)
-        #   - No punch-in on weekday with approved leave → Leave Day
-        #   - No punch-in on weekday without leave → Absent
         q_att = """
         SELECT
             COUNT(*) as total_attendance_records,
+            SUM(CASE WHEN e.EmpJoinDate IS NOT NULL AND a.AttDate < e.EmpJoinDate THEN 1 ELSE 0 END) as pre_joining_days,
+            SUM(CASE WHEN (e.EmpJoinDate IS NULL OR a.AttDate >= e.EmpJoinDate) THEN 1 ELSE 0 END) as post_joining_days,
             SUM(CASE WHEN a.AttActInTime IS NOT NULL THEN 1 ELSE 0 END) as present_days,
             SUM(CASE WHEN a.AttActInTime IS NULL
+                      AND (e.EmpJoinDate IS NULL OR a.AttDate >= e.EmpJoinDate)
                       AND DATEPART(WEEKDAY, a.AttDate) NOT IN (1, 7)
                       AND h.OffsID IS NULL
-                      AND (e.EmpJoinDate IS NULL OR a.AttDate >= e.EmpJoinDate)
                       THEN 1 ELSE 0 END) as absent_days,
             SUM(CASE WHEN a.AttSalType IN ('HD', 'HALF') THEN 1 ELSE 0 END) as half_days,
             0 as leave_days,
             SUM(CASE WHEN a.AttActInTime IS NULL
+                      AND (e.EmpJoinDate IS NULL OR a.AttDate >= e.EmpJoinDate)
                       AND DATEPART(WEEKDAY, a.AttDate) IN (1, 7)
                       THEN 1 ELSE 0 END) as weekly_offs,
             SUM(CASE WHEN a.AttActInTime IS NULL
+                      AND (e.EmpJoinDate IS NULL OR a.AttDate >= e.EmpJoinDate)
                       AND DATEPART(WEEKDAY, a.AttDate) NOT IN (1, 7)
                       AND h.OffsID IS NOT NULL
                       THEN 1 ELSE 0 END) as paid_holidays,
-            SUM(CASE WHEN a.AttActInTime IS NULL
-                      AND (e.EmpJoinDate IS NOT NULL AND a.AttDate < e.EmpJoinDate)
-                      THEN 1 ELSE 0 END) as pre_joining_days,
             SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_arrivals_count,
             SUM(ISNULL(a.AttLateComeMins, 0)) as total_late_mins,
             SUM(CASE WHEN a.AttEarlyGoneMins > 0 THEN 1 ELSE 0 END) as early_exits_count,
@@ -1402,7 +1549,6 @@ class AttendanceService:
         att_rows = execute_readonly_query(q_att, {"emp_id": emp_id})
         att_tot = att_rows[0] if att_rows else {}
 
-        tot_rec = att_tot.get("total_attendance_records") or 1
         present_cnt = att_tot.get("present_days") or 0
         absent_cnt = att_tot.get("absent_days") or 0
         late_cnt = att_tot.get("late_arrivals_count") or 0
@@ -1433,11 +1579,11 @@ class AttendanceService:
         unauth_data = unauth_rows[0] if unauth_rows else {}
         unauth_cnt = unauth_data.get("unauthorized_absence_days") or 0
         leave_covered_cnt = unauth_data.get("leave_covered_absence_days") or 0
+        post_joining_cnt = att_tot.get("post_joining_days") or 0
         weekly_offs_cnt = att_tot.get("weekly_offs") or 0
         paid_holidays_cnt = att_tot.get("paid_holidays") or 0
-        pre_joining_cnt = att_tot.get("pre_joining_days") or 0
-        working_days = tot_rec - weekly_offs_cnt - paid_holidays_cnt - pre_joining_cnt
-        working_denom = max(working_days, 1)
+        working_days = max(post_joining_cnt - weekly_offs_cnt - paid_holidays_cnt, 0)
+        working_denom = max(working_days, present_cnt, 1)
         unauth_pct = round((unauth_cnt / working_denom) * 100.0, 1)
 
         absconding_risk = "LOW"
@@ -1543,9 +1689,9 @@ class AttendanceService:
             is_active=bool(e_row["EmpIsActive"]),
             total_attendance_records=att_tot.get("total_attendance_records") or 0,
             present_days=present_cnt,
-            present_pct=round((present_cnt / working_denom) * 100.0, 1),
+            present_pct=min(100.0, round((present_cnt / working_denom) * 100.0, 1)),
             absent_days=absent_cnt,
-            absent_pct=round((absent_cnt / working_denom) * 100.0, 1),
+            absent_pct=min(100.0, round((absent_cnt / working_denom) * 100.0, 1)),
             half_days=att_tot.get("half_days") or 0,
             leave_days=leave_covered_cnt,
             weekly_offs=weekly_offs_cnt,

@@ -68,6 +68,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         pathname.startsWith("/modules/CONTACT/")
       );
     }
+    if (href === "/modules/attendance") {
+      return (
+        pathname === "/modules/attendance" ||
+        pathname === "/modules/attendance/" ||
+        pathname === "/modules/ATTENDANCE" ||
+        pathname === "/modules/ATTENDANCE/" ||
+        pathname.startsWith("/modules/attendance/employee/") ||
+        pathname.startsWith("/modules/attendance/department/")
+      );
+    }
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
@@ -157,6 +167,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       {item.label}
                     </Text>
                   </View>
+                  {item.badge && (
+                    <View
+                      className={`px-1.5 py-0.5 rounded ${
+                        active
+                          ? "bg-blue-700"
+                          : "bg-slate-800 border border-slate-700"
+                      }`}
+                    >
+                      <Text
+                        className={`text-[9px] font-mono font-bold ${
+                          active ? "text-white" : "text-slate-300"
+                        }`}
+                      >
+                        {item.badge}
+                      </Text>
+                    </View>
+                  )}
                 </Pressable>
               );
             })}

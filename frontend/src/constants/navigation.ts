@@ -6,7 +6,7 @@ import {
   Activity,
   Banknote,
   Building2,
-  Calendar,
+  CalendarCheck,
   Code2,
   Database,
   LayoutDashboard,
@@ -14,7 +14,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
-  UserCheck,
   Users,
 } from "lucide-react-native";
 
@@ -158,15 +157,23 @@ export const ENTERPRISE_NAV_GROUP: NavGroup = {
 export const EMPLOYEE_ANALYTICS_NAV_GROUP: NavGroup = {
   id: "employee_analytics",
   label: "Employee Analytics",
-  icon: UserCheck,
+  icon: CalendarCheck,
   href: "/modules/attendance",
   defaultExpanded: true,
   children: [
     {
-      label: "Attendance & Leave",
+      label: "Attendance & Leave Analysis",
       href: "/modules/attendance",
-      icon: Calendar,
-      description: "Punches, Shifts, Overtime, Leave Applications & Balances",
+      icon: CalendarCheck,
+      description: "Punches, Shifts, Overtime, Leave Applications & 14 Audit Rules",
+      badge: "LIVE",
+    },
+    {
+      label: "Department Summary",
+      href: "/modules/attendance/department-summary",
+      icon: Building2,
+      description: "Department-wise headcount, attendance volume, late ratio & OT hours",
+      badge: "Master",
     },
   ],
 };

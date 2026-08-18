@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
-import { useRouter } from "expo-router";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import {
   AlertTriangle,
   Building,
@@ -8,9 +7,7 @@ import {
   CalendarCheck,
   Clock,
   Clock3,
-  ExternalLink,
   MapPin,
-  Search,
   UserCheck,
   UserX,
 } from "lucide-react-native";
@@ -23,13 +20,8 @@ interface AttendanceOverviewTabProps {
 }
 
 export function AttendanceOverviewTab({ deptId, compId }: AttendanceOverviewTabProps = {}) {
-  const router = useRouter();
   const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(deptId);
   const [selectedCompId, setSelectedCompId] = useState<number | undefined>(compId);
-
-  const [searchQuery, setSearchQuery] = useState("");
-
-
 
   const { data: overview, isLoading: isOverviewLoading, error: overviewError } = useAttendanceOverview(
     selectedDeptId,
@@ -63,13 +55,6 @@ export function AttendanceOverviewTab({ deptId, compId }: AttendanceOverviewTabP
   }
 
   const { attendance_metrics: att, punch_metrics: pm, shift_distribution: shifts } = overview;
-
-  const filteredDepts = (orgHierarchy?.departments || []).filter((d) =>
-    searchQuery
-      ? d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (d.code && d.code.toLowerCase().includes(searchQuery.toLowerCase()))
-      : true
-  );
 
   return (
     <View className="gap-2.5 w-full">
@@ -195,11 +180,11 @@ export function AttendanceOverviewTab({ deptId, compId }: AttendanceOverviewTabP
             </View>
 
             <View className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {orgHierarchy.companies.map((c) => {
+              {orgHierarchy.companies.map((c, index) => {
                 const isSelected = selectedCompId === c.id;
                 return (
                   <Pressable
-                    key={c.id}
+                    key={`comp-${c.id}-${index}`}
                     onPress={() => setSelectedCompId(isSelected ? undefined : c.id)}
                     className={`p-4 rounded-xl border transition-all ${
                       isSelected
@@ -253,8 +238,8 @@ export function AttendanceOverviewTab({ deptId, compId }: AttendanceOverviewTabP
             </View>
 
             <View className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {orgHierarchy.locations.slice(0, 9).map((loc) => (
-                <View key={loc.id} className="bg-dark-bg p-4 rounded-xl border border-dark-border">
+              {orgHierarchy.locations.slice(0, 9).map((loc, index) => (
+                <View key={`loc-${loc.id}-${index}`} className="bg-dark-bg p-4 rounded-xl border border-dark-border">
                   <View className="flex-row items-center justify-between mb-2">
                     <Text className="text-sm font-bold text-white">{loc.name}</Text>
                     <View className="px-2 py-0.5 rounded bg-sky-950 border border-sky-800">
@@ -279,75 +264,6 @@ export function AttendanceOverviewTab({ deptId, compId }: AttendanceOverviewTabP
                   </View>
                 </View>
               ))}
-            </View>
-          </View>
-
-          {/* Department Attendance Master Table */}
-          <View className="bg-dark-card border border-dark-border rounded-xl p-4">
-            <View className="flex-row flex-wrap items-center justify-between gap-4 mb-4">
-              <View>
-                <Text className="text-base font-bold text-white">Department Attendance Master</Text>
-                <Text className="text-xs text-slate-400">
-                  Breakdown across {orgHierarchy.departments.length} departments. Click a department to filter Overview stats.
-                </Text>
-              </View>
-
-              {/* Search Bar */}
-              <View className="flex-row items-center bg-dark-bg border border-dark-border rounded-xl px-3 py-1.5 w-full sm:w-64">
-                <Search size={14} color="#94a3b8" />
-                <TextInput
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="Search department..."
-                  placeholderTextColor="#64748b"
-                  className="text-xs text-white ml-2 flex-1 outline-none"
-                />
-              </View>
-            </View>
-
-            <View className="border border-dark-border rounded-xl overflow-hidden">
-              <View className="flex-row bg-dark-bg border-b border-dark-border p-3">
-                <Text className="text-xs font-bold uppercase text-slate-400 flex-1">Department</Text>
-                <Text className="text-xs font-bold uppercase text-slate-400 w-24 text-right">Headcount</Text>
-                <Text className="text-xs font-bold uppercase text-slate-400 w-32 text-right">Total Records</Text>
-                <Text className="text-xs font-bold uppercase text-slate-400 w-24 text-right">Late %</Text>
-                <Text className="text-xs font-bold uppercase text-slate-400 w-32 text-right">OT Hours</Text>
-              </View>
-
-              {filteredDepts.slice(0, 15).map((d, index) => {
-                const isSelected = selectedDeptId === d.id;
-                return (
-                  <Pressable
-                    key={`dept-${d.id}-${index}`}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/modules/attendance/department/[deptId]",
-                        params: { deptId: String(d.id) },
-                      })
-                    }
-                    className={`flex-row items-center p-3 border-b border-dark-border/60 transition-colors ${
-                      isSelected ? "bg-purple-950/40" : "hover:bg-dark-bg/60"
-                    }`}
-                  >
-
-                    <View className="flex-1 flex-row items-center gap-2">
-                      <Text className="text-xs font-bold text-white">{d.name}</Text>
-                      <View className="px-2 py-0.5 rounded bg-purple-950/60 border border-purple-800/60 flex-row items-center gap-1">
-                        <ExternalLink size={10} color="#c084fc" />
-                        <Text className="text-[10px] font-bold text-purple-300">Open Page</Text>
-                      </View>
-                    </View>
-                    <Text className="text-xs font-mono text-purple-300 w-24 text-right">{d.headcount}</Text>
-                    <Text className="text-xs font-mono text-slate-300 w-32 text-right">
-                      {d.total_attendance_records.toLocaleString()}
-                    </Text>
-                    <Text className="text-xs font-mono text-amber-400 w-24 text-right">{d.late_pct}%</Text>
-                    <Text className="text-xs font-mono text-amber-300 w-32 text-right font-bold">
-                      {d.total_ot_hours.toLocaleString()} hrs
-                    </Text>
-                  </Pressable>
-                );
-              })}
             </View>
           </View>
         </View>
@@ -404,8 +320,8 @@ export function AttendanceOverviewTab({ deptId, compId }: AttendanceOverviewTabP
         </View>
 
         <View className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {shifts.map((s) => (
-            <View key={s.shift_id} className="bg-dark-bg p-4 rounded-xl border border-dark-border">
+          {shifts.map((s, index) => (
+            <View key={`shift-${s.shift_id}-${index}`} className="bg-dark-bg p-4 rounded-xl border border-dark-border">
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-sm font-bold text-white">{s.shift_description}</Text>
                 <View className="px-2 py-0.5 rounded bg-dark-card border border-dark-border font-mono text-[10px] text-purple-400 font-bold">
