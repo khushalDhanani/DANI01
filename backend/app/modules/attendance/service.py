@@ -48,17 +48,17 @@ class AttendanceService:
             params["comp_id"] = comp_id
         where_sql = " AND ".join(where_clauses)
 
-        # 1. Total counts from PayAttendance
+        # 1. Total counts from PayAttendance using AttLeaveLabelID and punch timestamps
         q_totals = f"""
         SELECT
             COUNT(*) as total_records,
             COUNT(DISTINCT AttEmpID) as total_emps,
-            SUM(CASE WHEN AttSalType IN ('P', 'PRESENT') THEN 1 ELSE 0 END) as present_days,
-            SUM(CASE WHEN AttSalType IN ('A', 'ABSENT') THEN 1 ELSE 0 END) as absent_days,
-            SUM(CASE WHEN AttSalType IN ('HD', 'HALF') THEN 1 ELSE 0 END) as half_days,
-            SUM(CASE WHEN AttSalType IN ('PL', 'CL', 'SL', 'CO', 'ML', 'LWP') THEN 1 ELSE 0 END) as leave_days,
-            SUM(CASE WHEN AttSalType IN ('WO', 'WEEKOFF') THEN 1 ELSE 0 END) as weekly_offs,
-            SUM(CASE WHEN AttSalType IN ('PH', 'HOLIDAY') THEN 1 ELSE 0 END) as paid_holidays
+            SUM(CASE WHEN AttLeaveLabelID = 6 OR AttActInTime IS NOT NULL OR AttActOutTime IS NOT NULL THEN 1 ELSE 0 END) as present_days,
+            SUM(CASE WHEN AttLeaveLabelID = 7 OR (AttActInTime IS NULL AND AttActOutTime IS NULL AND ISNULL(AttLeaveLabelID, 0) NOT IN (6, 8, 10, 9)) THEN 1 ELSE 0 END) as absent_days,
+            SUM(CASE WHEN AttLeaveLabelID IN (11, 12, 14, 15, 16, 17, 18, 19, 22, 23, 25, 28, 30, 32, 33) THEN 1 ELSE 0 END) as half_days,
+            SUM(CASE WHEN ISNULL(AttLeaveLabelID, 0) IN (1, 2, 9, 11, 12, 14, 15, 16, 17, 18, 19, 20, 22, 23, 25, 28, 30, 32, 33) THEN 1 ELSE 0 END) as leave_days,
+            SUM(CASE WHEN AttLeaveLabelID = 10 THEN 1 ELSE 0 END) as weekly_offs,
+            SUM(CASE WHEN AttLeaveLabelID = 8 THEN 1 ELSE 0 END) as paid_holidays
         FROM dbo.PayAttendance
         WHERE {where_sql};
         """
@@ -108,34 +108,34 @@ class AttendanceService:
         )
 
         # 3. Shift distribution
-        shift_where = f"WHERE s.IsActive = 1 AND {where_sql.replace('AttDeptID', 'a.AttDeptID').replace('AttCompID', 'a.AttCompID')}"
         q_shifts = f"""
         SELECT
-            s.ShiftID,
-            s.ShiftCode,
-            s.ShiftDescription,
-            CONVERT(varchar(8), s.FromTime, 108) as FromTime,
-            CONVERT(varchar(8), s.ToTime, 108) as ToTime,
-            COUNT(a.AttID) as assigned_cnt
-        FROM dbo.PayShiftMst s
-        LEFT JOIN dbo.PayAttendance a ON a.AttShiftID = s.ShiftID
-        {shift_where}
-        GROUP BY s.ShiftID, s.ShiftCode, s.ShiftDescription, CONVERT(varchar(8), s.FromTime, 108), CONVERT(varchar(8), s.ToTime, 108)
-        ORDER BY assigned_cnt DESC;
+            s.ShiftID as shift_id,
+            s.ShiftCode as shift_code,
+            s.ShiftDescription as shift_description,
+            CAST(s.FromTime AS VARCHAR) as from_time,
+            CAST(s.ToTime AS VARCHAR) as to_time,
+            COUNT(a.AttID) as assigned_attendance_count
+        FROM dbo.PayAttendance a
+        LEFT JOIN dbo.PayShiftMst s ON s.ShiftID = a.AttShiftID
+        WHERE {where_sql}
+        GROUP BY s.ShiftID, s.ShiftCode, s.ShiftDescription, s.FromTime, s.ToTime
+        ORDER BY assigned_attendance_count DESC;
         """
         shift_rows = execute_readonly_query(q_shifts, params)
         shift_dist: list[ShiftDistributionItem] = []
-        for r in shift_rows:
-            cnt = r["assigned_cnt"] or 0
+        for sr in shift_rows:
+            cnt = sr.get("assigned_attendance_count") or sr.get("assigned_cnt") or 0
+            pct = round((cnt / tot) * 100.0, 1)
             shift_dist.append(
                 ShiftDistributionItem(
-                    shift_id=r["ShiftID"],
-                    shift_code=r["ShiftCode"] or f"SH-{r['ShiftID']}",
-                    shift_description=r["ShiftDescription"] or "Standard Shift",
-                    from_time=r["FromTime"] or "09:00:00",
-                    to_time=r["ToTime"] or "18:00:00",
+                    shift_id=sr.get("shift_id") or sr.get("ShiftID") or 0,
+                    shift_code=sr.get("shift_code") or sr.get("ShiftCode") or "GS",
+                    shift_description=sr.get("shift_description") or sr.get("ShiftDescription") or "General Shift",
+                    from_time=str(sr.get("from_time") or sr.get("FromTime") or "09:00:00")[:8],
+                    to_time=str(sr.get("to_time") or sr.get("ToTime") or "18:00:00")[:8],
                     assigned_attendance_count=cnt,
-                    percentage=round((cnt / tot) * 100.0, 1),
+                    percentage=pct,
                 )
             )
 
@@ -1049,6 +1049,8 @@ class AttendanceService:
             WHERE e.EmpIsActive = 1
               AND ISNULL(e.EmpIsDeleted, 0) = 0
               AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+              AND e.EmpCode NOT LIKE '9%'
+              AND ISNULL(e.EmpTypeID, 1) IN (1, 2)
         ),
         CompHeadcount AS (
             SELECT CompID, COUNT(*) as headcount
@@ -1059,7 +1061,7 @@ class AttendanceService:
             SELECT
                 ISNULL(a.AttCompID, 1) as CompID,
                 COUNT(a.AttID) as total_attendance,
-                SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN a.AttLeaveLabelID = 6 OR a.AttActInTime IS NOT NULL OR a.AttActOutTime IS NOT NULL THEN 1 ELSE 0 END) as present_count,
                 SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
                 SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
             FROM dbo.PayAttendance a
@@ -1126,6 +1128,8 @@ class AttendanceService:
             WHERE e.EmpIsActive = 1
               AND ISNULL(e.EmpIsDeleted, 0) = 0
               AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+              AND e.EmpCode NOT LIKE '9%'
+              AND ISNULL(e.EmpTypeID, 1) IN (1, 2)
         ),
         LocHeadcount AS (
             SELECT CompID, LocID, COUNT(*) as headcount
@@ -1137,7 +1141,7 @@ class AttendanceService:
                 ISNULL(a.AttCompID, 1) as CompID,
                 ISNULL(a.AttBranchID, 0) as LocID,
                 COUNT(a.AttID) as total_attendance,
-                SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN a.AttLeaveLabelID = 6 OR a.AttActInTime IS NOT NULL OR a.AttActOutTime IS NOT NULL THEN 1 ELSE 0 END) as present_count,
                 SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
                 SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
             FROM dbo.PayAttendance a
@@ -1207,6 +1211,8 @@ class AttendanceService:
             WHERE e.EmpIsActive = 1
               AND ISNULL(e.EmpIsDeleted, 0) = 0
               AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+              AND e.EmpCode NOT LIKE '9%'
+              AND ISNULL(e.EmpTypeID, 1) IN (1, 2)
         ),
         DeptHeadcount AS (
             SELECT DeptID, COUNT(*) as headcount
@@ -1217,7 +1223,7 @@ class AttendanceService:
             SELECT
                 a.AttDeptID as DeptID,
                 COUNT(a.AttID) as total_attendance,
-                SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN a.AttLeaveLabelID = 6 OR a.AttActInTime IS NOT NULL OR a.AttActOutTime IS NOT NULL THEN 1 ELSE 0 END) as present_count,
                 SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
                 SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
             FROM dbo.PayAttendance a
@@ -1283,6 +1289,8 @@ class AttendanceService:
             WHERE e.EmpIsActive = 1
               AND ISNULL(e.EmpIsDeleted, 0) = 0
               AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+              AND e.EmpCode NOT LIKE '9%'
+              AND ISNULL(e.EmpTypeID, 1) IN (1, 2)
         ),
         DeptLocHeadcount AS (
             SELECT LocID, DeptID, COUNT(*) as headcount
@@ -1294,7 +1302,7 @@ class AttendanceService:
                 ISNULL(a.AttBranchID, 0) as LocID,
                 a.AttDeptID as DeptID,
                 COUNT(a.AttID) as total_attendance,
-                SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN a.AttLeaveLabelID = 6 OR a.AttActInTime IS NOT NULL OR a.AttActOutTime IS NOT NULL THEN 1 ELSE 0 END) as present_count,
                 SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
                 SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
             FROM dbo.PayAttendance a
@@ -1368,6 +1376,8 @@ class AttendanceService:
             WHERE e.EmpIsActive = 1
               AND ISNULL(e.EmpIsDeleted, 0) = 0
               AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+              AND e.EmpCode NOT LIKE '9%'
+              AND ISNULL(e.EmpTypeID, 1) IN (1, 2)
         )
         SELECT
             d.DeptID as id,
@@ -1375,24 +1385,57 @@ class AttendanceService:
             CAST(d.CosecDeptId AS VARCHAR) as code,
             (SELECT COUNT(*) FROM ActiveEmps WHERE DeptID = d.DeptID) as headcount,
             COUNT(a.AttID) as total_attendance,
-            SUM(CASE WHEN a.AttSalType IN ('SAL', 'P', 'PR') THEN 1 ELSE 0 END) as present_count,
-            SUM(CASE WHEN a.AttSalType IN ('A', 'ABS') THEN 1 ELSE 0 END) as absent_count,
+            SUM(CASE WHEN a.AttLeaveLabelID = 6 OR a.AttActInTime IS NOT NULL OR a.AttActOutTime IS NOT NULL THEN 1 ELSE 0 END) as present_count,
+            SUM(CASE WHEN a.AttLeaveLabelID = 7 OR (a.AttActInTime IS NULL AND a.AttActOutTime IS NULL AND ISNULL(a.AttLeaveLabelID, 0) NOT IN (6, 8, 10, 9)) THEN 1 ELSE 0 END) as absent_count,
             SUM(CASE WHEN a.AttLateComeMins > 0 THEN 1 ELSE 0 END) as late_count,
             SUM(ISNULL(a.AttActOTMins, 0)) / 60.0 as total_ot_hours
         FROM dbo.PayAttendance a
-        INNER JOIN ActiveEmps ae ON ae.EmpID = a.AttEmpID
-        LEFT JOIN dbo.OrgDepartmentMst d ON d.DeptID = a.AttDeptID
-        WHERE a.AttDeptID = :dept_id
+        INNER JOIN ActiveEmps ae ON ae.EmpID = a.AttEmpID AND ae.DeptID = :dept_id
+        LEFT JOIN dbo.OrgDepartmentMst d ON d.DeptID = ae.DeptID
+        WHERE ae.DeptID = :dept_id
         GROUP BY d.DeptID, d.DeptName, d.CosecDeptId;
         """
         rows = execute_readonly_query(q_dept, {"dept_id": dept_id})
+
         if not rows:
-            # Fallback if no records found or invalid dept_id
+            q_fallback = """
+            WITH CurrentOfficial AS (
+                SELECT
+                    o.EmpID,
+                    o.DeptID,
+                    ROW_NUMBER() OVER (PARTITION BY o.EmpID ORDER BY o.ApplicableFrDate DESC, o.EmpOfficeDetID DESC) AS rn
+                FROM dbo.EmployeeOfficialDet o
+                WHERE o.EmpOfficeDetIsActive = 1 AND ISNULL(o.EmpOfficeDetIsDeleted, 0) = 0
+            ),
+            ActiveEmps AS (
+                SELECT
+                    e.EmpID,
+                    ISNULL(co.DeptID, 0) as DeptID
+                FROM dbo.EmployeeMst e
+                LEFT JOIN CurrentOfficial co ON co.EmpID = e.EmpID AND co.rn = 1
+                WHERE e.EmpIsActive = 1
+                  AND ISNULL(e.EmpIsDeleted, 0) = 0
+                  AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+                  AND e.EmpCode NOT LIKE '9%'
+                  AND ISNULL(e.EmpTypeID, 1) IN (1, 2)
+            )
+            SELECT
+                d.DeptID as id,
+                ISNULL(d.DeptName, 'Unassigned Department') as name,
+                CAST(d.CosecDeptId AS VARCHAR) as code,
+                (SELECT COUNT(*) FROM ActiveEmps WHERE DeptID = d.DeptID) as headcount
+            FROM dbo.OrgDepartmentMst d
+            WHERE d.DeptID = :dept_id;
+            """
+            fallback_rows = execute_readonly_query(q_fallback, {"dept_id": dept_id})
+            dept_name = fallback_rows[0]["name"] if fallback_rows else f"Department #{dept_id}"
+            dept_code = fallback_rows[0]["code"] if fallback_rows else f"DEP-{dept_id}"
+            dept_hc = fallback_rows[0]["headcount"] if fallback_rows else 0
             return DepartmentDetailResponse(
                 dept_id=dept_id,
-                dept_name=f"Department #{dept_id}",
-                dept_code=f"DEP-{dept_id}",
-                headcount=0,
+                dept_name=dept_name,
+                dept_code=dept_code,
+                headcount=dept_hc,
                 total_attendance_records=0,
                 present_count=0,
                 present_pct=0.0,
@@ -1407,8 +1450,8 @@ class AttendanceService:
             )
 
         r = rows[0]
-        tot = r["total_attendance"] or 1
-        hc = r["headcount"] or 1
+        tot = r["total_attendance"] or 0
+        hc_val = r["headcount"] or 0
         present_count = r["present_count"] or 0
         absent_count = r["absent_count"] or 0
         late_count = r["late_count"] or 0
@@ -1416,14 +1459,32 @@ class AttendanceService:
 
         # Count active & pending leaves for active employees in this department
         q_leaves_count = """
+        WITH CurrentOfficial AS (
+            SELECT
+                o.EmpID,
+                o.DeptID,
+                ROW_NUMBER() OVER (PARTITION BY o.EmpID ORDER BY o.ApplicableFrDate DESC, o.EmpOfficeDetID DESC) AS rn
+            FROM dbo.EmployeeOfficialDet o
+            WHERE o.EmpOfficeDetIsActive = 1 AND ISNULL(o.EmpOfficeDetIsDeleted, 0) = 0
+        ),
+        ActiveEmps AS (
+            SELECT
+                e.EmpID,
+                ISNULL(co.DeptID, 0) as DeptID
+            FROM dbo.EmployeeMst e
+            LEFT JOIN CurrentOfficial co ON co.EmpID = e.EmpID AND co.rn = 1
+            WHERE e.EmpIsActive = 1
+              AND ISNULL(e.EmpIsDeleted, 0) = 0
+              AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE())
+              AND e.EmpCode NOT LIKE '9%'
+              AND ISNULL(e.EmpTypeID, 1) IN (1, 2)
+        )
         SELECT
             SUM(CASE WHEN lr.LeaveStatusID = 13 THEN 1 ELSE 0 END) as active_leaves,
             SUM(CASE WHEN lr.LeaveStatusID IN (1, 0, 14) THEN 1 ELSE 0 END) as pending_leaves
         FROM dbo.LeaveRequest lr
-        JOIN dbo.PayAttendance a ON a.AttEmpID = lr.LeaveRequestByEmpID
-        JOIN dbo.EmployeeMst e ON e.EmpID = lr.LeaveRequestByEmpID
-        WHERE a.AttDeptID = :dept_id
-          AND e.EmpIsActive = 1 AND ISNULL(e.EmpIsDeleted, 0) = 0 AND (e.EmpResignDate IS NULL OR e.EmpResignDate > GETDATE());
+        INNER JOIN ActiveEmps ae ON ae.EmpID = lr.LeaveRequestByEmpID
+        WHERE ae.DeptID = :dept_id;
         """
         leave_cnt_rows = execute_readonly_query(q_leaves_count, {"dept_id": dept_id})
         active_leaves = 0
@@ -1434,18 +1495,18 @@ class AttendanceService:
 
         return DepartmentDetailResponse(
             dept_id=dept_id,
-            dept_name=r["name"],
+            dept_name=r["name"] or f"Department #{dept_id}",
             dept_code=r["code"] or f"DEP-{dept_id}",
-            headcount=r["headcount"] or 0,
-            total_attendance_records=r["total_attendance"] or 0,
+            headcount=hc_val,
+            total_attendance_records=tot,
             present_count=present_count,
-            present_pct=round((present_count / tot) * 100.0, 1),
+            present_pct=round((present_count / tot) * 100.0, 1) if tot > 0 else 0.0,
             absent_count=absent_count,
-            absent_pct=round((absent_count / tot) * 100.0, 1),
+            absent_pct=round((absent_count / tot) * 100.0, 1) if tot > 0 else 0.0,
             late_count=late_count,
-            late_pct=round((late_count / tot) * 100.0, 1),
+            late_pct=round((late_count / tot) * 100.0, 1) if tot > 0 else 0.0,
             total_ot_hours=round(total_ot, 1),
-            avg_ot_hours_per_emp=round(total_ot / hc, 1),
+            avg_ot_hours_per_emp=round(total_ot / hc_val, 1) if hc_val > 0 else 0.0,
             active_leaves_count=active_leaves,
             pending_leaves_count=pending_leaves,
         )

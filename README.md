@@ -246,6 +246,7 @@ Use `/docs` as the source of truth for the exact current endpoint contracts.
 
 ```bash
 cd backend
+uv run uvicorn app.main:app --reload
 uv run pytest
 uv run ruff check .
 uv run ruff format --check .
